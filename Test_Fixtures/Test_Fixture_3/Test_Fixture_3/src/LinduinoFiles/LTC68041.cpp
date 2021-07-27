@@ -1044,5 +1044,87 @@ void spi_write_read(uint8_t tx_Data[],//array of data to be written on SPI port
 
 }
 
+void write_68(uint8_t total_ic, //Number of ICs to be written to 
+			  uint8_t tx_cmd[2], //The command to be transmitted 
+			  uint8_t data[] // Payload Data
+			  )
+{
+	const uint8_t BYTES_IN_REG = 6;
+	const uint8_t CMD_LEN = 4+(8*total_ic);
+	uint8_t *cmd;
+	uint16_t data_pec;
+	uint16_t cmd_pec;
+	uint8_t cmd_index;
+	
+	cmd = (uint8_t *)malloc(CMD_LEN*sizeof(uint8_t));
+	cmd[0] = tx_cmd[0];
+	cmd[1] = tx_cmd[1];
+	cmd_pec = pec15_calc(2, cmd);
+	cmd[2] = (uint8_t)(cmd_pec >> 8);
+	cmd[3] = (uint8_t)(cmd_pec);
+	
+	cmd_index = 4;
+	for (uint8_t current_ic = total_ic; current_ic > 0; current_ic--)               // Executes for each LTC681x, this loops starts with the last IC on the stack.
+    {	                                                                            //The first configuration written is received by the last IC in the daisy chain
+		for (uint8_t current_byte = 0; current_byte < BYTES_IN_REG; current_byte++)
+		{
+			cmd[cmd_index] = data[((current_ic-1)*6)+current_byte];
+			cmd_index = cmd_index + 1;
+		}
+		
+		data_pec = (uint16_t)pec15_calc(BYTES_IN_REG, &data[(current_ic-1)*6]);    // Calculating the PEC for each ICs configuration register data
+		cmd[cmd_index] = (uint8_t)(data_pec >> 8);
+		cmd[cmd_index + 1] = (uint8_t)data_pec;
+		cmd_index = cmd_index + 2;
+	}
+	
+	output_low(CS_PIN);
+	spi_write_array(CMD_LEN, cmd);
+	output_high(CS_PIN); //this was originally low
+	
+	free(cmd);
+}
 
+void LTC6804_wrcomm(uint8_t total_ic, uint8_t writeData[][6])
+{
+	uint8_t cmd[2]= {0x07 , 0x21};
+	uint8_t write_buffer[256];
+	uint8_t write_count = 0;
+	for (uint8_t chip = 0; chip<total_ic; chip++)
+	{	
+		for (uint8_t data = 0; data<6; data++)
+		{
+			write_buffer[write_count] = writeData[chip][data];
+			write_count++;
+		}
+	}
+	write_68(total_ic, cmd, write_buffer);
+}
+
+void LTC6804_stcomm(uint8_t len) //Length of data to be transmitted 
+{
+	uint8_t cmd[4];
+	uint16_t cmd_pec;
+
+	cmd[0] = 0x07;
+	cmd[1] = 0x23;
+	cmd_pec = pec15_calc(2, cmd);
+	cmd[2] = (uint8_t)(cmd_pec >> 8);
+	cmd[3] = (uint8_t)(cmd_pec);
+
+	output_low(CS_PIN);
+	spi_write_array(4,cmd);
+	for (int i = 0; i<len*3; i++)
+	{
+	  spi_read_byte(0xFF);
+	}
+	output_high(CS_PIN);
+}
+
+uint8_t spi_read_byte(uint8_t tx_dat)
+{
+  uint8_t data;
+  data = (uint8_t)SPI.transfer(0xFF);
+  return(data);
+}
 

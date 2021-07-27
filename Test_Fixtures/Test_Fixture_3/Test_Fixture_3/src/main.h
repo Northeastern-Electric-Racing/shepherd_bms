@@ -11,12 +11,13 @@
 #define I2C_NACKSTOP 0x90
 
 #include <Arduino.h>
-#include <..\..\..\..\..\LinduinoMaster\LTSketchbook\libraries\LTC68041\LTC68041.h> //will need to change on machine basis
+#include <.\LinduinoFiles\LTC68041.h> //will need to change on machine basis
 
 void setup();
 void loop();
 void GetChipConfigurations(uint8_t localConfig[][6]);
 void SetChipConfigurations(uint8_t localConfig[][6]);
 void ConfigureDischarge(uint8_t chip, uint16_t cells);
+void ConfigureCOMMRegisters(uint8_t numChips, uint8_t dataToWrite[][3], uint8_t commOutput [][6]);
 
 #endif
