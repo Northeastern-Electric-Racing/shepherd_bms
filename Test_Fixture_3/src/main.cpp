@@ -29,6 +29,7 @@ void loop() {
   
   //get and print the cell voltages
   LTC6804_rdcv(0, numChips, rawCellVoltages);
+  /*
   for (int c = 0; c < numChips; c++){
     for (int cell = 0; cell < 12; cell++){
       cellVoltages[c][cell] = float(rawCellVoltages[c][cell]) / 10000;
@@ -38,9 +39,10 @@ void loop() {
     Serial.println();
   }
   Serial.println();
-
+*/
   GetChipConfigurations(chipConfigurations);
 
+/*
    for (int c = 0; c < numChips; c++){
     for (int byte = 0; byte < 6; byte++){
       Serial.print(chipConfigurations[c][byte]);
@@ -49,7 +51,7 @@ void loop() {
     Serial.println();
   }
   Serial.println();
-
+*/
   uint8_t commRegisterData[numChips][6];
   uint8_t i2cWriteData[numChips][3];
   for(int chip = 0; chip < numChips; chip++){
@@ -96,4 +98,34 @@ void ConfigureCOMMRegisters(uint8_t numChips, uint8_t dataToWrite[][3], uint8_t 
     commOutput[chip][5] = dataToWrite[chip][2] << 4;
 
   }
+}
+void ConfigureCOMMRegisters2(uint8_t numChips, uint8_t dataToWrite[][2], uint8_t commOutput [][6])
+{
+  for (int chip = 0; chip < numChips; chip++){
+    commOutput[chip][0] = 0x60 + dataToWrite[chip][0] >> 4;
+    commOutput[chip][1] = dataToWrite[chip][0] << 4;
+    commOutput[chip][2] = 0x00 + dataToWrite[chip][1] >> 4;
+    commOutput[chip][3] = dataToWrite[chip][1] << 4;
+    commOutput[chip][4] = 0x70;
+    commOutput[chip][5] = 0;
+  }
+}
+
+void GetThermistor(uint8_t thermisters[]) 
+{
+  uint8_t commRegisterData[numChips][6];
+  uint8_t i2cWriteData[numChips][2];
+  for (int chip = 0; chip < numChips; chip++){
+    i2cWriteData[chip][0] = 0x90;
+    i2cWriteData[chip][1] = 0x8;
+  }
+  ConfigureCOMMRegisters2(numChips, i2cWriteData, commRegisterData);
+  LTC6804_wrcomm(numChips, commRegisterData);
+  LTC6804_stcomm(numChips * 3);
+  uint16_t aux_data[numChips][6];
+  uint8_t error = LTC6804_rdaux(0,1,aux_data);
+  for (int chip = 0; chip < numChips; chip++) {
+    thermisters[chip] = aux_data[chip][AUX_CH_GPIO4];
+  }
+  return;
 }
