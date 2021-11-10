@@ -51,7 +51,8 @@ void loop() {
     Serial.println();
   }
   Serial.println();
-*/
+  */
+
   uint8_t commRegisterData[numChips][6];
   uint8_t i2cWriteData[numChips][3];
   for(int chip = 0; chip < numChips; chip++){
@@ -63,6 +64,16 @@ void loop() {
   LTC6804_wrcomm(numChips, commRegisterData);
   LTC6804_stcomm(numChips * 3);
 
+
+  float thermistors[numChips];
+  GetThermistor(thermistors);
+  /*
+  for (int c = 0; c < numChips; c++) {
+    Serial.print(thermistors[c]);
+    Serial.print('\t');
+  }
+  Serial.println();
+  */
 
   delay(1000);
 }
@@ -111,21 +122,43 @@ void ConfigureCOMMRegisters2(uint8_t numChips, uint8_t dataToWrite[][2], uint8_t
   }
 }
 
-void GetThermistor(uint8_t thermisters[]) 
+void GetThermistor(float thermisters[]) 
 {
   uint8_t commRegisterData[numChips][6];
   uint8_t i2cWriteData[numChips][2];
+  for (int mux = 0; mux < 8; mux += 2) {
+    for (int chip = 0; chip < numChips; chip++){
+      // Read from first mux for all chips
+      i2cWriteData[chip][0] = 0x90+mux;
+      // Disable this mux
+      i2cWriteData[chip][1] = 0x0;
+    }
+    ConfigureCOMMRegisters2(numChips, i2cWriteData, commRegisterData);
+    LTC6804_wrcomm(numChips, commRegisterData);
+    LTC6804_stcomm(numChips * 3);
+  }
   for (int chip = 0; chip < numChips; chip++){
+    // Read from first mux for all chips
     i2cWriteData[chip][0] = 0x90;
+    // Read first thermistor
     i2cWriteData[chip][1] = 0x8;
   }
   ConfigureCOMMRegisters2(numChips, i2cWriteData, commRegisterData);
   LTC6804_wrcomm(numChips, commRegisterData);
   LTC6804_stcomm(numChips * 3);
   uint16_t aux_data[numChips][6];
-  uint8_t error = LTC6804_rdaux(0,1,aux_data);
-  for (int chip = 0; chip < numChips; chip++) {
-    thermisters[chip] = aux_data[chip][AUX_CH_GPIO4];
+  uint8_t error = LTC6804_rdaux(0,0,aux_data);
+  if (error) {
+    Serial.println("Yo waddup");
   }
-  return;
+
+  for (int chip = 0; chip < numChips; chip++) {
+    for (int gpio = 0; gpio < 5; gpio++) {
+      Serial.print(float(aux_data[chip][gpio]));
+      Serial.print("\t");
+    }
+    Serial.println();
+    thermisters[chip] = float(aux_data[chip][3]);
+  }
+  Serial.println();
 }
