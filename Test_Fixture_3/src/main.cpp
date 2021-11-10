@@ -55,16 +55,17 @@ void loop() {
 
   uint8_t commReadData[numChips][6];
 
+  // this communicates with the EEprom on the eval board
   for(int chip = 0; chip < numChips; chip++){
-    for(int byte = 0; byte < 3; byte++){
-      i2cWriteData[chip][byte] = 0xAA;
-    }
+    i2cWriteData[chip][0] = 0xA0;
+    i2cWriteData[chip][1] = 0x01;
+    i2cWriteData[chip][2] = 0xAA;
   }
 
   ConfigureCOMMRegisters(numChips, i2cWriteData, commRegisterData);
 
   LTC6804_wrcomm(numChips, commRegisterData);
-  //LTC6804_stcomm(numChips * 3);
+  LTC6804_stcomm(numChips * 3);
   LTC6804_rdcomm(numChips, commReadData);
 
   for (int c = 0; c < numChips; c++){
@@ -105,12 +106,10 @@ void ConfigureCOMMRegisters(uint8_t numChips, uint8_t dataToWrite[][3], uint8_t 
   for (int chip = 0; chip < numChips; chip++){
     commOutput[chip][0] = 0x60 | (dataToWrite[chip][0] >> 4);
     commOutput[chip][1] = (dataToWrite[chip][0] << 4) | 0x08;
-    commOutput[chip][2] = 0x60 | (dataToWrite[chip][1] >> 4);
+    commOutput[chip][2] = 0x00 | (dataToWrite[chip][1] >> 4);
     commOutput[chip][3] = (dataToWrite[chip][1] << 4) | 0x08;
-    commOutput[chip][4] = 0x60 | (dataToWrite[chip][2] >> 4);
-    commOutput[chip][5] = (dataToWrite[chip][2] << 4) | 0x08;
-
-    Serial.println(commOutput[chip][0], HEX);
+    commOutput[chip][4] = 0x00 | (dataToWrite[chip][2] >> 4);
+    commOutput[chip][5] = (dataToWrite[chip][2] << 4) | 0x09;
 
     /*
     commOutput[chip][0] = 0x60 + (dataToWrite[chip][0] >> 4);
