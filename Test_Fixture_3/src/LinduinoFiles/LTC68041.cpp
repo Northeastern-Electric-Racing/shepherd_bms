@@ -1079,6 +1079,7 @@ void write_68(uint8_t total_ic, //Number of ICs to be written to
 	}
 	
 	output_low(CS_PIN);
+  wakeup_idle();
 	spi_write_array(CMD_LEN, cmd);
 	output_high(CS_PIN); //this was originally low
 	
@@ -1113,6 +1114,7 @@ void LTC6804_stcomm(uint8_t len) //Length of data to be transmitted
 	cmd[3] = (uint8_t)(cmd_pec);
 
 	output_low(CS_PIN);
+  wakeup_idle();
 	spi_write_array(4,cmd);
 	for (int i = 0; i<len*3; i++)
 	{
