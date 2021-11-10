@@ -1078,8 +1078,8 @@ void write_68(uint8_t total_ic, //Number of ICs to be written to
 		cmd_index = cmd_index + 2;
 	}
 	
-	output_low(CS_PIN);
   wakeup_idle();
+	output_low(CS_PIN);
 	spi_write_array(CMD_LEN, cmd);
 	output_high(CS_PIN); //this was originally low
 	
@@ -1102,6 +1102,73 @@ void LTC6804_wrcomm(uint8_t total_ic, uint8_t writeData[][6])
 	write_68(total_ic, cmd, write_buffer);
 }
 
+int8_t LTC6804_rdcomm(uint8_t total_ic, //Number of ICs in the system
+                      uint8_t readData[][6] //A two dimensional array that stores the read data
+                     )
+{
+	uint8_t cmd[2]= {0x07 , 0x22};
+	uint8_t read_buffer[256];
+	int8_t pec_error = 0;
+	uint16_t data_pec;
+	uint16_t calc_pec;
+	uint8_t c_ic=0;
+	
+	pec_error = read_68(total_ic, cmd, read_buffer);
+	
+	for (uint8_t current_ic = 0; current_ic<total_ic; current_ic++)
+	{
+	
+		for (int byte=0; byte<6; byte++)
+		{
+			readData[current_ic][byte] = read_buffer[byte+(8*current_ic)];
+		}	
+    return(0); //todo : PEC Error
+  }
+}
+/* Generic function to write 68xx commands and read data. Function calculated PEC for tx_cmd data */
+int8_t read_68( uint8_t total_ic, // Number of ICs in the system 
+				uint8_t tx_cmd[2], // The command to be transmitted 
+				uint8_t *rx_data // Data to be read
+				)
+{
+	const uint8_t BYTES_IN_REG = 8;
+	uint8_t cmd[4];
+	uint8_t data[256];
+	int8_t pec_error = 0;
+	uint16_t cmd_pec;
+	uint16_t data_pec;
+	uint16_t received_pec;
+	
+	cmd[0] = tx_cmd[0];
+	cmd[1] = tx_cmd[1];
+	cmd_pec = pec15_calc(2, cmd);
+	cmd[2] = (uint8_t)(cmd_pec >> 8);
+	cmd[3] = (uint8_t)(cmd_pec);
+	
+	output_low(CS_PIN);
+	spi_write_read(cmd, 4, data, (BYTES_IN_REG*total_ic));         //Transmits the command and reads the configuration data of all ICs on the daisy chain into rx_data[] array
+	output_high(CS_PIN);                                         
+
+	for (uint8_t current_ic = 0; current_ic < total_ic; current_ic++) //Executes for each LTC681x in the daisy chain and packs the data
+	{																//into the rx_data array as well as check the received data for any bit errors
+		for (uint8_t current_byte = 0; current_byte < BYTES_IN_REG; current_byte++)
+		{
+			rx_data[(current_ic*8)+current_byte] = data[current_byte + (current_ic*BYTES_IN_REG)];
+		}
+		
+		received_pec = (rx_data[(current_ic*8)+6]<<8) + rx_data[(current_ic*8)+7];
+		data_pec = pec15_calc(6, &rx_data[current_ic*8]);
+		
+		if (received_pec != data_pec)
+		{
+		  pec_error = -1;
+		}
+	}
+	
+	return(pec_error);
+}
+
+
 void LTC6804_stcomm(uint8_t len) //Length of data to be transmitted 
 {
 	uint8_t cmd[4];
@@ -1113,8 +1180,8 @@ void LTC6804_stcomm(uint8_t len) //Length of data to be transmitted
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
 	cmd[3] = (uint8_t)(cmd_pec);
 
+  //wakeup_idle();
 	output_low(CS_PIN);
-  wakeup_idle();
 	spi_write_array(4,cmd);
 	for (int i = 0; i<len*3; i++)
 	{

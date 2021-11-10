@@ -227,4 +227,13 @@ void LTC6804_wrcomm(uint8_t total_ic, uint8_t writeData[][6]);
 uint8_t spi_read_byte(uint8_t tx_dat);
 
 void LTC6804_stcomm(uint8_t len);
+
+int8_t LTC6804_rdcomm(uint8_t total_ic, //Number of ICs in the system
+                      uint8_t readData[][6] //A two dimensional array that stores the read data
+                     );
+
+int8_t read_68( uint8_t total_ic, // Number of ICs in the system 
+				uint8_t tx_cmd[2], // The command to be transmitted 
+				uint8_t *rx_data // Data to be read
+				);
 #endif

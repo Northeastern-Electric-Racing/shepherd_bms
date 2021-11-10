@@ -1,6 +1,6 @@
 #include "main.h"
 
-const uint8_t numChips = 2;
+const uint8_t numChips = 1;
 uint16_t rawCellVoltages[numChips][12];
 float cellVoltages[numChips][12];
 uint8_t chipConfigurations[numChips][6];
@@ -52,14 +52,29 @@ void loop() {
 
   uint8_t commRegisterData[numChips][6];
   uint8_t i2cWriteData[numChips][3];
+
+  uint8_t commReadData[numChips][6];
+
   for(int chip = 0; chip < numChips; chip++){
     for(int byte = 0; byte < 3; byte++){
       i2cWriteData[chip][byte] = 0xAA;
     }
   }
+
   ConfigureCOMMRegisters(numChips, i2cWriteData, commRegisterData);
+
   LTC6804_wrcomm(numChips, commRegisterData);
-  LTC6804_stcomm(numChips * 3);
+  //LTC6804_stcomm(numChips * 3);
+  LTC6804_rdcomm(numChips, commReadData);
+
+  for (int c = 0; c < numChips; c++){
+    for (int byte = 0; byte < 6; byte++){
+      Serial.print(commReadData[c][byte], HEX);
+      Serial.print("\t");
+    }
+    Serial.println();
+  }
+  Serial.println();
 
 
   delay(1000);
@@ -88,12 +103,22 @@ void ConfigureDischarge(uint8_t chip, uint16_t cells) {
 void ConfigureCOMMRegisters(uint8_t numChips, uint8_t dataToWrite[][3], uint8_t commOutput [][6])
 {
   for (int chip = 0; chip < numChips; chip++){
-    commOutput[chip][0] = 0x60 + dataToWrite[chip][0] >> 4;
-    commOutput[chip][1] = dataToWrite[chip][0] << 4;
-    commOutput[chip][2] = 0x00 + dataToWrite[chip][1] >> 4;
-    commOutput[chip][3] = dataToWrite[chip][1] << 4;
-    commOutput[chip][4] = 0x00 + dataToWrite[chip][2] >> 4;
-    commOutput[chip][5] = dataToWrite[chip][2] << 4;
+    commOutput[chip][0] = 0x60 | (dataToWrite[chip][0] >> 4);
+    commOutput[chip][1] = (dataToWrite[chip][0] << 4) | 0x08;
+    commOutput[chip][2] = 0x60 | (dataToWrite[chip][1] >> 4);
+    commOutput[chip][3] = (dataToWrite[chip][1] << 4) | 0x08;
+    commOutput[chip][4] = 0x60 | (dataToWrite[chip][2] >> 4);
+    commOutput[chip][5] = (dataToWrite[chip][2] << 4) | 0x08;
 
+    Serial.println(commOutput[chip][0], HEX);
+
+    /*
+    commOutput[chip][0] = 0x60 + (dataToWrite[chip][0] >> 4);
+    commOutput[chip][1] = (dataToWrite[chip][0] << 4) + 0x08;
+    commOutput[chip][2] = 0x60 + (dataToWrite[chip][1] >> 4);
+    commOutput[chip][3] = (dataToWrite[chip][1] << 4) + 0x08;
+    commOutput[chip][4] = 0x60 + (dataToWrite[chip][2] >> 4);
+    commOutput[chip][5] = (dataToWrite[chip][2] << 4) + 0x08;
+    */
   }
 }
