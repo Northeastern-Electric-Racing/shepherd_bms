@@ -72,12 +72,12 @@ void loop() {
   // Writing to the Multiplexer (Address 0x96, channel 8)
   for(int chip = 0; chip < numChips; chip++)
   {
-    i2cWriteData[chip][0] = 0x96;
+    i2cWriteData[chip][0] = MUX4_ADDRESS;
     i2cWriteData[chip][1] = 0x07;
     i2cWriteData[chip][2] = 0xAA;   //was "data to be stored in EEPROM" but we're not using an EEPROM rn
   }
 
-  Segment_msgSerialization(numChips, i2cWriteData, commRegisterData, MSG_OPERATION_SERIALIZE);
+  segment_msgSerialization(numChips, i2cWriteData, commRegisterData, MSG_OPERATION_SERIALIZE);
 
   LTC6804_wrcomm(numChips, commRegisterData);
   LTC6804_rdcomm(numChips, commReadData);    //Reading what we just wrote to the COMM register
@@ -98,7 +98,7 @@ void loop() {
   LTC6804_stcomm(numChips * 2);               //Start communication by sending that data
   LTC6804_rdcomm(numChips, commReadData);     //Read data from I2C Multiplexer
 
-  Segment_msgSerialization(numChips, outputData, commReadData, MSG_OPERATION_DESERIALIZE);
+  segment_msgSerialization(numChips, outputData, commReadData, MSG_OPERATION_DESERIALIZE);
 
   Serial.print("Register Data from LTC chip:\n");
   for (int c = 0; c < numChips; c++)
@@ -166,7 +166,7 @@ void ConfigureDischarge(uint8_t chip, uint16_t cells)
  * @param commOutput 
  * @param operation 
  */
-void Segment_msgSerialization(uint8_t numChips, uint8_t data[][3], uint8_t commData [][6], msg_Ser_Operation_t operation)
+void segment_msgSerialization(uint8_t numChips, uint8_t data[][3], uint8_t commData [][6], msg_Ser_Operation_t operation)
 {
   if(operation == MSG_OPERATION_SERIALIZE)
   {
