@@ -89,6 +89,7 @@ uint8_t ADAX[2]; //!< GPIO conversion command.
   The Function also intializes the ADCV and ADAX commands to convert all cell and GPIO voltages in
   the Normal ADC mode.
 */
+
 void LTC6804_initialize()
 {
   quikeval_SPI_connect();
