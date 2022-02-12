@@ -96,8 +96,6 @@ void loop() {
   }
   Serial.println();
 
-  /*****************************************************************/
-
   LTC6804_wrcomm(numChips, commRegisterData); //Loading LTC register with data to send just in case, not sure if necessary in this case because we already loaded it
   LTC6804_stcomm(numChips * 2);               //Start communication by sending that data
   LTC6804_rdcomm(numChips, commReadData);     //Read data from I2C Multiplexer
@@ -117,6 +115,9 @@ void loop() {
 
   delay(1000);
 }
+
+
+
 
 //last two bytes of recieved index are PEC and we want to dump them
 void GetChipConfigurations(uint8_t localConfig[][6]) 
