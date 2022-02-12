@@ -61,9 +61,7 @@ void loop() {
   uint8_t i2cWriteData[numChips][3];
 
   uint8_t commReadData[numChips][6];
-
-
-
+  uint8_t outputData[numChips][3];
 
   /***************************************************************************************
    * 
@@ -71,15 +69,15 @@ void loop() {
    * 
   ****************************************************************************************/
 
-  // Writing to the Multiplexer (Address 0x96, )
+  // Writing to the Multiplexer (Address 0x96, channel 8)
   for(int chip = 0; chip < numChips; chip++)
   {
     i2cWriteData[chip][0] = 0x96;
-    i2cWriteData[chip][1] = 0x08;
+    i2cWriteData[chip][1] = 0x07;
     i2cWriteData[chip][2] = 0xAA;   //was "data to be stored in EEPROM" but we're not using an EEPROM rn
   }
 
-  ConfigureCOMMRegisters(numChips, i2cWriteData, commRegisterData);
+  Segment_msgSerialization(numChips, i2cWriteData, commRegisterData, MSG_OPERATION_SERIALIZE);
 
   LTC6804_wrcomm(numChips, commRegisterData);
   LTC6804_rdcomm(numChips, commReadData);    //Reading what we just wrote to the COMM register
@@ -100,7 +98,9 @@ void loop() {
   LTC6804_stcomm(numChips * 2);               //Start communication by sending that data
   LTC6804_rdcomm(numChips, commReadData);     //Read data from I2C Multiplexer
 
-  Serial.print("Data from the Multiplexer?:\n");
+  Segment_msgSerialization(numChips, outputData, commReadData, MSG_OPERATION_DESERIALIZE);
+
+  Serial.print("Register Data from LTC chip:\n");
   for (int c = 0; c < numChips; c++)
   {
     for (int byte = 0; byte < 6; byte++)
@@ -112,6 +112,17 @@ void loop() {
   }
   Serial.println();
 
+  Serial.print("Decoded Data from MUX:\n");
+  for (int c = 0; c < numChips; c++)
+  {
+    for (int byte = 0; byte < 3; byte++)
+    {
+      Serial.print(outputData[c][byte], HEX);
+      Serial.print("\t");
+    }
+    Serial.println();
+  }
+  Serial.println();
 
   delay(1000);
 }
@@ -120,8 +131,8 @@ void loop() {
 
 
 //last two bytes of recieved index are PEC and we want to dump them
-void GetChipConfigurations(uint8_t localConfig[][6]) 
-{ 
+void GetChipConfigurations(uint8_t localConfig[][6])
+{
   uint8_t remoteConfig[numChips][8];
   LTC6804_rdcfg(numChips, remoteConfig);
   for (int chip = 0; chip < numChips; chip++)
@@ -148,30 +159,36 @@ void ConfigureDischarge(uint8_t chip, uint16_t cells)
 
 
 /**
- * @brief This takes the desired I2C command and serializes it to the 6 COMM registers of the LTC6804, might need to double check calculations in the future
+ * @brief Serializes the data to be written to the LTC6280 register
  * 
  * @param numChips 
- * @param dataToWrite 
+ * @param data 
  * @param commOutput 
+ * @param operation 
  */
-void ConfigureCOMMRegisters(uint8_t numChips, uint8_t dataToWrite[][3], uint8_t commOutput [][6])
+void Segment_msgSerialization(uint8_t numChips, uint8_t data[][3], uint8_t commData [][6], msg_Ser_Operation_t operation)
 {
-  for (int chip = 0; chip < numChips; chip++)
+  if(operation == MSG_OPERATION_SERIALIZE)
   {
-    commOutput[chip][0] = 0x60 | (dataToWrite[chip][0] >> 4);
-    commOutput[chip][1] = (dataToWrite[chip][0] << 4) | 0x08;
-    commOutput[chip][2] = 0x00 | (dataToWrite[chip][1] >> 4);
-    commOutput[chip][3] = (dataToWrite[chip][1] << 4) | 0x09;
-    commOutput[chip][4] = 0x70 | (dataToWrite[chip][2] >> 4);
-    commOutput[chip][5] = (dataToWrite[chip][2] << 4) | 0x09;
-
-    /*
-    commOutput[chip][0] = 0x60 + (dataToWrite[chip][0] >> 4);
-    commOutput[chip][1] = (dataToWrite[chip][0] << 4) + 0x08;
-    commOutput[chip][2] = 0x60 + (dataToWrite[chip][1] >> 4);
-    commOutput[chip][3] = (dataToWrite[chip][1] << 4) + 0x08;
-    commOutput[chip][4] = 0x60 + (dataToWrite[chip][2] >> 4);
-    commOutput[chip][5] = (dataToWrite[chip][2] << 4) + 0x08;
-    */
+    for (int chip = 0; chip < numChips; chip++)
+    {
+      commData[chip][0] = 0x60 | (data[chip][0] >> 4);
+      commData[chip][1] = (data[chip][0] << 4) | 0x08;
+      commData[chip][2] = 0x00 | (data[chip][1] >> 4);
+      commData[chip][3] = (data[chip][1] << 4) | 0x09;
+      commData[chip][4] = 0x70 | (data[chip][2] >> 4);
+      commData[chip][5] = (data[chip][2] << 4) | 0x09;
+    }
   }
+  if(operation == MSG_OPERATION_DESERIALIZE)
+  {
+    for (int chip = 0; chip < numChips; chip++)
+    {
+      data[chip][0] = ((commData[chip][0] << 4) & 0xF0) | ((commData[chip][1] >> 4) & 0x0F);
+      data[chip][1] = ((commData[chip][2] << 4) & 0xF0) | ((commData[chip][1] >> 3) & 0x0F);
+      data[chip][2] = ((commData[chip][4] << 4) & 0xF0) | ((commData[chip][1] >> 5) & 0x0F);
+    }
+
+  }
+  
 }
