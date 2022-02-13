@@ -6,6 +6,7 @@
 #include <Arduino.h>
 
 //Teensy Pinout
+#define RELAY_PIN       36          //implementation of RELAY_PIN is as simple as digitalWrite(RELAY_PIN,HIGH or LOW);
 //CAN
 #define CAN1_RX         23
 #define CAN1_TX         22
@@ -32,7 +33,7 @@
 //Digital Bitshift IO
 /* 2,3,4,5,6,7 */
 //Digital IO
-/* 8,9,28,29,32,33,34,35,36,37 */
+/* 8,9,28,29,32,33,34,35,37 */
 
 class nerduino
 {
@@ -44,6 +45,7 @@ class nerduino
     
     /**
      * @todo: call all constructors of onboard chips during this intialization, maybe change hierarchy?
+     *
      */
 };
 
@@ -93,10 +95,20 @@ class SHT30
 
 //CAN Transceiver (Need to ask Matt McCauley about what chip we're using now)
 /**
- * 
- * 
+ * Datasheet needed
+ * https://github.com/Northeastern-Electric-Racing/NER/blob/master/Embedded%20Software/CAN%20Latency/TeensyCanTest/src/main.cpp  --Implementation of CAN on Teensy
  */
 
+class CAN
+{
+    private:
+
+    public:
+    /**
+     * @todo create a master CAN process to process CAN queue and intialize using desired parameters, this process will need to be a bit more complex than
+     *       just the chip implementations, so a knowledge of the CAN network and systems will be necessary
+     */
+};
 
 
 //AMC6821 PWM Generator
@@ -112,8 +124,6 @@ class AMC6821
     public:
 
 };
-
-
 
 /*************************************************/
 

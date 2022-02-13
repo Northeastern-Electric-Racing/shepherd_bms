@@ -4,7 +4,6 @@ nerduino::nerduino()
 {
     Wire.begin();
     Serial.begin(9600);
-    
 }
 
 /**************************************/
