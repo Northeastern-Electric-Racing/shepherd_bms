@@ -11,3 +11,30 @@ files in other parts of the car just to standardize the code and make it more re
  2. Uses a VSCode extension called ```PlatformIO``` to upload to Teensy 4.1 on NERduino
 
  3. Updates to Come!
+
+## TODO's
+### NERDUINO LOCAL (High Priority)
+##### AXDL312 Accelerometer
+ - ~~Proof of Concept~~ kinda
+ - Implement functionality
+ - Test implementation
+##### SHT Humidity Sensor
+ - Proof of Concept
+ - Implement functionality
+ - Test implementation
+##### Can Transceiver (Note this requires more systems knowledge)
+- ~~Proof of Concept~~
+- Implement Functionality
+- Test implementation
+##### AMC6821 PWM Generator / Fan controller
+- Proof of Concept
+- Implement Functionality
+- Test implementation
+### SHEPHERD COMPUTE/SEGMENT
+##### LTC6820 isoSPI Chip
+- Proof of Concept
+- Implement Functionality
+- Test implementation
+##### Other Shepherd Compute Functionalities
+- Latching Fault/Charging?
+- Diode OR?
