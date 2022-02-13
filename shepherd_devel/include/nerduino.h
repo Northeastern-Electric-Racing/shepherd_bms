@@ -3,7 +3,7 @@
 
 /*************************************************/
 #include <Wire.h>
-
+#include <Arduino.h>
 
 //Teensy Pinout
 //CAN
@@ -72,7 +72,6 @@ class ADXL312
         bool verifyFunctionality();
         void configureForMeasurement();
         uint8_t* getXYZ();
-        
 };
 
 
