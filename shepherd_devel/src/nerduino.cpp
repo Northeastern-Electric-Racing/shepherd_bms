@@ -6,6 +6,7 @@ nerduino::nerduino()
     Serial.begin(9600);
 }
 
+nerduino::~nerduino(){}
 /**************************************/
 
 /**

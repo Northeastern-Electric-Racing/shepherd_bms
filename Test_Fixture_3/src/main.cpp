@@ -16,7 +16,7 @@ void setup() {
 
 void loop() {
 
-/*******************************************************
+ /*******************************************************
  * Cell Voltage Printing
  *******************************************************/
 
@@ -39,7 +39,7 @@ void loop() {
   }
   Serial.println();
 
-/******************************************************
+ /******************************************************
  * Current Config Printing
  ******************************************************/
 
@@ -127,6 +127,9 @@ void loop() {
 
   delay(1000);
 }
+/*****************************************************************************/
+//Helper Functions:
+
 
 //last two bytes of recieved index are PEC and we want to dump them
 void GetChipConfigurations(uint8_t localConfig[][6])
@@ -156,7 +159,7 @@ void ConfigureDischarge(uint8_t chip, uint16_t cells)
 
 
 /**
- * @brief Reads and returns the voltages of the cells
+ * @brief Reads and returns the cell voltages in a 2D array
  ****** @todo might need to modify the params of this function*****
  * https://stackoverflow.com/questions/8617683/return-a-2d-array-from-a-function  --returning a 2d array
  * @param cellIter

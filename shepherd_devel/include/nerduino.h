@@ -93,13 +93,15 @@ class SHT30
 };
 
 
-//CAN Transceiver (Need to ask Matt McCauley about what chip we're using now)
+//SN65HVD256D CAN Transceiver (Might want to move to a few seperate files to create a master queue using __attribute__((weak)) )
 /**
- * Datasheet needed
+ * https://www.ti.com/lit/ds/symlink/sn65hvd255.pdf?HQS=dis-dk-null-digikeymode-dsf-pf-null-wwe&ts=1644803460205&ref_url=https%253A%252F%252Fwww.ti.com%252Fgeneral%252Fdocs%252Fsuppproductinfo.tsp%253FdistId%253D10%2526gotoUrl%253Dhttps%253A%252F%252Fwww.ti.com%252Flit%252Fgpn%252Fsn65hvd255
+ * ^Datasheet
+ * 
  * https://github.com/Northeastern-Electric-Racing/NER/blob/master/Embedded%20Software/CAN%20Latency/TeensyCanTest/src/main.cpp  --Implementation of CAN on Teensy
  */
 
-class CAN
+class SN65HVD
 {
     private:
 
