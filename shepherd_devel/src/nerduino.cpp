@@ -33,7 +33,7 @@ ADXL312::~ADXL312(){}
 void ADXL312::ADXL312write(uint8_t *msg, uint8_t numBytes)
 {
     Wire.beginTransmission(ADXL312_I2C_ADDR);
-    for(uint8_t i; i<numBytes;i++)
+    for(uint8_t i=0; i<numBytes;i++)
     {
         Wire.write(msg[i]);
     }
@@ -107,11 +107,12 @@ void ADXL312::configureForMeasurement()
 uint8_t *ADXL312::getXYZ()
 {
     uint8_t cmd[1] = {ADXL312_XYZDATA_REG_OFFSET}; 
-    uint8_t msg[6];
+    uint8_t *msg = new uint8_t[6];
     ADXL312write(cmd, 1);
     if(ADXL312read(msg, 6))
     {
         return msg;
     }
     Serial.println("ERROR: XYZ Data not available!");
+    return msg;
 }

@@ -15,6 +15,7 @@ segment::segment()
 
 segment::~segment(){}
 
+
 //last two bytes of recieved index are PEC and we want to dump them
 void segment::getChipConfigurations(uint8_t localConfig[][6])
 {
