@@ -113,5 +113,4 @@ uint8_t *ADXL312::getXYZ()
         return msg;
     }
     Serial.println("ERROR: XYZ Data not available!");
-    return false;
 }

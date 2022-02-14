@@ -30,14 +30,8 @@ void GetChipConfigurations(uint8_t localConfig[][6]);
 void SetChipConfigurations(uint8_t localConfig[][6]);
 void ConfigureDischarge(uint8_t chip, uint16_t cells);
 
-/**
- * @brief Serializes the data to be written to the LTC6280 register
- * 
- * @param numChips 
- * @param data 
- * @param commOutput 
- * @param operation 
- */
-void segment_msgSerialization(uint8_t numChips, uint8_t data[][3], uint8_t commData [][6], msg_Ser_Operation_t operation);
+
+float **segment_cvRead(uint8_t cell);
+void segment_msgSerialization(uint8_t data[][3], uint8_t commData [][6], msg_Ser_Operation_t operation);
 
 #endif
