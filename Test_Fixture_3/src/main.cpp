@@ -25,6 +25,7 @@ void loop() {
   {
     cellTestIter = 0;
   }
+  Serial.println(cellTestIter);
 
   cellVoltages = segment_cvRead(cellTestIter);
   Serial.print("Voltage:\n");
@@ -118,7 +119,7 @@ void loop() {
   {
     for (int byte = 0; byte < 3; byte++)
     {
-      Serial.print(outputData[c][byte], HEX);
+      Serial.print(outputData[c][byte], DEC);
       Serial.print("\t");
     }
     Serial.println();
