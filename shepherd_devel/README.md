@@ -3,6 +3,12 @@ It's finally here, we're just starting the lay the groundwork for the code for t
 board design finish up. We hope to use this file structure and the ```nerduino.h``` and ```nerduino.cpp```
 files in other parts of the car just to standardize the code and make it more readable
 
+##### The #1 priority of this repo is to consolidate the NERduino chip drivers into a few files that can be univerally used on NERduinos throughout the car. 
+
+###### The #2 priority is to write the drivers behind the BMS system and shepherd segment. 
+
+###### The #3 priority is to optimize battery management through BMS algorithms
+
 ### Some things to note
  1. This code is in it's really early stages right now, so it's very empty.
 
@@ -22,7 +28,7 @@ files in other parts of the car just to standardize the code and make it more re
  - Proof of Concept
  - Implement functionality
  - Test implementation
-##### Can Transceiver (Note this requires more systems knowledge)
+##### SN65HVD Can Transceiver (Note this requires more systems knowledge)
 - ~~Proof of Concept~~
 - Implement Functionality
 - Test implementation
