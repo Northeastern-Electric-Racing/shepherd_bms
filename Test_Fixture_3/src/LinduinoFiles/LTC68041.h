@@ -169,7 +169,7 @@ static const unsigned int crc15Table[256] = {0x0,0xc599, 0xceab, 0xb32, 0xd8cf, 
 #define AUX_CH_GPIO5 5
 #define AUX_CH_VREF2 6
 
-//uint8_t CHG = 0; //!< aux channels to be converted
+uint8_t CHG = 0; //!< aux channels to be converted
 /*!****************************************************
  \brief Controls if Discharging transitors are enabled
  or disabled during Cell conversions.
