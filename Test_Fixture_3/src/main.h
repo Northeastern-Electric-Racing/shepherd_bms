@@ -28,5 +28,7 @@ void ConfigureDischarge(uint8_t chip, uint16_t cells);
 void ConfigureCOMMRegisters(uint8_t numChips, uint8_t dataToWrite[][3], uint8_t commOutput [][6]);
 
 void segment_msgSerialization(uint8_t data[][3], uint8_t commData [][6], msg_Ser_Operation_t operation);
+void GetThermistor(uint8_t thermisters[], uint8_t MUX, uint8_t mux_channel);
+void closeMUX(uint8_t MUX);
 
 #endif

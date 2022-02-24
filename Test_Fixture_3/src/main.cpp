@@ -12,7 +12,7 @@ void setup() {
   Serial.begin(9600);
   Serial.println("Hello World!");
   LTC6804_initialize(); 
-  //set_adc(MD_NORMAL, DCP_ENABLED, CELL_CH_ALL, AUX_CH_ALL);
+  set_adc(MD_NORMAL, DCP_ENABLED, CELL_CH_ALL, AUX_CH_ALL);
 }
 
 void loop() {
@@ -45,6 +45,7 @@ void loop() {
   Serial.println();
 
   GetChipConfigurations(chipConfigurations);
+  SetChipConfigurations(chipConfigurations);
 
   Serial.print("Chip CFG:\n");
   for (int c = 0; c < numChips; c++)
@@ -62,6 +63,7 @@ void loop() {
   uint8_t i2cWriteData[numChips][3];
   uint8_t outputData[NUMCHIPS][3];
   uint8_t commReadData[numChips][6];
+  uint8_t thermistors[NUMCHIPS];
 
 
 
@@ -72,52 +74,16 @@ void loop() {
    * 
   ****************************************************************************************/
 
-  // Writing to the Multiplexer (Address 0x96, )
-  for(int chip = 0; chip < numChips; chip++)
+  Serial.println("Thermistor Values:");
+  for(int i=0 ; i<8 ; i++)
   {
-    i2cWriteData[chip][0] = 0x96;
-    i2cWriteData[chip][1] = 0x08;
-    i2cWriteData[chip][2] = 0xAA;   //was "data to be stored in EEPROM" but we're not using an EEPROM rn and this byte isn't being transmitted
-  }
-  LTC6804_adax();     //start ADC conversions for GPIO ports, which we'll be getting the thermistor values from
-  segment_msgSerialization(i2cWriteData, commRegisterData, MSG_OPERATION_SERIALIZE);
-
-  LTC6804_wrcomm(numChips, commRegisterData);
-  LTC6804_rdcomm(numChips, commReadData);    //Reading what we just wrote to the COMM register
-
-  Serial.print("What we're writing to the LTC chip:\n");
-  for (int c = 0; c < numChips; c++)
-  {
-    for (int byte = 0; byte < 6; byte++)
-    {
-      Serial.print(commReadData[c][byte], HEX);     //printing what we just wrote to COMM register
-      Serial.print("\t");
-    }
-    Serial.println();
+    GetThermistor(thermistors, 0x90, i);      //we're writing to each MUX address
+    //Serial.print(thermistors[0]); 
+    //Serial.print("\t");
+    //delay(5);
   }
   Serial.println();
-
-  /*****************************************************************/
-
-  LTC6804_wrcomm(numChips, commRegisterData); //Loading LTC register with data to send just in case, not sure if necessary in this case because we already loaded it
-  LTC6804_stcomm(numChips * 2);               //Start communication by sending that data
-  LTC6804_rdcomm(numChips, commReadData);     //Read data from I2C Multiplexer
-
-  Serial.print("Register Data from LTC chip:\n");
-  for (int c = 0; c < NUMCHIPS; c++)
-  {
-    for (int byte = 0; byte < 6; byte++)
-    {
-      Serial.print(commReadData[c][byte], HEX);
-      Serial.print("\t");
-    }
-    Serial.println();
-  }
-  Serial.println();
-
   
-
-
   delay(1000);
 }
 
@@ -212,4 +178,60 @@ void segment_msgSerialization(uint8_t data[][3], uint8_t commData [][6], msg_Ser
 
   }
   
+}
+
+
+/**
+ * @brief Get the thermistor reading
+ * 
+ * @todo Look into page 55 of polling ADC status????? 
+ * 
+ * @param thermisters 
+ * @param MUX 
+ * @param mux_channel 
+ */
+void GetThermistor(uint8_t thermisters[], uint8_t MUX, uint8_t mux_channel) 
+{
+  uint8_t commRegisterData[numChips][6];
+  uint8_t i2cWriteData[numChips][3];
+  for (int chip = 0; chip < numChips; chip++){
+    i2cWriteData[chip][0] = MUX;
+    i2cWriteData[chip][1] = mux_channel | 0x8;    //0x8 is the "enable" bit, MUX needs to be disabled after reading
+    i2cWriteData[chip][2] = 0;
+  }
+  ConfigureCOMMRegisters(numChips, i2cWriteData, commRegisterData);
+  LTC6804_wrcomm(numChips, commRegisterData);
+  LTC6804_stcomm(numChips * 3);
+  delay(5);
+  LTC6804_adax();     //retrieves GPIO?
+  delay(5);
+  uint16_t aux_data[numChips][6];
+  LTC6804_rdaux(0,1,aux_data);
+  for (int chip = 0; chip < numChips; chip++) {
+    thermisters[chip] = aux_data[chip][AUX_CH_GPIO3];     //This might be the wrong GPIO possibly?
+    Serial.print(aux_data[chip][AUX_CH_GPIO1]);
+    Serial.print("\t");
+    Serial.print(aux_data[chip][AUX_CH_GPIO2]);
+    Serial.print("\t");
+    Serial.print(aux_data[chip][AUX_CH_GPIO3]);
+    Serial.print("\t");
+    Serial.print(aux_data[chip][AUX_CH_GPIO4]);
+    Serial.print("\t");
+    Serial.print(aux_data[chip][AUX_CH_GPIO5]);
+    Serial.print("\t");
+  }
+  closeMUX(MUX);
+  Serial.println();
+  return;
+}
+
+void closeMUX(uint8_t MUX)
+{
+  uint8_t commRegisterData[numChips][6];
+  uint8_t i2cWriteData[numChips][3];
+  for (int chip = 0; chip < numChips; chip++){
+    i2cWriteData[chip][0] = MUX;
+    i2cWriteData[chip][1] = 0;    //enable bit of MUX channel set to 0, closes all channels
+    i2cWriteData[chip][2] = 0;
+  }
 }

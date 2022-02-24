@@ -215,7 +215,7 @@ void LTC6804_adax()
   cmd[2] = (uint8_t)(cmd_pec >> 8);
   cmd[3] = (uint8_t)(cmd_pec);
 
-  //wakeup_idle (); //This will guarantee that the LTC6804 isoSPI port is awake. This command can be removed.
+  wakeup_idle (); //This will guarantee that the LTC6804 isoSPI port is awake. This command can be removed.
   output_low(LTC6804_CS);
   spi_write_array(4,cmd);
   output_high(LTC6804_CS);
@@ -1181,7 +1181,7 @@ void LTC6804_stcomm(uint8_t len) //Length of data to be transmitted
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
 	cmd[3] = (uint8_t)(cmd_pec);
 
-  //wakeup_idle();
+  wakeup_idle();
 	output_low(CS_PIN);
 	spi_write_array(4,cmd);
 	for (int i = 0; i<len*3; i++)
