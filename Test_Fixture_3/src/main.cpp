@@ -12,7 +12,7 @@ void setup() {
   Serial.begin(9600);
   Serial.println("Hello World!");
   LTC6804_initialize(); 
-  set_adc(MD_NORMAL, DCP_ENABLED, CELL_CH_ALL, AUX_CH_ALL);
+  set_adc(MD_NORMAL, DCP_DISABLED, CELL_CH_ALL, AUX_CH_ALL);
 }
 
 void loop() {
