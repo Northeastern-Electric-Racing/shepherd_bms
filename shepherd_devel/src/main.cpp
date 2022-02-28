@@ -1,5 +1,6 @@
 #include "segment.h"
 #include "nerduino.h"
+#include "canMsgHandler.h"
 
 void setup() {
   nerduino nerduino;

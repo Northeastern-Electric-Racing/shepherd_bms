@@ -28,7 +28,7 @@ ADXL312::~ADXL312(){}
  * @brief Writing to the local I2C bus with the address of the ADXL312
  * 
  * @param msg 
- * @param numBytes 
+ * @param numBytes
  */
 void ADXL312::ADXL312write(uint8_t *msg, uint8_t numBytes)
 {
@@ -116,3 +116,8 @@ uint8_t *ADXL312::getXYZ()
     Serial.println("ERROR: XYZ Data not available!");
     return msg;
 }
+
+
+/***********************************************************************************/
+
+

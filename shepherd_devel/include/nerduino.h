@@ -3,7 +3,9 @@
 
 /*************************************************/
 #include <Wire.h>
+#include <EEPROM.h>
 #include <Arduino.h>
+#include "canMsgHandler.h"
 
 //Teensy Pinout
 #define RELAY_PIN       36          //implementation of RELAY_PIN is as simple as digitalWrite(RELAY_PIN,HIGH or LOW);
@@ -48,7 +50,6 @@ class nerduino
      *
      */
 };
-
 
 //ADXL312 Accelerometer
 /**

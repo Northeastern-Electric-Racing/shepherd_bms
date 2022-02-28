@@ -1,0 +1,103 @@
+#ifndef CANMSGHANDLER_H
+#define CANMSGHANDLER_H
+
+#include <Arduino.h>
+#include <FlexCAN_T4.h>
+
+
+/*************************************************/
+/**
+ * CAN Settings
+ */
+
+#define BAUD_RATE 250000U
+#define MAX_MB_NUM 16 // maximum number of CAN mailboxes to use
+extern FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> myCan; // main CAN object
+
+/*************************************************/
+/**
+ * CAN Addresses
+ */
+
+/**
+ * @brief Configurable CAN messages
+ * @todo Move to EEPROM for CAN address configure CAN messages, probably create address struct just for this
+ */
+#define CANMSG_BMSSHUTDOWN          0x03
+#define CANMSG_BMSDTCSTATUS         0x06
+#define CANMSG_SET_INVERTER         0x101
+#define CANMSG_SET_CARDIRECTION     0x102
+#define CANMSG_SET_BRAKELIGHT       0x103
+#define CANMSG_ERR_BRAKESWITCH      0x104
+#define CANMSG_ERR_PEDALSENSOR      0x105
+#define CANMSG_CARACCELERATION      0x300
+#define CANMSG_BRAKEFLUIDPRESSURE   0x301
+#define CANMSG_COOLINGFLOWRATE      0x302
+#define CANMSG_GPSDATA              0x303
+#define CANMSG_DIFFTEMP             0x304
+
+//Predefined CAN Messages (cannot change)
+#define CANMSG_ACCELERATIONCTRLINFO 0xC0
+#define CANMSG_MOTORTEMP1           0xA0
+#define CANMSG_MOTORTEMP2           0xA1
+#define CANMSG_MOTORETEMP3          0xA2
+#define CANMSG_MOTORMOTION          0xA5
+#define CANMSG_MOTORCURRENT         0xA6
+#define CANMSG_MOTORVOLTAGE         0xA7
+#define CANMSG_MCVEHICLESTATE       0xAA
+#define CANMSG_ERR_MCFAULT          0xAB
+#define CANMSG_MOTORTORQUETIMER     0xAC
+#define CANMSG_BMSSTATUS2           0x6B1
+#define CANMSG_BMSCHARGEDISCHARGE   0x6B0
+#define CANMSG_MC_BMS_INTEGRATION   0x202
+#define CANMSG_CHARGER_TO_BMS       0x18EB2440
+#define CANMSG_BMS_TO_CHARGER       0x18E54024
+
+/**************************************************/
+/**
+ * Prototype Function
+ */
+
+int sendMessage(uint32_t id, uint8_t len, const uint8_t *buf); 
+void incomingCANCallback(const CAN_message_t &msg);
+void initializeCAN(uint8_t canLine);
+
+/**
+ * @brief CAN Message Handle Commands
+ * __attribute__((weak)) indicates that if the compiler doesn't find any other function with this same name, then it will default to these which just do nothing
+ * This means we can use a master CAN processing command amongst all devices
+ * 
+ */
+__attribute__((weak)) void canHandler_CANMSG_BMSSHUTDOWN          (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_BMSDTCSTATUS         (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_SET_INVERTER         (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_SET_CARDIRECTION     (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_SET_BRAKELIGHT       (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_ERR_BRAKESWITCH      (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_ERR_PEDALSENSOR      (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_CARACCELERATION      (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_BRAKEFLUIDPRESSURE   (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_COOLINGFLOWRATE      (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_GPSDATA              (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_DIFFTEMP             (const CAN_message_t &msg){return;}
+
+//Predefined CAN Messages
+__attribute__((weak)) void canHandler_CANMSG_ACCELERATIONCTRLINFO (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_MOTORTEMP1           (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_MOTORTEMP2           (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_MOTORETEMP3          (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_MOTORMOTION          (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_MOTORCURRENT         (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_MOTORVOLTAGE         (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_MCVEHICLESTATE       (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_ERR_MCFAULT          (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_MOTORTORQUETIMER     (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_BMSSTATUS2           (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_BMSCHARGEDISCHARGE   (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_MC_BMS_INTEGRATION   (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_CHARGER_TO_BMS       (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_BMS_TO_CHARGER       (const CAN_message_t &msg){return;}
+
+/**************************************************/
+
+#endif
