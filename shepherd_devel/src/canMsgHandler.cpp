@@ -9,7 +9,14 @@ FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> myCan;
  */
 void initializeCAN(uint8_t canLine)
 {
+    myCan.begin(); // needed to initialize the CAN object (must be first method called)
+    myCan.setBaudRate(BAUD_RATE); // sets baud rate
 
+    myCan.setMaxMB(MAX_MB_NUM);
+    myCan.enableFIFO(); // enables the FIFO operation mode, where all received messages are received and accessed via a queue
+    myCan.enableFIFOInterrupt(); // enables interrupts to be used with FIFO
+    myCan.onReceive(incomingCANCallback); // sets the callback for received messages
+    myCan.mailboxStatus(); // prints out mailbox config information
 }
 
 
@@ -51,6 +58,11 @@ uint8_t *buf1;
  */
 void incomingCANCallback(const CAN_message_t &msg)
 {
+    if(!SDWrite())
+    {
+        Serial.println("Error logging to SD Card!");
+    }
+
     switch(msg.id)
     {
         case CANMSG_BMSSHUTDOWN:
@@ -141,4 +153,44 @@ void incomingCANCallback(const CAN_message_t &msg)
             break;
     }
 }
-/***********************************************************/
+
+/**************************************************************/
+/**
+ * @brief CAN Message Handle Commands
+ * __attribute__((weak)) indicates that if the compiler doesn't find any other function with this same name, then it will default to these which just do nothing
+ * This means we can use a master CAN processing command amongst all devices
+ * 
+ */
+
+__attribute__((weak)) void canHandler_CANMSG_BMSSHUTDOWN          (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_BMSDTCSTATUS         (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_SET_INVERTER         (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_SET_CARDIRECTION     (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_SET_BRAKELIGHT       (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_ERR_BRAKESWITCH      (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_ERR_PEDALSENSOR      (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_CARACCELERATION      (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_BRAKEFLUIDPRESSURE   (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_COOLINGFLOWRATE      (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_GPSDATA              (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_DIFFTEMP             (const CAN_message_t &msg){return;}
+
+//Predefined CAN Messages
+__attribute__((weak)) void canHandler_CANMSG_ACCELERATIONCTRLINFO (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_MOTORTEMP1           (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_MOTORTEMP2           (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_MOTORETEMP3          (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_MOTORMOTION          (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_MOTORCURRENT         (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_MOTORVOLTAGE         (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_MCVEHICLESTATE       (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_ERR_MCFAULT          (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_MOTORTORQUETIMER     (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_BMSSTATUS2           (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_BMSCHARGEDISCHARGE   (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_MC_BMS_INTEGRATION   (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_CHARGER_TO_BMS       (const CAN_message_t &msg){return;}
+__attribute__((weak)) void canHandler_CANMSG_BMS_TO_CHARGER       (const CAN_message_t &msg){return;}
+
+//For SD logging in the TCU, isn't used anywhere else
+__attribute__((weak)) bool SDWrite(){return true;}
