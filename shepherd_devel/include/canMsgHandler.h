@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <FlexCAN_T4.h>
+#include <EEPROM.h>
 
 
 /*************************************************/
@@ -19,10 +20,30 @@ extern FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> myCan; // main CAN object
  * CAN Addresses
  */
 
+struct
+{
+    uint8_t BMSSHUTDOWN;
+    uint8_t BMSDTCSTATUS;
+    uint8_t SET_INVERTER;
+    uint8_t SET_CARDIRECTION;
+    uint8_t SET_BRAKELIGHT;
+    uint8_t ERR_BRAKESWITCH;
+    uint8_t ERR_PEDALSENSOR;
+    uint8_t CARACCELERATION;
+    uint8_t BRAKEFLUIDPRESSURE;
+    uint8_t COOLINGFLOWRATE;
+    uint8_t GPSDATA;
+    uint8_t DIFFTEMP;
+} canmsgAddr;
+
 /**
  * @brief Configurable CAN messages
  * @todo Move to EEPROM for CAN address configure CAN messages, probably create address struct just for this
+ * @note these values will be phased out as the dynamic EEPROM configurable address method is moved in
  */
+
+#define NUM_CONFIGURABLECANMSG      12
+
 #define CANMSG_BMSSHUTDOWN          0x03
 #define CANMSG_BMSDTCSTATUS         0x06
 #define CANMSG_SET_INVERTER         0x101
@@ -37,6 +58,7 @@ extern FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> myCan; // main CAN object
 #define CANMSG_DIFFTEMP             0x304
 
 //Predefined CAN Messages (cannot change)
+#define CANMSG_CONFIGUREADDR        0x99
 #define CANMSG_ACCELERATIONCTRLINFO 0xC0
 #define CANMSG_MOTORTEMP1           0xA0
 #define CANMSG_MOTORTEMP2           0xA1
@@ -61,6 +83,8 @@ extern FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> myCan; // main CAN object
 int sendMessage(uint32_t id, uint8_t len, const uint8_t *buf); 
 void incomingCANCallback(const CAN_message_t &msg);
 void initializeCAN(uint8_t canLine);
+void readEEPROMAddrs();
+void canHandler_CANMSG_CONFIGUREADDR(const CAN_message_t &msg);
 
 /**
  * @brief CAN Message Handle Commands

@@ -79,6 +79,7 @@ bool ADXL312::verifyFunctionality()
     ADXL312write(cmd, 1);
     if(ADXL312read(msg, 1))
     {
+        Serial.println(msg[0]);
         if(msg[0] == ADXL312_DEVID)
         {
             Serial.println("ADXL312 connection online...");

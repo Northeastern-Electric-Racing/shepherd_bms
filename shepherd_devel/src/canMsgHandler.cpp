@@ -5,7 +5,7 @@ FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> myCan;
 /**
  * @brief Initializes a CAN object for whichever line we are choosing
  * 
- * @param canLine   which CAN transceiver to use we want to use 
+ * @param canLine   which CAN transceiver to use we want to use = NOT currently being used, we will probably need this eventually if we need to broadcast at different rates
  */
 void initializeCAN(uint8_t canLine)
 {
@@ -18,7 +18,6 @@ void initializeCAN(uint8_t canLine)
     myCan.onReceive(incomingCANCallback); // sets the callback for received messages
     myCan.mailboxStatus(); // prints out mailbox config information
 }
-
 
 /**
  * @brief Sends CAN message
@@ -50,6 +49,35 @@ uint8_t *buf1;
     return myCan.write(msg);
 }
 
+void canHandler_CANMSG_CONFIGUREADDR(const CAN_message_t &msg){
+
+  //Need to figure out the contents of the command
+    for(uint8_t i; i<NUM_CONFIGURABLECANMSG; i++)
+    {
+        EEPROM.write(i,msg.buf[i]);
+    }
+  //EEPROM.write(LED_pin_location, configmsg[0]);         //reconfigure EEPROM values
+  //EEPROM.write(sensor_param_location, configmsg[1]);
+    readEEPROMAddrs();
+
+}
+
+void readEEPROMAddrs()
+{
+    canmsgAddr.BMSSHUTDOWN = EEPROM.read(0);
+    canmsgAddr.BMSDTCSTATUS = EEPROM.read(1);
+    canmsgAddr.SET_INVERTER = EEPROM.read(2);
+    canmsgAddr.SET_CARDIRECTION = EEPROM.read(3);
+    canmsgAddr.SET_BRAKELIGHT = EEPROM.read(4);
+    canmsgAddr.ERR_BRAKESWITCH = EEPROM.read(5);
+    canmsgAddr.ERR_PEDALSENSOR = EEPROM.read(6);
+    canmsgAddr.CARACCELERATION = EEPROM.read(7);
+    canmsgAddr.BRAKEFLUIDPRESSURE = EEPROM.read(8);
+    canmsgAddr.COOLINGFLOWRATE = EEPROM.read(9);
+    canmsgAddr.GPSDATA = EEPROM.read(10);
+    canmsgAddr.DIFFTEMP = EEPROM.read(11);
+}
+
 /**
  * @brief Processes all CAN messages
  * @note  ID filtering should happen beforehand, maybe add relevent ID's to each .cpp file?
@@ -65,6 +93,9 @@ void incomingCANCallback(const CAN_message_t &msg)
 
     switch(msg.id)
     {
+        case CANMSG_CONFIGUREADDR:
+            canHandler_CANMSG_CONFIGUREADDR(msg);
+            break;
         case CANMSG_BMSSHUTDOWN:
             canHandler_CANMSG_BMSSHUTDOWN(msg);
             break;
@@ -107,7 +138,7 @@ void incomingCANCallback(const CAN_message_t &msg)
             canHandler_CANMSG_ACCELERATIONCTRLINFO(msg);
             break;
         case CANMSG_MOTORTEMP1              :
-            canHandler_CANMSG_MOTORTEMP1(msg);          //Do all motor temp messages get handled the same way?
+            canHandler_CANMSG_MOTORTEMP1(msg);          //Do all motor temp messages get handled the same way? if so we can make all them go to the same case
             break;
         case CANMSG_MOTORTEMP2              :
             canHandler_CANMSG_MOTORTEMP2(msg);
