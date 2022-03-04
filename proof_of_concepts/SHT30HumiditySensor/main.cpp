@@ -3,11 +3,10 @@
 
 void setup() {
   nerduino nerduino;
-  ADXL312 accelerometer;
+  SHT30 tempHumidSensor;
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-
-
+  tempHumidSensor.isHeaterEnabled;
 }

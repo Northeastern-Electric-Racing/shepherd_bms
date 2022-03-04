@@ -30,7 +30,7 @@ SHT30::~SHT30(){}
  */
 void SHT30::SHT30write(uint16_t *msg, uint8_t numBytes)
 {
-    Wire.beginTransmission(SHT30_I2C_ADDR)
+    Wire.beginTransmission(SHT30_I2C_ADDR+SHT30_I2C_ADDR_WRITE_BIT)
     for (uint8_t i=0; i< numBytes; i++)
     {
         Wire.write(msg);
@@ -65,7 +65,7 @@ bool SHT30::SHT30read(uint8_t *msg, uint8_t numBytes)
  * @brief Performs a reading of the status register, from ADAFRUIT SHT30 github ino
  * returns the 16-bit status register
  */
-void readStatusReg(void)                                    
+uint16_t readStatusReg(void)                                    
 {
     SHT30write(SHT30_READSTATUS, 1)
     uint8_t data[3];
