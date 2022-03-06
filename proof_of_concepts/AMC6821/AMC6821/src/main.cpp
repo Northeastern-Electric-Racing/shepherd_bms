@@ -34,21 +34,21 @@
  */
 #define AMC6821_CHARACTERISTICS_REG         0x20
 //PWM Frequencies
-#define AMC6821_CHARACTERISTICS_1KHZ        0x00
-#define AMC6821_CHARACTERISTICS_10KHZ       0x01
-#define AMC6821_CHARACTERISTICS_20KHZ       0x02
-#define AMC6821_CHARACTERISTICS_25KHZ       0x03
-#define AMC6821_CHARACTERISTICS_30KHZ       0x04
-#define AMC6821_CHARACTERISTICS_40KHZ       0x05    //0x06 and 0x07 also result in 40kHz duty cycle
+#define AMC6821_CHARACTERISTICS_1KHZ        0x0
+#define AMC6821_CHARACTERISTICS_10KHZ       0x1
+#define AMC6821_CHARACTERISTICS_20KHZ       0x2
+#define AMC6821_CHARACTERISTICS_25KHZ       0x3    //(default) This frequency is what our fans operate at
+#define AMC6821_CHARACTERISTICS_30KHZ       0x4
+#define AMC6821_CHARACTERISTICS_40KHZ       0x5    //0x06 and 0x07 also result in 40kHz duty cycle
 //Fan spin up times
-#define AMC6821_CHARACTERISTICS_SPINUP_02   0x00    //02 means 0.2 seconds
-#define AMC6821_CHARACTERISTICS_SPINUP_04   0x01    //04 means 0.4 seconds
-#define AMC6821_CHARACTERISTICS_SPINUP_06   0x02    //...
-#define AMC6821_CHARACTERISTICS_SPINUP_08   0x03
-#define AMC6821_CHARACTERISTICS_SPINUP_1    0x04
-#define AMC6821_CHARACTERISTICS_SPINUP_2    0x05
-#define AMC6821_CHARACTERISTICS_SPINUP_4    0x06
-#define AMC6821_CHARACTERISTICS_SPINUP_8    0x07
+#define AMC6821_CHARACTERISTICS_SPINUP_02   0x0    //02 means 0.2 seconds
+#define AMC6821_CHARACTERISTICS_SPINUP_04   0x1    //04 means 0.4 seconds
+#define AMC6821_CHARACTERISTICS_SPINUP_06   0x2    //...
+#define AMC6821_CHARACTERISTICS_SPINUP_08   0x3
+#define AMC6821_CHARACTERISTICS_SPINUP_1    0x4
+#define AMC6821_CHARACTERISTICS_SPINUP_2    0x5    //(default)
+#define AMC6821_CHARACTERISTICS_SPINUP_4    0x6
+#define AMC6821_CHARACTERISTICS_SPINUP_8    0x7
 
 
 /******************************************************************************************************************/
