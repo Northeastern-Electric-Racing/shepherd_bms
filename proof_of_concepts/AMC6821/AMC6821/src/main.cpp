@@ -16,7 +16,7 @@
 
 /**
  * @note Duty Cycle is variable corresponding to 1/255 increments 
- *       (0x00 corresponds to 0% duty cycle and 0xFF corresponds to 100% duty cycle)
+ *       (0x00 corresponds to 0% duty cycle and 0xFF(255) corresponds to 100% duty cycle)
  * @ref Refer to page 40 of datasheet
  */
 #define AMC6821_DUTYCYCLE_REG               0x22
@@ -26,7 +26,7 @@
  * @brief PWM I2C Characteristics Command Contents  (8 bits)
  * @ref Refer to page 41 of datasheet
  *                _______________________________________________________________________________________________________________
- * bit numbers:   |            7            |      6      |           5   4   3               |    2   1   0                    |
+ * bit numbers:   |            7            |      6      |           5   4   3               |            2   1   0            |
  *                |-------------------------|-------------|-----------------------------------|---------------------------------|
  * contents:      |   Fan spin up disable   |   Reserved  |   PWM Frequency(see AMC macros)   |   Spin up time(see AMC macros)  |
  *                |_________________________|_____________|___________________________________|_________________________________|
