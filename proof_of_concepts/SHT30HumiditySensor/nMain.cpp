@@ -50,7 +50,7 @@ class nerduino
  */
 
 #define SHT30_I2C_ADDR                 0x44     //If ADDR (pin2) is connected to VDD, 0x45
-#define SHT30_I2C_ADDR_WRITE_BIT       0x00     //This is the write bit to add to ADDR
+// Not necessary, Wire.beginTransmission() implies write bit:   #define SHT30_I2C_ADDR_WRITE_BIT       0x00     //This is the write bit to add to ADDR
 #define SHT30_START_CMD_WCS            0x2C06   //Start measurement command with clock streching enabled and high repeatability
 #define SHT30_START_CMD_NCS            0x2400   //Start measurement command with clock streching disabled and high repeatability 
 #define SHT30_READSTATUS               0xF32D   /**< Read Out of Status Register */
@@ -60,12 +60,13 @@ class nerduino
 #define SHT30_HEATERDIS                0x3066   /**< Heater Disable */
 #define SHT30_REG_HEATER_BIT           0x0d     /**< Status Register Heater Bit */
 
+
 class SHT30
 {
     private:
         void SHT30write(uint8_t *msg, uint8_t numBytes)    //Allows for private I2C writing with SHT30
         {
-            Wire.beginTransmission(SHT30_I2C_ADDR+SHT30_I2C_ADDR_WRITE_BIT);
+            Wire.beginTransmission(SHT30_I2C_ADDR);
             for(uint8_t i=0; i< numBytes; i++)
             {
                 Wire.write(msg[i]);
