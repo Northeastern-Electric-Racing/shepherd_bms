@@ -66,11 +66,8 @@ void loop() {
 
  
   Wire.beginTransmission(AMC6821_I2C_ADDR);
-  Wire.write(0x22);
+  Wire.write(AMC6821_DUTYCYCLE_REG);
   Wire.write(0x00);
-=======
-  Wire.write(AMC6821_DEVID_REG);
->>>>>>> ab62440f8f65b1217b3ab3595c01687f1080779b
   Wire.endTransmission(false);
   Wire.requestFrom(AMC6821_I2C_ADDR, 1);
 
