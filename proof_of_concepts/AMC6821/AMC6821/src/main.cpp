@@ -66,7 +66,6 @@ void loop() {
 
  
   Wire.beginTransmission(AMC6821_I2C_ADDR);
-<<<<<<< HEAD
   Wire.write(0x22);
   Wire.write(0x00);
 =======
