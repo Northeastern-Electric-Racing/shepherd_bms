@@ -85,7 +85,13 @@ void loop() {
   delay(1000);
 }
 
+void AMC6821write(uint8_t *i2cByte)
+{
 
+Wire.beginTransmission(AMC6821_I2C_ADDR);
+
+
+}
 
 //page 8 of datasheet talks about addresses 
 //address written in hex 
