@@ -12,6 +12,10 @@
 #define AMC6821_I2C_ADDR                    0x18
 #define AMC6821_DEVID_REG                   0x3D
 #define AMC6821_DEVID                       0x21
+#define AMC6821_CONFIG1_REG                 0x00
+#define AMC6821_CONFIG2_REG                 0x01
+#define AMC6821_CONFIG3_REG                 0x3F
+#define AMC6821_CONFIG4_REG                 0x04
 
 
 /**
@@ -51,23 +55,121 @@
 #define AMC6821_CHARACTERISTICS_SPINUP_8    0x7
 
 
+void AMC6821write(uint8_t *msg, uint8_t numBytes);
+bool AMC6821read(uint8_t *cmd, uint8_t numBytes);
+void resetChip();
+void writeConfig(uint8_t configNum, uint8_t config);
+
 /******************************************************************************************************************/
 
 void setup() {
-  // put your setup code here, to run once:
+  delay(3000);
 
+  uint8_t msg[1];
+
+  pinMode(13,OUTPUT);
+  digitalWrite(13,HIGH);
   Serial.begin(9600);
   Wire.begin();
+
+  //resetChip();
+  delay(1000);
+
+  writeConfig(4, 0x88);
+  delay(100);
+  writeConfig(2, 0x03);
+  delay(100);
+  writeConfig(3, 0x02);
+  delay(100);
+  writeConfig(1, 0x94);
+  delay(100);
+
+////////////////////////////////////////////////////
+  Wire.beginTransmission(AMC6821_I2C_ADDR);
+  Wire.write(AMC6821_CHARACTERISTICS_REG);
+  Wire.write(0x1D);
+  Wire.endTransmission();
+////////////////////////////////////////////
+////////////////////////////////////////////
+  uint8_t cmd[1];
+
+  cmd[0]=AMC6821_CONFIG1_REG;
+  AMC6821write(cmd,1);
+  if(AMC6821read(msg,1))
+  {
+    Serial.print("Config Reg 1:\t");
+    Serial.println(msg[0],HEX);
+  }
+
+  delay(10);
+
+  cmd[0]=AMC6821_CONFIG2_REG;
+  AMC6821write(cmd,1);
+  if(AMC6821read(msg,1))
+  {
+    Serial.print("Config Reg 2:\t");
+    Serial.println(msg[0],HEX);
+  }
+
+  delay(10);
+
+  cmd[0]=AMC6821_CONFIG3_REG;
+  AMC6821write(cmd,1);
+  if(AMC6821read(msg,1))
+  {
+    Serial.print("Config Reg 3:\t");
+    Serial.println(msg[0],HEX);
+  }
+
+  delay(10);
+
+  cmd[0]=AMC6821_CONFIG4_REG;
+  AMC6821write(cmd,1);
+  if(AMC6821read(msg,1))
+  {
+    Serial.print("Config Reg 4:\t");
+    Serial.println(msg[0],HEX);
+  }
+
+  delay(10);
+
+  cmd[0]=AMC6821_DEVID_REG;
+  AMC6821write(cmd,1);
+  if(AMC6821read(msg,1))
+  {
+    Serial.print("Device ID:\t");
+    Serial.println(msg[0],HEX);
+  }
+
+  delay(10);
+
+  cmd[0]=AMC6821_CHARACTERISTICS_REG;
+  AMC6821write(cmd,1);
+  if(AMC6821read(msg,1))
+  {
+    Serial.print("Characteristic Reg:\t");
+    Serial.println(msg[0],HEX);
+  }
+
+  delay(10);
+
 }
+
+uint8_t fanspeed = 0;
 
 void loop() {
   // put your main code here, to run repeatedly:
-  int idmsg[1];
-
+  uint8_t idmsg[1];
  
   Wire.beginTransmission(AMC6821_I2C_ADDR);
   Wire.write(AMC6821_DUTYCYCLE_REG);
-  Wire.write(0x00);
+  Wire.write(0xFF);
+  Wire.endTransmission(false);
+
+  delay(10);
+
+  Wire.beginTransmission(AMC6821_I2C_ADDR);
+  Wire.write(AMC6821_DUTYCYCLE_REG);
   Wire.endTransmission(false);
   Wire.requestFrom(AMC6821_I2C_ADDR, 1);
 
@@ -81,16 +183,95 @@ void loop() {
       }
   }
 
+  Serial.print("PWM Level =\t");
   Serial.println(idmsg[0], HEX);
   delay(1000);
 }
 
-void AMC6821write(uint8_t *i2cByte)
+/**
+ * @brief Writing to the local I2C bus with the address of the ADXL312
+ * 
+ * @param msg 
+ * @param numBytes
+ */
+void AMC6821write(uint8_t *msg, uint8_t numBytes)
 {
+    Wire.beginTransmission(AMC6821_I2C_ADDR);
+    for(uint8_t i=0; i<numBytes;i++)
+    {
+        Wire.write(msg[i]);
+    }
+    Wire.endTransmission(false);
+}
 
-Wire.beginTransmission(AMC6821_I2C_ADDR);
+/**
+ * @brief Requesting data to read in from the ADXL312
+ * 
+ * @param msg 
+ * @param numBytes 
+ * @return true 
+ * @return false 
+ */
+bool AMC6821read(uint8_t *msg, uint8_t numBytes)
+{
+    Wire.requestFrom(AMC6821_I2C_ADDR, (int)numBytes);
+
+    if (Wire.available())
+    {
+        uint8_t i2cByte=0;
+        while(Wire.available())
+        {
+            msg[i2cByte] = Wire.read();
+            i2cByte++;
+        }
+        return true;
+    }
+
+    return false;
+}
 
 
+void resetChip()
+{
+  uint8_t cmd[2] = {AMC6821_CONFIG2_REG, 0x80};
+  AMC6821write(cmd,2);
+
+  uint8_t cmd2[1];
+  uint8_t msg[1];
+  cmd[0]=AMC6821_CONFIG1_REG;
+  AMC6821write(cmd2,1);
+  if(AMC6821read(msg,1))
+  {}
+
+  delay(10);
+
+}
+
+void writeConfig(uint8_t configNum, uint8_t config)
+{
+  uint8_t cmd[2];
+  cmd[1] = config;
+
+  switch(configNum)
+  {
+    case 0x01:
+      cmd[0] =  AMC6821_CONFIG1_REG;
+      break;
+    case 0x02:
+      cmd[0] =  AMC6821_CONFIG2_REG;
+      break;
+    case 0x03:
+      cmd[0] =  AMC6821_CONFIG3_REG;
+      break;
+    case 0x04:
+      cmd[0] =  AMC6821_CONFIG4_REG;
+      break;
+    default:
+      Serial.println("Unidentified Config #!");
+      break;
+  }
+  
+  AMC6821write(cmd,2);
 }
 
 //page 8 of datasheet talks about addresses 
