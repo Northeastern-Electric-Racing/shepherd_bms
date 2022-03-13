@@ -76,13 +76,15 @@ void setup() {
   delay(1000);
 
   writeConfig(1, 0x94);
-  delay(100);
-  writeConfig(3, 0x02);
-  delay(100);
-  writeConfig(2, 0x03);
-  delay(100);
+  delay(500);
   writeConfig(4, 0x88);
-  delay(100);
+  delay(500);
+  
+  writeConfig(3, 0x02);
+  delay(500);
+  writeConfig(2, 0x03);
+  delay(500);
+  
   
 ////////////////////////////////////////////////////
   Wire.beginTransmission(AMC6821_I2C_ADDR);
