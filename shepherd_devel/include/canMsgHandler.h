@@ -1,3 +1,13 @@
+/**
+ * @file canMsgHandler.h
+ * @author Nick DePatie
+ * @brief 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   CAN Node must be initialized externally by setting the desired CAN ID's into the EEPROM before use
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * 
+ * @date 2022-03-07
+ */
 #ifndef CANMSGHANDLER_H
 #define CANMSGHANDLER_H
 
@@ -20,21 +30,55 @@ extern FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> myCan; // main CAN object
  * CAN Addresses
  */
 
+/**
+ * @brief Specifies the locations of the CAN addresses on the EEPROM
+ */
+enum
+{
+    BMSSHUTDOWN,            
+    BMSDTCSTATUS=2,
+    SET_INVERTER=4,
+    SET_CARDIRECTION=6,
+    SET_BRAKELIGHT=8,
+    ERR_BRAKESWITCH=10,
+    ERR_PEDALSENSOR=12,
+    CARACCELERATION=14,
+    BRAKEFLUIDPRESSURE=16,
+    COOLINGFLOWRATE=18,
+    GPSDATA=20,
+    DIFFTEMP=22
+};
+
+/**
+ * @brief 
+ * 
+ */
+typedef union
+{
+    uint8_t rawEEPROM[2];
+    uint16_t canID;
+}canID_t;
+
+
+/**
+ * @brief Contains all CAN addresses saved in the EEPROM
+ * @note MUST BE INITIALIZED BEFORE NORMAL OPERATION
+ */
 struct
 {
-    uint8_t BMSSHUTDOWN;
-    uint8_t BMSDTCSTATUS;
-    uint8_t SET_INVERTER;
-    uint8_t SET_CARDIRECTION;
-    uint8_t SET_BRAKELIGHT;
-    uint8_t ERR_BRAKESWITCH;
-    uint8_t ERR_PEDALSENSOR;
-    uint8_t CARACCELERATION;
-    uint8_t BRAKEFLUIDPRESSURE;
-    uint8_t COOLINGFLOWRATE;
-    uint8_t GPSDATA;
-    uint8_t DIFFTEMP;
-} canmsgAddr;
+    canID_t BMSSHUTDOWN;
+    canID_t BMSDTCSTATUS;
+    canID_t SET_INVERTER;
+    canID_t SET_CARDIRECTION;
+    canID_t SET_BRAKELIGHT;
+    canID_t ERR_BRAKESWITCH;
+    canID_t ERR_PEDALSENSOR;
+    canID_t CARACCELERATION;
+    canID_t BRAKEFLUIDPRESSURE;
+    canID_t COOLINGFLOWRATE;
+    canID_t GPSDATA;
+    canID_t DIFFTEMP;
+}canIDs;
 
 /**
  * @brief Configurable CAN messages
@@ -44,6 +88,9 @@ struct
 
 #define NUM_CONFIGURABLECANMSG      12
 
+/**
+ * @brief Old CAN ID's 
+ * 
 #define CANMSG_BMSSHUTDOWN          0x03
 #define CANMSG_BMSDTCSTATUS         0x06
 #define CANMSG_SET_INVERTER         0x101
@@ -56,6 +103,7 @@ struct
 #define CANMSG_COOLINGFLOWRATE      0x302
 #define CANMSG_GPSDATA              0x303
 #define CANMSG_DIFFTEMP             0x304
+*/
 
 //Predefined CAN Messages (cannot change)
 #define CANMSG_CONFIGUREADDR        0x99
@@ -72,20 +120,53 @@ struct
 #define CANMSG_BMSSTATUS2           0x6B1
 #define CANMSG_BMSCHARGEDISCHARGE   0x6B0
 #define CANMSG_MC_BMS_INTEGRATION   0x202
-#define CANMSG_CHARGER_TO_BMS       0x18EB2440
-#define CANMSG_BMS_TO_CHARGER       0x18E54024
+//#define CANMSG_CHARGER_TO_BMS       0x18EB2440        //not used in nodes
+//#define CANMSG_BMS_TO_CHARGER       0x18E54024
 
-/**************************************************/
+/*******************************************************************/
 /**
  * Prototype Function
  */
 
-int sendMessage(uint32_t id, uint8_t len, const uint8_t *buf); 
+/**
+ * @brief Sends CAN message
+ * 
+ * @param id 
+ * @param len 
+ * @param buf 
+ * @return int 
+ */
+int sendMessage(uint32_t id, uint8_t len, const uint8_t *buf);
+
+/**
+ * @brief Processes all CAN messages
+ * @note  ID filtering should happen beforehand, maybe add relevent ID's to each .cpp file?
+ * 
+ * @param msg 
+ */
 void incomingCANCallback(const CAN_message_t &msg);
+
+/**
+ * @brief Initializes a CAN object for whichever line we are choosing
+ * 
+ * @param canLine   which CAN transceiver to use we want to use = NOT currently being used, we will probably need this eventually if we need to broadcast at different rates
+ */
 void initializeCAN(uint8_t canLine);
+
+/**
+ * @brief Reads in all EEPROM values and initializes the canAddr's struct
+ * 
+ */
 void readEEPROMAddrs();
+
+/**
+ * @brief Configures the EEPROM address of the CAN message specified by the first index of the message to the address value specified by the second index of the message
+ * 
+ * @param msg
+ */
 void canHandler_CANMSG_CONFIGUREADDR(const CAN_message_t &msg);
 
+/***********************************************************************************/
 /**
  * @brief CAN Message Handle Commands
  * __attribute__((weak)) indicates that if the compiler doesn't find any other function with this same name, then it will default to these which just do nothing
@@ -120,8 +201,6 @@ void canHandler_CANMSG_MOTORTORQUETIMER     (const CAN_message_t &msg);
 void canHandler_CANMSG_BMSSTATUS2           (const CAN_message_t &msg);
 void canHandler_CANMSG_BMSCHARGEDISCHARGE   (const CAN_message_t &msg);
 void canHandler_CANMSG_MC_BMS_INTEGRATION   (const CAN_message_t &msg);
-void canHandler_CANMSG_CHARGER_TO_BMS       (const CAN_message_t &msg);
-void canHandler_CANMSG_BMS_TO_CHARGER       (const CAN_message_t &msg);
 
 //For SD logging in the TCU, isn't used anywhere else
 bool SDWrite();
