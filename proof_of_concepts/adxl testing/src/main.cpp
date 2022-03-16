@@ -17,8 +17,10 @@ void getXYZ(uint8_t *msg);
 void setup() {
   Serial.begin(9600);
   Wire.begin();
+  delay(3000);
   Serial.print("Initializing...");
   configureForMeasurement();
+  delay(500);
 }
 
 void loop() {
@@ -26,7 +28,7 @@ void loop() {
   {
     Serial.println("ahhh");
   }
-
+  
   uint8_t *msg = new uint8_t[6];
   int16_t XYZDATA;
 
@@ -128,6 +130,7 @@ void getXYZ(uint8_t *msg)
 {
     uint8_t cmd[1] = {ADXL312_XYZDATA_REG_OFFSET}; 
     ADXL312write(cmd, 1);
+    delay(5);
     if(ADXL312read(msg, 6))
     {
         return;
