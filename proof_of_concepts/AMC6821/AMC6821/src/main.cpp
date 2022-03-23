@@ -75,13 +75,9 @@ void setup() {
   //resetChip();
   delay(1000);
 
-  writeConfig(1, 0x94);
+  writeConfig(1, 0x00);
   delay(500);
-  writeConfig(4, 0x88);
-  delay(500);
-  
-  writeConfig(3, 0x02);
-  delay(500);
+
   writeConfig(2, 0x03);
   delay(500);
   
@@ -165,7 +161,7 @@ void loop() {
  
   Wire.beginTransmission(AMC6821_I2C_ADDR);
   Wire.write(AMC6821_DUTYCYCLE_REG);
-  Wire.write(0xFF);
+  Wire.write(0xA7);
   Wire.endTransmission(false);
 
   delay(10);
@@ -187,7 +183,33 @@ void loop() {
 
   Serial.print("PWM Level =\t");
   Serial.println(idmsg[0], HEX);
-  delay(1000);
+  delay(5000);
+
+   Wire.beginTransmission(AMC6821_I2C_ADDR);
+  Wire.write(AMC6821_DUTYCYCLE_REG);
+  Wire.write(0x00);
+  Wire.endTransmission(false);
+
+  delay(10);
+
+  Wire.beginTransmission(AMC6821_I2C_ADDR);
+  Wire.write(AMC6821_DUTYCYCLE_REG);
+  Wire.endTransmission(false);
+  Wire.requestFrom(AMC6821_I2C_ADDR, 1);
+
+  if (Wire.available())
+  {
+      uint8_t i2cByte=0;
+
+      while(Wire.available())
+      {
+         idmsg[i2cByte] = Wire.read();
+      }
+  }
+
+  Serial.print("PWM Level =\t");
+  Serial.println(idmsg[0], HEX);
+  delay(5000);
 }
 
 /**
