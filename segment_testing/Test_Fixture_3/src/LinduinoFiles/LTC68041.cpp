@@ -498,8 +498,6 @@ int8_t LTC6804_rdaux(uint8_t reg, //Determines which GPIO voltage register is re
                      uint16_t aux_codes[][6]//A two dimensional array of the gpio voltage codes.
                     )
 {
-
-
   const uint8_t NUM_RX_BYT = 8;
   const uint8_t BYT_IN_REG = 6;
   const uint8_t GPIO_IN_REG = 3;
