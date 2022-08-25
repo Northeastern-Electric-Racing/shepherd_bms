@@ -3,6 +3,8 @@
 const uint8_t numChips = 2;
 uint16_t rawCellVoltages[numChips][12];
 float cellVoltages[numChips][12];
+uint16_t rawTempVoltages[numChips][6];
+float temps[numChips][6];
 uint8_t chipConfigurations[numChips][6];
 uint16_t cellTestIter = 0;
 
@@ -65,9 +67,6 @@ void loop() {
 
   uint8_t commReadData[numChips][6];
 
-
-
-
   /***************************************************************************************
    * 
    * https://www.analog.com/media/en/technical-documentation/data-sheets/680412fc.pdf   --page 56 shows an example of I2C communication via LTC6804
@@ -77,16 +76,16 @@ void loop() {
   // Writing to the Multiplexer (Address 0x96, )
   for(int chip = 0; chip < numChips; chip++)
   {
-    i2cWriteData[chip][0] = 0x96;
-    i2cWriteData[chip][1] = 0x08;
-    i2cWriteData[chip][2] = 0xAA;   //was "data to be stored in EEPROM" but we're not using an EEPROM rn
+    i2cWriteData[chip][0] = 0x92;
+    i2cWriteData[chip][1] = 0x00;
+    i2cWriteData[chip][2] = 0x00;
   }
 
   ConfigureCOMMRegisters(numChips, i2cWriteData, commRegisterData);
 
   LTC6804_wrcomm(numChips, commRegisterData);
   LTC6804_rdcomm(numChips, commReadData);    //Reading what we just wrote to the COMM register
-
+  
   Serial.print("What we're writing to the LTC chip:\n");
   for (int c = 0; c < numChips; c++)
   {
@@ -102,8 +101,43 @@ void loop() {
   /*****************************************************************/
 
   LTC6804_wrcomm(numChips, commRegisterData); //Loading LTC register with data to send just in case, not sure if necessary in this case because we already loaded it
-  LTC6804_stcomm(numChips * 2);               //Start communication by sending that data
-  LTC6804_rdcomm(numChips, commReadData);     //Read data from I2C Multiplexer
+  LTC6804_stcomm(24);                             //Start communication by sending that data
+  LTC6804_rdcomm(numChips, commReadData);        //Read data from I2C Multiplexer
+
+
+
+  // Writing to the Multiplexer (Address 0x96, )
+  for(int chip = 0; chip < numChips; chip++)
+  {
+    i2cWriteData[chip][0] = 0x90;
+    i2cWriteData[chip][1] = 0x08;
+    i2cWriteData[chip][2] = 0x00;
+  }
+
+  ConfigureCOMMRegisters(numChips, i2cWriteData, commRegisterData);
+
+  LTC6804_wrcomm(numChips, commRegisterData);
+  LTC6804_rdcomm(numChips, commReadData);    //Reading what we just wrote to the COMM register
+  
+  Serial.print("What we're writing to the LTC chip:\n");
+  for (int c = 0; c < numChips; c++)
+  {
+    for (int byte = 0; byte < 6; byte++)
+    {
+      Serial.print(commReadData[c][byte], HEX);     //printing what we just wrote to COMM register
+      Serial.print("\t");
+    }
+    Serial.println();
+  }
+  Serial.println();
+
+  /*****************************************************************/
+
+  LTC6804_wrcomm(numChips, commRegisterData); //Loading LTC register with data to send just in case, not sure if necessary in this case because we already loaded it
+  LTC6804_stcomm(24);                             //Start communication by sending that data
+  LTC6804_rdcomm(numChips, commReadData);        //Read data from I2C Multiplexer
+
+
 
   Serial.print("Data from the Multiplexer?:\n");
   for (int c = 0; c < numChips; c++)
@@ -111,6 +145,25 @@ void loop() {
     for (int byte = 0; byte < 6; byte++)
     {
       Serial.print(commReadData[c][byte], HEX);
+      Serial.print("\t");
+    }
+    Serial.println();
+  }
+  Serial.println();
+
+  
+
+  // Reading IO
+  LTC6804_adax();
+  //get and print the GPIO voltages
+  LTC6804_rdaux(1, numChips, rawTempVoltages);
+  Serial.print("Temps:\n");
+  for (int c = 0; c < numChips; c++)
+  {
+    for (int temp = 0; temp < 6; temp++)
+    {
+      temps[c][temp] = float(rawTempVoltages[c][temp]) / 10000;
+      Serial.print(temps[c][temp]);
       Serial.print("\t");
     }
     Serial.println();
@@ -160,20 +213,11 @@ void ConfigureCOMMRegisters(uint8_t numChips, uint8_t dataToWrite[][3], uint8_t 
 {
   for (int chip = 0; chip < numChips; chip++)
   {
-    commOutput[chip][0] = 0x60 | (dataToWrite[chip][0] >> 4);
-    commOutput[chip][1] = (dataToWrite[chip][0] << 4) | 0x08;
-    commOutput[chip][2] = 0x00 | (dataToWrite[chip][1] >> 4);
-    commOutput[chip][3] = (dataToWrite[chip][1] << 4) | 0x09;
-    commOutput[chip][4] = 0x70 | (dataToWrite[chip][2] >> 4);
-    commOutput[chip][5] = (dataToWrite[chip][2] << 4) | 0x09;
-
-    /*
-    commOutput[chip][0] = 0x60 + (dataToWrite[chip][0] >> 4);
-    commOutput[chip][1] = (dataToWrite[chip][0] << 4) + 0x08;
-    commOutput[chip][2] = 0x60 + (dataToWrite[chip][1] >> 4);
-    commOutput[chip][3] = (dataToWrite[chip][1] << 4) + 0x08;
-    commOutput[chip][4] = 0x60 + (dataToWrite[chip][2] >> 4);
-    commOutput[chip][5] = (dataToWrite[chip][2] << 4) + 0x08;
-    */
+    commOutput[chip][0] = 0x60 | (dataToWrite[chip][0] >> 4); // START + high side of B0
+    commOutput[chip][1] = (dataToWrite[chip][0] << 4) | 0x00; // low side of B0 + NACK
+    commOutput[chip][2] = 0x00 | (dataToWrite[chip][1] >> 4); // BLANK + high side of B1
+    commOutput[chip][3] = (dataToWrite[chip][1] << 4) | 0x00; // low side of B1 + NACK
+    commOutput[chip][4] = 0x00 | (dataToWrite[chip][2] >> 4); // BLANK + high side of B2
+    commOutput[chip][5] = (dataToWrite[chip][2] << 4) | 0x09; // low side of B2 + STOP & NACK
   }
 }
