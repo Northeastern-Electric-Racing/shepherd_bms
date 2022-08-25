@@ -11,7 +11,7 @@
 #define I2C_NACKSTOP 0x90
 
 #include <Arduino.h>
-#include <.\LinduinoFiles\LTC68041.h> //will need to change on machine basis
+#include <LinduinoFiles/LTC68041.h> //will need to change on machine basis
 
 void setup();
 void loop();

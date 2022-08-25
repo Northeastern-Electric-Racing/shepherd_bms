@@ -1,6 +1,6 @@
 #include "main.h"
 
-const uint8_t numChips = 1;
+const uint8_t numChips = 2;
 uint16_t rawCellVoltages[numChips][12];
 float cellVoltages[numChips][12];
 uint8_t chipConfigurations[numChips][6];
@@ -25,6 +25,9 @@ void loop() {
   ConfigureDischarge(0, cellTestIter);
   ConfigureDischarge(1, cellTestIter);
   SetChipConfigurations(chipConfigurations);
+
+  Serial.print("Discharge: ");
+  Serial.println(cellTestIter, BIN);
 
   LTC6804_adcv(); //this needs to be done before pulling from registers
 
