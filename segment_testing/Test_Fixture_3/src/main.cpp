@@ -14,39 +14,54 @@ char serialBuf[20];
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
+  delay(3000); // Allow time to connect and see boot up info
   Serial.println("Hello World!");
-  LTC6804_initialize(); 
-  //set_adc(MD_NORMAL, DCP_ENABLED, CELL_CH_ALL, AUX_CH_ALL);
+  LTC6804_initialize();
+
+  // Turn OFF GPIO 1 & 2 pull downs
   GetChipConfigurations(chipConfigurations);
   for (int c = 0; c < numChips; c++)
   {
     chipConfigurations[c][0] |= 0x18;
   }
   SetChipConfigurations(chipConfigurations);
+
+  Serial.print("Chip CFG:\n");
+  for (int c = 0; c < numChips; c++)
+  {
+    for (int byte = 0; byte < 6; byte++)
+    {
+      Serial.print(chipConfigurations[c][byte], HEX);
+      Serial.print("\t");
+    }
+    Serial.println();
+  }
+  Serial.println();
 }
 
 void loop() {
-  if (Serial.available()) {
-    key_press = Serial.read();
+  // Keypress processing
+  if (Serial.available()) { // Check for key presses
+    key_press = Serial.read(); // Read key
     if ((key_press == ' ')) {
-      discharge = !discharge;
+      discharge = !discharge; // Toggle discharging
     }
   }
 
   if (discharge) {
+    // Just a counter for testing
     cellTestIter++;
     if (cellTestIter >= 16)
     {
       cellTestIter = 0;
     }
 
+    GetChipConfigurations(chipConfigurations);
     ConfigureDischarge(0, cellTestIter);
     ConfigureDischarge(1, cellTestIter);
     SetChipConfigurations(chipConfigurations);
-
-    Serial.print("Discharge: ");
-    Serial.println(cellTestIter, BIN);
   } else {
+    GetChipConfigurations(chipConfigurations);
     ConfigureDischarge(0, 0);
     ConfigureDischarge(1, 0);
     SetChipConfigurations(chipConfigurations);
@@ -76,47 +91,14 @@ void loop() {
   Serial.println();
 
   GetChipConfigurations(chipConfigurations);
-
-  Serial.print("Chip CFG:\n");
-  for (int c = 0; c < numChips; c++)
-  {
-    for (int byte = 0; byte < 6; byte++)
-    {
-      Serial.print(chipConfigurations[c][byte], HEX);
-      Serial.print("\t");
-    }
-    Serial.println();
-  }
-  Serial.println();
-
   for (int c = 0; c < numChips; c++)
   {
     chipConfigurations[c][0] |= 0x18;
   }
   SetChipConfigurations(chipConfigurations);
 
-  Serial.print("NEW Chip CFG:\n");
-  for (int c = 0; c < numChips; c++)
-  {
-    for (int byte = 0; byte < 6; byte++)
-    {
-      Serial.print(chipConfigurations[c][byte], HEX);
-      Serial.print("\t");
-    }
-    Serial.println();
-  }
-  Serial.println();
-
-  uint8_t commRegisterData[numChips][6];
+  uint8_t commRegData[numChips][6];
   uint8_t i2cWriteData[numChips][3];
-
-  uint8_t commReadData[numChips][6];
-
-  /***************************************************************************************
-   * 
-   * https://www.analog.com/media/en/technical-documentation/data-sheets/680412fc.pdf   --page 56 shows an example of I2C communication via LTC6804
-   * 
-  ****************************************************************************************/
 
   // Writing to the Multiplexer (Address 0x96, )
   for(int chip = 0; chip < numChips; chip++)
@@ -126,17 +108,17 @@ void loop() {
     i2cWriteData[chip][2] = 0x00;
   }
 
-  ConfigureCOMMRegisters(numChips, i2cWriteData, commRegisterData);
+  ConfigureCOMMRegisters(numChips, i2cWriteData, commRegData);
 
-  LTC6804_wrcomm(numChips, commRegisterData);
-  LTC6804_rdcomm(numChips, commReadData);    //Reading what we just wrote to the COMM register
+  LTC6804_wrcomm(numChips, commRegData);
+  LTC6804_rdcomm(numChips, commRegData); //Reading what we just wrote to the COMM register
   
   Serial.print("What we're writing to the LTC chip:\n");
   for (int c = 0; c < numChips; c++)
   {
     for (int byte = 0; byte < 6; byte++)
     {
-      Serial.print(commReadData[c][byte], HEX);     //printing what we just wrote to COMM register
+      Serial.print(commRegData[c][byte], HEX);     //printing what we just wrote to COMM register
       Serial.print("\t");
     }
     Serial.println();
@@ -145,9 +127,9 @@ void loop() {
 
   /*****************************************************************/
 
-  LTC6804_wrcomm(numChips, commRegisterData); //Loading LTC register with data to send just in case, not sure if necessary in this case because we already loaded it
+  LTC6804_wrcomm(numChips, commRegData); //Loading LTC register with data to send just in case, not sure if necessary in this case because we already loaded it
   LTC6804_stcomm(24);                             //Start communication by sending that data
-  LTC6804_rdcomm(numChips, commReadData);        //Read data from I2C Multiplexer
+  LTC6804_rdcomm(numChips, commRegData);        //Read data from I2C Multiplexer
 
 
 
@@ -159,17 +141,17 @@ void loop() {
     i2cWriteData[chip][2] = 0x00;
   }
 
-  ConfigureCOMMRegisters(numChips, i2cWriteData, commRegisterData);
+  ConfigureCOMMRegisters(numChips, i2cWriteData, commRegData);
 
-  LTC6804_wrcomm(numChips, commRegisterData);
-  LTC6804_rdcomm(numChips, commReadData);    //Reading what we just wrote to the COMM register
+  LTC6804_wrcomm(numChips, commRegData);
+  LTC6804_rdcomm(numChips, commRegData);    //Reading what we just wrote to the COMM register
   
   Serial.print("What we're writing to the LTC chip:\n");
   for (int c = 0; c < numChips; c++)
   {
     for (int byte = 0; byte < 6; byte++)
     {
-      Serial.print(commReadData[c][byte], HEX);     //printing what we just wrote to COMM register
+      Serial.print(commRegData[c][byte], HEX);     //printing what we just wrote to COMM register
       Serial.print("\t");
     }
     Serial.println();
@@ -178,9 +160,9 @@ void loop() {
 
   /*****************************************************************/
 
-  LTC6804_wrcomm(numChips, commRegisterData); //Loading LTC register with data to send just in case, not sure if necessary in this case because we already loaded it
+  LTC6804_wrcomm(numChips, commRegData); //Loading LTC register with data to send just in case, not sure if necessary in this case because we already loaded it
   LTC6804_stcomm(24);                             //Start communication by sending that data
-  LTC6804_rdcomm(numChips, commReadData);        //Read data from I2C Multiplexer
+  LTC6804_rdcomm(numChips, commRegData);        //Read data from I2C Multiplexer
 
 
 
@@ -189,7 +171,7 @@ void loop() {
   {
     for (int byte = 0; byte < 6; byte++)
     {
-      Serial.print(commReadData[c][byte], HEX);
+      Serial.print(commRegData[c][byte], HEX);
       Serial.print("\t");
     }
     Serial.println();
