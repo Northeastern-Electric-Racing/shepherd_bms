@@ -10,6 +10,8 @@ uint16_t cellTestIter = 0;
 char key_press = '0';
 bool discharge = true;
 char serialBuf[20];
+uint8_t commRegData[numChips][6];
+uint8_t i2cWriteData[numChips][3];
 
 void setup() {
   // put your setup code here, to run once:
@@ -90,15 +92,13 @@ void loop() {
   }
   Serial.println();
 
+  // Ensuring GPIO 1 & 2 pull downs are OFF
   GetChipConfigurations(chipConfigurations);
   for (int c = 0; c < numChips; c++)
   {
     chipConfigurations[c][0] |= 0x18;
   }
   SetChipConfigurations(chipConfigurations);
-
-  uint8_t commRegData[numChips][6];
-  uint8_t i2cWriteData[numChips][3];
 
   // Writing to the Multiplexer (Address 0x96, )
   for(int chip = 0; chip < numChips; chip++)
@@ -161,7 +161,7 @@ void loop() {
   /*****************************************************************/
 
   LTC6804_wrcomm(numChips, commRegData); //Loading LTC register with data to send just in case, not sure if necessary in this case because we already loaded it
-  LTC6804_stcomm(24);                             //Start communication by sending that data
+  LTC6804_stcomm(24);                           //Start communication by sending that data
   LTC6804_rdcomm(numChips, commRegData);        //Read data from I2C Multiplexer
 
 
@@ -248,5 +248,93 @@ void ConfigureCOMMRegisters(uint8_t numChips, uint8_t dataToWrite[][3], uint8_t 
     commOutput[chip][3] = (dataToWrite[chip][1] << 4) | 0x00; // low side of B1 + ACK
     commOutput[chip][4] = 0x00 | (dataToWrite[chip][2] >> 4); // BLANK + high side of B2
     commOutput[chip][5] = (dataToWrite[chip][2] << 4) | 0x09; // low side of B2 + STOP & NACK
+  }
+}
+
+void SelectTherm(uint8_t therm) {
+  // Exit if out of range values
+  if (therm < 0 || therm > 32) {
+    return;
+  }
+  if (therm <= 8) {
+    // Turn off competing multiplexor (therms 9-16)
+    for(int chip = 0; chip < numChips; chip++) {
+      i2cWriteData[chip][0] = 0x92;
+      i2cWriteData[chip][1] = 0x00;
+      i2cWriteData[chip][2] = 0x00;
+    }
+    ConfigureCOMMRegisters(numChips, i2cWriteData, commRegData);
+    LTC6804_wrcomm(numChips, commRegData);
+    LTC6804_stcomm(24);
+
+    // Turn on desired thermistor
+    for(int chip = 0; chip < numChips; chip++) {
+      i2cWriteData[chip][0] = 0x90;
+      i2cWriteData[chip][1] = 0x08 + (therm - 1);
+      i2cWriteData[chip][2] = 0x00;
+    }
+    ConfigureCOMMRegisters(numChips, i2cWriteData, commRegData);
+    LTC6804_wrcomm(numChips, commRegData);
+    LTC6804_stcomm(24);
+  } else if (therm <= 16) {
+    // Turn off competing multiplexor (therms 1-8)
+    for(int chip = 0; chip < numChips; chip++) {
+      i2cWriteData[chip][0] = 0x90;
+      i2cWriteData[chip][1] = 0x00;
+      i2cWriteData[chip][2] = 0x00;
+    }
+    ConfigureCOMMRegisters(numChips, i2cWriteData, commRegData);
+    LTC6804_wrcomm(numChips, commRegData);
+    LTC6804_stcomm(24);
+
+    // Turn on desired thermistor
+    for(int chip = 0; chip < numChips; chip++) {
+      i2cWriteData[chip][0] = 0x92;
+      i2cWriteData[chip][1] = 0x08 + (therm - 9);
+      i2cWriteData[chip][2] = 0x00;
+    }
+    ConfigureCOMMRegisters(numChips, i2cWriteData, commRegData);
+    LTC6804_wrcomm(numChips, commRegData);
+    LTC6804_stcomm(24);
+  } else if (therm <= 24) {
+    // Turn off competing multiplexor (therms 25-32)
+    for(int chip = 0; chip < numChips; chip++) {
+      i2cWriteData[chip][0] = 0x96;
+      i2cWriteData[chip][1] = 0x00;
+      i2cWriteData[chip][2] = 0x00;
+    }
+    ConfigureCOMMRegisters(numChips, i2cWriteData, commRegData);
+    LTC6804_wrcomm(numChips, commRegData);
+    LTC6804_stcomm(24);
+
+    // Turn on desired thermistor
+    for(int chip = 0; chip < numChips; chip++) {
+      i2cWriteData[chip][0] = 0x94;
+      i2cWriteData[chip][1] = 0x08 + (therm - 17);
+      i2cWriteData[chip][2] = 0x00;
+    }
+    ConfigureCOMMRegisters(numChips, i2cWriteData, commRegData);
+    LTC6804_wrcomm(numChips, commRegData);
+    LTC6804_stcomm(24);
+  } else {
+    // Turn off competing multiplexor (therms 17-24)
+    for(int chip = 0; chip < numChips; chip++) {
+      i2cWriteData[chip][0] = 0x94;
+      i2cWriteData[chip][1] = 0x00;
+      i2cWriteData[chip][2] = 0x00;
+    }
+    ConfigureCOMMRegisters(numChips, i2cWriteData, commRegData);
+    LTC6804_wrcomm(numChips, commRegData);
+    LTC6804_stcomm(24);
+
+    // Turn on desired thermistor
+    for(int chip = 0; chip < numChips; chip++) {
+      i2cWriteData[chip][0] = 0x96;
+      i2cWriteData[chip][1] = 0x08 + (therm - 25);
+      i2cWriteData[chip][2] = 0x00;
+    }
+    ConfigureCOMMRegisters(numChips, i2cWriteData, commRegData);
+    LTC6804_wrcomm(numChips, commRegData);
+    LTC6804_stcomm(24);
   }
 }
