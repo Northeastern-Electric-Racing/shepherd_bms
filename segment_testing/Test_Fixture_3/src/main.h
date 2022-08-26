@@ -19,5 +19,6 @@ void GetChipConfigurations(uint8_t localConfig[][6]);
 void SetChipConfigurations(uint8_t localConfig[][6]);
 void ConfigureDischarge(uint8_t chip, uint16_t cells);
 void ConfigureCOMMRegisters(uint8_t numChips, uint8_t dataToWrite[][3], uint8_t commOutput [][6]);
+void SelectTherm(uint8_t therm);
 
 #endif

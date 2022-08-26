@@ -100,85 +100,7 @@ void loop() {
   }
   SetChipConfigurations(chipConfigurations);
 
-  // Writing to the Multiplexer (Address 0x96, )
-  for(int chip = 0; chip < numChips; chip++)
-  {
-    i2cWriteData[chip][0] = 0x92;
-    i2cWriteData[chip][1] = 0x00;
-    i2cWriteData[chip][2] = 0x00;
-  }
-
-  ConfigureCOMMRegisters(numChips, i2cWriteData, commRegData);
-
-  LTC6804_wrcomm(numChips, commRegData);
-  LTC6804_rdcomm(numChips, commRegData); //Reading what we just wrote to the COMM register
-  
-  Serial.print("What we're writing to the LTC chip:\n");
-  for (int c = 0; c < numChips; c++)
-  {
-    for (int byte = 0; byte < 6; byte++)
-    {
-      Serial.print(commRegData[c][byte], HEX);     //printing what we just wrote to COMM register
-      Serial.print("\t");
-    }
-    Serial.println();
-  }
-  Serial.println();
-
-  /*****************************************************************/
-
-  LTC6804_wrcomm(numChips, commRegData); //Loading LTC register with data to send just in case, not sure if necessary in this case because we already loaded it
-  LTC6804_stcomm(24);                             //Start communication by sending that data
-  LTC6804_rdcomm(numChips, commRegData);        //Read data from I2C Multiplexer
-
-
-
-  // Writing to the Multiplexer (Address 0x96, )
-  for(int chip = 0; chip < numChips; chip++)
-  {
-    i2cWriteData[chip][0] = 0x90;
-    i2cWriteData[chip][1] = 0x08;
-    i2cWriteData[chip][2] = 0x00;
-  }
-
-  ConfigureCOMMRegisters(numChips, i2cWriteData, commRegData);
-
-  LTC6804_wrcomm(numChips, commRegData);
-  LTC6804_rdcomm(numChips, commRegData);    //Reading what we just wrote to the COMM register
-  
-  Serial.print("What we're writing to the LTC chip:\n");
-  for (int c = 0; c < numChips; c++)
-  {
-    for (int byte = 0; byte < 6; byte++)
-    {
-      Serial.print(commRegData[c][byte], HEX);     //printing what we just wrote to COMM register
-      Serial.print("\t");
-    }
-    Serial.println();
-  }
-  Serial.println();
-
-  /*****************************************************************/
-
-  LTC6804_wrcomm(numChips, commRegData); //Loading LTC register with data to send just in case, not sure if necessary in this case because we already loaded it
-  LTC6804_stcomm(24);                           //Start communication by sending that data
-  LTC6804_rdcomm(numChips, commRegData);        //Read data from I2C Multiplexer
-
-
-
-  Serial.print("Data from the Multiplexer?:\n");
-  for (int c = 0; c < numChips; c++)
-  {
-    for (int byte = 0; byte < 6; byte++)
-    {
-      Serial.print(commRegData[c][byte], HEX);
-      Serial.print("\t");
-    }
-    Serial.println();
-  }
-  Serial.println();
-
-  
+  SelectTherm(1);
 
   // Reading IO
   LTC6804_adax();
@@ -251,6 +173,11 @@ void ConfigureCOMMRegisters(uint8_t numChips, uint8_t dataToWrite[][3], uint8_t 
   }
 }
 
+/**
+ * @brief Configures multiplexors to expose the desired therrmistor for measurment
+ * 
+ * @param therm Number thermistor requested
+ */
 void SelectTherm(uint8_t therm) {
   // Exit if out of range values
   if (therm < 0 || therm > 32) {
