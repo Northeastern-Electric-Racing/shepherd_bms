@@ -94,7 +94,7 @@ void LTC6804_initialize()
 {
   quikeval_SPI_connect();
   spi_enable(SPI_CLOCK_DIV16); // This will set the Linduino to have a 1MHz Clock
-  set_adc(MD_NORMAL,DCP_DISABLED,CELL_CH_ALL,AUX_CH_GPIO1);
+  set_adc(MD_NORMAL,DCP_DISABLED,CELL_CH_ALL,AUX_CH_ALL);
 }
 
 /*!*******************************************************************************************************************

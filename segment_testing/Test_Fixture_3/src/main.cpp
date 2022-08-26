@@ -101,11 +101,12 @@ void loop() {
   SetChipConfigurations(chipConfigurations);
 
   SelectTherm(1);
+  SelectTherm(17);
 
   // Reading IO
   LTC6804_adax();
   //get and print the GPIO voltages
-  LTC6804_rdaux(1, numChips, rawTempVoltages);
+  LTC6804_rdaux(0, numChips, rawTempVoltages);
   Serial.print("Temps:\n");
   for (int c = 0; c < numChips; c++)
   {
