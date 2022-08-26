@@ -16,6 +16,12 @@ void setup() {
   Serial.println("Hello World!");
   LTC6804_initialize(); 
   //set_adc(MD_NORMAL, DCP_ENABLED, CELL_CH_ALL, AUX_CH_ALL);
+  GetChipConfigurations(chipConfigurations);
+  for (int c = 0; c < numChips; c++)
+  {
+    chipConfigurations[c][0] |= 0x18;
+  }
+  SetChipConfigurations(chipConfigurations);
 }
 
 void loop() {
@@ -70,7 +76,25 @@ void loop() {
   {
     for (int byte = 0; byte < 6; byte++)
     {
-      Serial.print(chipConfigurations[c][byte]);
+      Serial.print(chipConfigurations[c][byte], HEX);
+      Serial.print("\t");
+    }
+    Serial.println();
+  }
+  Serial.println();
+
+  for (int c = 0; c < numChips; c++)
+  {
+    chipConfigurations[c][0] |= 0x18;
+  }
+  SetChipConfigurations(chipConfigurations);
+
+  Serial.print("NEW Chip CFG:\n");
+  for (int c = 0; c < numChips; c++)
+  {
+    for (int byte = 0; byte < 6; byte++)
+    {
+      Serial.print(chipConfigurations[c][byte], HEX);
       Serial.print("\t");
     }
     Serial.println();
@@ -188,6 +212,8 @@ void loop() {
 
   delay(1000);
 }
+
+
 
 //last two bytes of recieved index are PEC and we want to dump them
 void GetChipConfigurations(uint8_t localConfig[][6]) 
