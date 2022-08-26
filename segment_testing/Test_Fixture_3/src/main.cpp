@@ -7,6 +7,8 @@ uint16_t rawTempVoltages[numChips][6];
 float temps[numChips][6];
 uint8_t chipConfigurations[numChips][6];
 uint16_t cellTestIter = 0;
+char key_press = '0';
+bool discharge = true;
 
 void setup() {
   // put your setup code here, to run once:
@@ -17,19 +19,32 @@ void setup() {
 }
 
 void loop() {
-
-  cellTestIter++;
-  if (cellTestIter >= 16)
-  {
-    cellTestIter = 0;
+  if (Serial.available()) {
+    key_press = Serial.read();
+    // keys '0' to '9' set the speed
+    if ((key_press == ' ')) {
+      discharge = !discharge;
+    }
   }
 
-  ConfigureDischarge(0, cellTestIter);
-  ConfigureDischarge(1, cellTestIter);
-  SetChipConfigurations(chipConfigurations);
+  if (discharge) {
+    cellTestIter++;
+    if (cellTestIter >= 16)
+    {
+      cellTestIter = 0;
+    }
 
-  Serial.print("Discharge: ");
-  Serial.println(cellTestIter, BIN);
+    ConfigureDischarge(0, cellTestIter);
+    ConfigureDischarge(1, cellTestIter);
+    SetChipConfigurations(chipConfigurations);
+
+    Serial.print("Discharge: ");
+    Serial.println(cellTestIter, BIN);
+  } else {
+    ConfigureDischarge(0, 0);
+    ConfigureDischarge(1, 0);
+    SetChipConfigurations(chipConfigurations);
+  }
 
   LTC6804_adcv(); //this needs to be done before pulling from registers
 
