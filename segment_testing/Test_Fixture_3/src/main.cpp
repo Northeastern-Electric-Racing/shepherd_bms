@@ -4,7 +4,7 @@ const uint8_t numChips = 2;
 uint16_t rawCellVoltages[numChips][12];
 float cellVoltages[numChips][12];
 uint16_t rawTempVoltages[numChips][6];
-float temps[numChips][6];
+int32_t temps[numChips][32];
 uint8_t chipConfigurations[numChips][6];
 uint16_t cellTestIter = 0;
 char key_press = '0';
@@ -99,27 +99,39 @@ void loop() {
     chipConfigurations[c][0] |= 0x18;
   }
   SetChipConfigurations(chipConfigurations);
-
+  /*
   SelectTherm(1);
   SelectTherm(17);
-
-  // Reading IO
-  LTC6804_adax();
-  //get and print the GPIO voltages
-  LTC6804_rdaux(0, numChips, rawTempVoltages);
-  Serial.print("Temps:\n");
+  LTC6804_adax(); // Run ADC for AUX (GPIOs and refs)
+  LTC6804_rdaux(0, numChips, rawTempVoltages); // Fetch ADC results from AUX registers
   for (int c = 0; c < numChips; c++)
   {
-    for (int temp = 0; temp < 6; temp++)
+    Serial.print(rawTempVoltages[c][0]);
+    Serial.print(" ");
+    Serial.print(rawTempVoltages[c][1]);
+    Serial.print(" ");
+    Serial.println(rawTempVoltages[c][2]);
+    temps[c][0] = THERM_REF * (float(rawTempVoltages[c][0]) / 10000) / ((float(rawTempVoltages[c][2]) / 10000) - (float(rawTempVoltages[c][0]) / 10000));
+    temps[c][16] = THERM_REF * (float(rawTempVoltages[c][1]) / 10000) / ((float(rawTempVoltages[c][2]) / 10000) - (float(rawTempVoltages[c][1]) / 10000));
+    Serial.print(temps[c][0]);
+    Serial.print(" ");
+    Serial.println(temps[c][16]);
+    Serial.println();
+  }*/
+
+  updateAllTherms(1, temps);
+  
+  Serial.print("ALL Temps:\n");
+  for (int c = 0; c < 1; c++)
+  {
+    for (int i = 0; i < 32; i++)
     {
-      temps[c][temp] = float(rawTempVoltages[c][temp]) / 10000;
-      Serial.print(temps[c][temp]);
+      Serial.print(temps[c][i]);
       Serial.print("\t");
     }
     Serial.println();
   }
   Serial.println();
-
 
   delay(1000);
 }
@@ -265,4 +277,21 @@ void SelectTherm(uint8_t therm) {
     LTC6804_wrcomm(numChips, commRegData);
     LTC6804_stcomm(24);
   }
+}
+
+void updateAllTherms(uint8_t numChips, int32_t out[][32]) {
+  for (int therm = 1; therm <= 16; therm++) {
+    SelectTherm(therm);
+    SelectTherm(therm + 16);
+    LTC6804_adax(); // Run ADC for AUX (GPIOs and refs)
+    LTC6804_rdaux(0, numChips, rawTempVoltages); // Fetch ADC results from AUX registers
+    for (int c = 0; c < numChips; c++) {
+      out[c][therm - 1] = THERM_REF * (float(rawTempVoltages[c][0]) / 10000) / ((float(rawTempVoltages[c][2]) / 10000) - (float(rawTempVoltages[c][0]) / 10000));
+      out[c][therm + 15] = THERM_REF * (float(rawTempVoltages[c][1]) / 10000) / ((float(rawTempVoltages[c][2]) / 10000) - (float(rawTempVoltages[c][1]) / 10000));
+    }
+  }
+}
+
+int8_t steinhartEq(int8_t R) {
+  return int8_t(1 / (0.001125308852122 + (0.000234711863267 * log(R)) + (0.000000085663516 * (pow(log(R), 3)))));
 }
