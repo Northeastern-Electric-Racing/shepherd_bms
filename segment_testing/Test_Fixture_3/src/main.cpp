@@ -243,9 +243,9 @@ void ConfigureCOMMRegisters(uint8_t numChips, uint8_t dataToWrite[][3], uint8_t 
   for (int chip = 0; chip < numChips; chip++)
   {
     commOutput[chip][0] = 0x60 | (dataToWrite[chip][0] >> 4); // START + high side of B0
-    commOutput[chip][1] = (dataToWrite[chip][0] << 4) | 0x00; // low side of B0 + NACK
+    commOutput[chip][1] = (dataToWrite[chip][0] << 4) | 0x00; // low side of B0 + ACK
     commOutput[chip][2] = 0x00 | (dataToWrite[chip][1] >> 4); // BLANK + high side of B1
-    commOutput[chip][3] = (dataToWrite[chip][1] << 4) | 0x00; // low side of B1 + NACK
+    commOutput[chip][3] = (dataToWrite[chip][1] << 4) | 0x00; // low side of B1 + ACK
     commOutput[chip][4] = 0x00 | (dataToWrite[chip][2] >> 4); // BLANK + high side of B2
     commOutput[chip][5] = (dataToWrite[chip][2] << 4) | 0x09; // low side of B2 + STOP & NACK
   }
