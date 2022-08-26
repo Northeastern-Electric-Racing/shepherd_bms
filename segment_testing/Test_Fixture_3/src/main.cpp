@@ -9,6 +9,7 @@ uint8_t chipConfigurations[numChips][6];
 uint16_t cellTestIter = 0;
 char key_press = '0';
 bool discharge = true;
+char serialBuf[20];
 
 void setup() {
   // put your setup code here, to run once:
@@ -27,7 +28,6 @@ void setup() {
 void loop() {
   if (Serial.available()) {
     key_press = Serial.read();
-    // keys '0' to '9' set the speed
     if ((key_press == ' ')) {
       discharge = !discharge;
     }
@@ -52,9 +52,10 @@ void loop() {
     SetChipConfigurations(chipConfigurations);
   }
 
+  // Run ADC on cell taps
   LTC6804_adcv(); //this needs to be done before pulling from registers
 
-  //get and print the cell voltages
+  // Pull and print the cell voltages from registers
   LTC6804_rdcv(0, numChips, rawCellVoltages);
   Serial.print("Voltage:\n");
   for (int c = 0; c < numChips; c++)
@@ -62,8 +63,13 @@ void loop() {
     for (int cell = 0; cell < 12; cell++)
     {
       cellVoltages[c][cell] = float(rawCellVoltages[c][cell]) / 10000;
-      Serial.print(cellVoltages[c][cell]);
-      Serial.print("\t");
+      dtostrf(cellVoltages[c][cell], 6, 4, serialBuf);
+      sprintf(serialBuf, "%sV\t", serialBuf);
+      Serial.print(serialBuf);
+      // This would work, but arduino stupidly does not support floats in formatting :/
+      // Keeping here for when we move to teensy (which I think can do this )
+      // sprintf(serialBuf, "%1.4fV\t", cellVoltages[c][cell]);
+      // Serial.print(serialBuf);
     }
     Serial.println();
   }
