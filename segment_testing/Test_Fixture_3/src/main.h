@@ -22,7 +22,8 @@ void SetChipConfigurations(uint8_t localConfig[][6]);
 void ConfigureDischarge(uint8_t chip, uint16_t cells);
 void ConfigureCOMMRegisters(uint8_t numChips, uint8_t dataToWrite[][3], uint8_t commOutput [][6]);
 void SelectTherm(uint8_t therm);
-void updateAllTherms(uint8_t numChips, int32_t out[][32]);
+void updateAllTherms(uint8_t numChips, uint32_t out[][32]);
 int8_t steinhartEq(int8_t R);
+uint8_t steinhartEst(uint32_t R);
 
 #endif
