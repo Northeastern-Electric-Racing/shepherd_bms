@@ -53,7 +53,7 @@ void loop() {
   if (discharge) {
     // Just a counter for testing
     cellTestIter++;
-    if (cellTestIter >= 16)
+    if (cellTestIter >= 512)
     {
       cellTestIter = 0;
     }
@@ -133,7 +133,7 @@ void loop() {
   }
   Serial.println();
 
-  delay(1000);
+  delay(250);
 }
 
 
