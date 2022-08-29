@@ -1,9 +1,15 @@
 #ifndef CONFIG_H    // To make sure you don't declare the function more than once by including the header multiple times.
 #define CONFIG_H
 
+// PACK SETUP
 #define CELLS_S 9
 #define CELLS_P 7
 #define THERMISTORS 11
+
+// DATA COLLECTION RATES
+#define VOLT_DELAY 500
+#define TEMP_DELAY 1500
+#define PRINT_DELAY 3000
 
 #include <Arduino.h>
 

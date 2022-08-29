@@ -1,4 +1,5 @@
 #include "main.h"
+#include "config.h"
 
 const uint8_t numChips = 2;
 uint16_t rawCellVoltages[numChips][12];
@@ -8,18 +9,20 @@ int temps[numChips][32];
 uint8_t chipConfigurations[numChips][6];
 uint16_t cellTestIter = 0;
 char keyPress = '0';
-bool discharge = false;
+bool discharge = true;
+bool balance = true;
 char serialBuf[20];
 uint8_t commRegData[numChips][6];
 uint8_t i2cWriteData[numChips][3];
-const uint32_t TEMP_CONV[] = {33200, 31500, 29900, 28400, 26900, 25600, 24300, 23100, 21900, 20900, 19900, 18900, 18000, 17100, 16300, 15500, 14800, 14100, 13500, 12900, 12300, 11700, 11200, 10700, 10200, 9780, 9350, 8940, 8560, 8190, 7840, 7510, 7190, 6890, 6610, 6340, 6080, 5830, 5590, 5370, 5150, 4950, 4750, 4570, 4390, 4220, 4060, 3900, 3750, 3610, 3470, 0};
-const uint32_t VOLT_TEMP_CONV[] = {45140, 44890, 44640, 44370, 44060, 43800, 43510, 43210, 42900, 42560, 42240, 41900, 41550, 41170, 40820, 40450, 40040, 39650, 39220, 38810, 38370, 37950, 37500, 37090, 36650, 36180, 35670, 35220, 34740, 34230, 33770, 33270, 32770, 32280, 31770, 31260, 30750, 30240, 29720, 29220, 28710, 28200, 27680, 27160, 26660, 26140, 25650, 25130, 24650, 24150, 23660, 23170, 22670, 22190, 21720, 21240, 0};
+
 uint64_t currTime = 0;
 uint64_t lastPrintTime = 0;
+uint64_t lastVoltTime = 0;
+uint64_t lastTempTime = 0;
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(96000);
+  Serial.begin(115200);
   delay(3000); // Allow time to connect and see boot up info
   Serial.println("Hello World!");
   LTC6804_initialize();
@@ -50,38 +53,39 @@ void loop() {
   // Keypress processing
   if (Serial.available()) { // Check for key presses
     keyPress = Serial.read(); // Read key
-    if ((keyPress == ' ')) {
+    if (keyPress == ' ') {
       discharge = !discharge; // Toggle discharging
+    } else if (keyPress == 'b') {
+      balance = !balance;
     }
   }
 
-  if (discharge) {
-    // Just a counter for testing
-    cellTestIter++;
-    if (cellTestIter >= 512)
-    {
-      cellTestIter = 0;
-    }
-
-    GetChipConfigurations(chipConfigurations);
-    ConfigureDischarge(0, cellTestIter);
-    ConfigureDischarge(1, cellTestIter);
-    SetChipConfigurations(chipConfigurations);
-  } else {
-    GetChipConfigurations(chipConfigurations);
-    ConfigureDischarge(0, 0);
-    ConfigureDischarge(1, 0);
-    SetChipConfigurations(chipConfigurations);
-  }
-
-  if (lastPrintTime + 2000 < currTime) {
-    lastPrintTime = currTime;
-
+  // MEASURE VOLTAGES
+  if (lastVoltTime + VOLT_DELAY < currTime) {
     // Run ADC on cell taps
     LTC6804_adcv(); //this needs to be done before pulling from registers
 
     // Pull and print the cell voltages from registers
     LTC6804_rdcv(0, numChips, rawCellVoltages);
+  }
+
+  // MEASURE TEMPS
+  if (lastTempTime + TEMP_DELAY < currTime) {
+    // Ensuring GPIO 1 & 2 pull downs are OFF
+    GetChipConfigurations(chipConfigurations);
+    for (int c = 0; c < numChips; c++)
+    {
+      chipConfigurations[c][0] |= 0x18;
+    }
+    SetChipConfigurations(chipConfigurations);
+
+    updateAllTherms(2, temps);
+  }
+
+  // PRINT VOLTAGES AND TEMPS
+  if (lastPrintTime + PRINT_DELAY < currTime) {
+    lastPrintTime = currTime;
+
     Serial.print("Voltage:\n");
     for (int c = 0; c < numChips; c++)
     {
@@ -99,35 +103,6 @@ void loop() {
       Serial.println();
     }
     Serial.println();
-
-    // Ensuring GPIO 1 & 2 pull downs are OFF
-    GetChipConfigurations(chipConfigurations);
-    for (int c = 0; c < numChips; c++)
-    {
-      chipConfigurations[c][0] |= 0x18;
-    }
-    SetChipConfigurations(chipConfigurations);
-    /*
-    SelectTherm(1);
-    SelectTherm(17);
-    LTC6804_adax(); // Run ADC for AUX (GPIOs and refs)
-    LTC6804_rdaux(0, numChips, rawTempVoltages); // Fetch ADC results from AUX registers
-    for (int c = 0; c < numChips; c++)
-    {
-      Serial.print(rawTempVoltages[c][0]);
-      Serial.print(" ");
-      Serial.print(rawTempVoltages[c][1]);
-      Serial.print(" ");
-      Serial.println(rawTempVoltages[c][2]);
-      temps[c][0] = THERM_REF * (float(rawTempVoltages[c][0]) / 10000) / ((float(rawTempVoltages[c][2]) / 10000) - (float(rawTempVoltages[c][0]) / 10000));
-      temps[c][16] = THERM_REF * (float(rawTempVoltages[c][1]) / 10000) / ((float(rawTempVoltages[c][2]) / 10000) - (float(rawTempVoltages[c][1]) / 10000));
-      Serial.print(temps[c][0]);
-      Serial.print(" ");
-      Serial.println(temps[c][16]);
-      Serial.println();
-    }*/
-
-    updateAllTherms(2, temps);
     
     Serial.print("ALL Temps:\n");
     for (int c = 0; c < 2; c++)
@@ -140,6 +115,26 @@ void loop() {
       Serial.println();
     }
     Serial.println();
+  }
+
+  // DISCHARGE
+  if (discharge) {
+    // Just a counter for testing
+    cellTestIter++;
+    if (cellTestIter >= 512)
+    {
+      cellTestIter = 0;
+    }
+
+    GetChipConfigurations(chipConfigurations);
+    ConfigureDischarge(0, cellTestIter);
+    ConfigureDischarge(1, cellTestIter);
+    SetChipConfigurations(chipConfigurations);
+  } else {
+    GetChipConfigurations(chipConfigurations);
+    ConfigureDischarge(0, 0);
+    ConfigureDischarge(1, 0);
+    SetChipConfigurations(chipConfigurations);
   }
 
   delay(150);
