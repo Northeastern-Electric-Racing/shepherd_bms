@@ -4,15 +4,16 @@ const uint8_t numChips = 2;
 uint16_t rawCellVoltages[numChips][12];
 float cellVoltages[numChips][12];
 uint16_t rawTempVoltages[numChips][6];
-uint32_t temps[numChips][32];
+int temps[numChips][32];
 uint8_t chipConfigurations[numChips][6];
 uint16_t cellTestIter = 0;
 char keyPress = '0';
-bool discharge = true;
+bool discharge = false;
 char serialBuf[20];
 uint8_t commRegData[numChips][6];
 uint8_t i2cWriteData[numChips][3];
 const uint32_t TEMP_CONV[] = {33200, 31500, 29900, 28400, 26900, 25600, 24300, 23100, 21900, 20900, 19900, 18900, 18000, 17100, 16300, 15500, 14800, 14100, 13500, 12900, 12300, 11700, 11200, 10700, 10200, 9780, 9350, 8940, 8560, 8190, 7840, 7510, 7190, 6890, 6610, 6340, 6080, 5830, 5590, 5370, 5150, 4950, 4750, 4570, 4390, 4220, 4060, 3900, 3750, 3610, 3470, 0};
+const uint32_t VOLT_TEMP_CONV[] = {45140, 44890, 44640, 44370, 44060, 43800, 43510, 43210, 42900, 42560, 42240, 41900, 41550, 41170, 40820, 40450, 40040, 39650, 39220, 38810, 38370, 37950, 37500, 37090, 36650, 36180, 35670, 35220, 34740, 34230, 33770, 33270, 32770, 32280, 31770, 31260, 30750, 30240, 29720, 29220, 28710, 28200, 27680, 27160, 26660, 26140, 25650, 25130, 24650, 24150, 23660, 23170, 22670, 22190, 21720, 21240, 0};
 uint64_t currTime = 0;
 uint64_t lastPrintTime = 0;
 
@@ -287,15 +288,18 @@ void SelectTherm(uint8_t therm) {
   }
 }
 
-void updateAllTherms(uint8_t numChips, uint32_t out[][32]) {
+void updateAllTherms(uint8_t numChips, int out[][32]) {
   for (int therm = 1; therm <= 16; therm++) {
     SelectTherm(therm);
+    delay(5);
     SelectTherm(therm + 16);
+    delay(10);
     LTC6804_adax(); // Run ADC for AUX (GPIOs and refs)
+    delay(10);
     LTC6804_rdaux(0, numChips, rawTempVoltages); // Fetch ADC results from AUX registers
     for (int c = 0; c < numChips; c++) {
-      out[c][therm - 1] = steinhartEst(THERM_REF * (float(rawTempVoltages[c][0]) / 10000) / ((float(rawTempVoltages[c][2]) / 10000) - (float(rawTempVoltages[c][0]) / 10000)));
-      out[c][therm + 15] = steinhartEst(THERM_REF * (float(rawTempVoltages[c][1]) / 10000) / ((float(rawTempVoltages[c][2]) / 10000) - (float(rawTempVoltages[c][1]) / 10000)));
+      out[c][therm - 1] = voltToTemp(uint32_t(rawTempVoltages[c][0] * (float(rawTempVoltages[c][2]) / 50000)));
+      out[c][therm + 15] = voltToTemp(uint32_t(rawTempVoltages[c][1] * (float(rawTempVoltages[c][2]) / 50000)));
     }
   }
 }
@@ -304,12 +308,17 @@ int8_t steinhartEq(int8_t R) {
   return int8_t(1 / (0.001125308852122 + (0.000234711863267 * log(R)) + (0.000000085663516 * (pow(log(R), 3)))));
 }
 
-/* Cause im lazy
-https://www.lasercalculator.com/ntc-thermistor-calculator/
+/* Cause im lazy: https://www.lasercalculator.com/ntc-thermistor-calculator/
 Currently only plots to 0-50. All values outside are binned to 0 or 50
 */
 uint8_t steinhartEst(uint32_t R) {
   int i = 0;
   while (R < TEMP_CONV[i]) i++;
   return i;
+}
+
+int voltToTemp(uint32_t V) {
+  int i = 0;
+  while (V < VOLT_TEMP_CONV[i]) i++;
+  return i - 5;
 }
