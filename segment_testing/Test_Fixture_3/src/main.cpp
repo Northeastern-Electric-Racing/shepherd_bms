@@ -15,7 +15,7 @@ uint8_t i2cWriteData[numChips][3];
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(9600);
+  Serial.begin(96000);
   delay(3000); // Allow time to connect and see boot up info
   Serial.println("Hello World!");
   LTC6804_initialize();
