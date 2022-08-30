@@ -5,11 +5,17 @@
 #define CELLS_S 9
 #define CELLS_P 7
 #define THERMISTORS 11
+#define CHIPS 2
 
 // DATA COLLECTION RATES
 #define VOLT_DELAY 500
 #define TEMP_DELAY 1500
 #define PRINT_DELAY 3000
+
+// CELL CONFIG
+#define MIN_VOLT 2.9
+#define MAX_VOLT 4.2
+#define MAX_DELTA_V 0.2
 
 #include <Arduino.h>
 
