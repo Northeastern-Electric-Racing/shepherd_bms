@@ -131,12 +131,12 @@ void loop() {
     Serial.print("Max Voltage: ");
     Serial.print(maxCellVal);
     Serial.print(", ");
-    Serial.println(maxCell);
+    Serial.println(maxCell + 1);
 
     Serial.print("Min Voltage: ");
     Serial.print(minCellVal);
     Serial.print(", ");
-    Serial.println(minCell);
+    Serial.println(minCell + 1);
 
     Serial.print("Cell Delta: ");
     Serial.println(deltaV);
