@@ -15,7 +15,7 @@
 // CELL CONFIG
 #define MIN_VOLT 2.9
 #define MAX_VOLT 4.2
-#define MAX_DELTA_V 0.2
+#define MAX_DELTA_V 0.02
 
 #include <Arduino.h>
 

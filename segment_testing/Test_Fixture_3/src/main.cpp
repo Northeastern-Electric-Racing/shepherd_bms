@@ -113,12 +113,14 @@ void loop() {
         }
         deltaV = maxCellVal - minCellVal;
         dtostrf(cellVoltages[c][cell], 6, 4, serialBuf);
+        sprintf(serialBuf, "%sV\t", serialBuf);
         if(balancing[c][cell]) {
-          sprintf(serialBuf, "%sV\t", serialBuf);
+          Serial.print("\033[31m");
+          Serial.print(serialBuf);
+          Serial.print("\033[37m");
         } else {
-          sprintf(serialBuf, "%sV\t", serialBuf);
+          Serial.print(serialBuf);
         }
-        Serial.print(serialBuf);
         // This would work, but arduino stupidly does not support floats in formatting :/
         // Keeping here for when we move to teensy (which I think can do this )
         // sprintf(serialBuf, "%1.4fV\t", cellVoltages[c][cell]);
