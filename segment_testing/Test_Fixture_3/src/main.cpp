@@ -114,7 +114,7 @@ void loop() {
         deltaV = maxCellVal - minCellVal;
         dtostrf(cellVoltages[c][cell], 6, 4, serialBuf);
         sprintf(serialBuf, "%sV\t", serialBuf);
-        if(balancing[c][cell]) {
+        if(balancing[c][cell] && discharge) {
           Serial.print("\033[31m");
           Serial.print(serialBuf);
           Serial.print("\033[37m");
