@@ -21,6 +21,7 @@ int minCell = 0;
 float maxCellVal = 0;
 int maxCell = 0;
 float deltaV = 0;
+float packV = 0;
 
 uint64_t currTime = 0;
 uint64_t lastPrintTime = 0;
@@ -98,11 +99,13 @@ void loop() {
     Serial.print("Voltage:\n");
     minCellVal = 100;
     maxCellVal = 0;
+    packV = 0;
     for (int c = 0; c < CHIPS; c++)
     {
       for (int cell = 0; cell < CELLS_S; cell++)
       {
         cellVoltages[c][cell] = float(rawCellVoltages[c][cell]) / 10000;
+        packV += cellVoltages[c][cell];
         if (cellVoltages[c][cell] < minCellVal) {
           minCellVal = cellVoltages[c][cell];
           minCell = c * CELLS_S + cell;
@@ -113,7 +116,7 @@ void loop() {
         }
         deltaV = maxCellVal - minCellVal;
         dtostrf(cellVoltages[c][cell], 6, 4, serialBuf);
-        sprintf(serialBuf, "%sV\t", serialBuf);
+        sprintf(serialBuf, "%s\t", serialBuf);
         if(balancing[c][cell] && discharge) {
           Serial.print("\033[31m");
           Serial.print(serialBuf);
@@ -126,9 +129,12 @@ void loop() {
         // sprintf(serialBuf, "%1.4fV\t", cellVoltages[c][cell]);
         // Serial.print(serialBuf);
       }
-      Serial.println();
+      // Serial.println();
     }
-    Serial.println();
+    Serial.println("\n");
+
+    Serial.print("Pack Voltage: ");
+    Serial.println(packV);
 
     Serial.print("Max Voltage: ");
     Serial.print(maxCellVal);
@@ -144,8 +150,17 @@ void loop() {
     Serial.println(deltaV);
     Serial.println();
     
-    Serial.print("ALL Temps:\n");
-    for (int c = 0; c < 2; c++)
+    Serial.print("Temperature:\n");
+    for (int c = 0; c < 1; c++)
+    {
+      for (int i = 16; i < 27; i++)
+      {
+        Serial.print(temps[c][i]);
+        Serial.print("\t");
+      }
+      // Serial.println();
+    }
+    for (int c = 1; c < 2; c++)
     {
       for (int i = 0; i < THERMISTORS; i++)
       {
@@ -167,7 +182,7 @@ void loop() {
       }
       for (int c = 0; c < CHIPS; c++) {
         for (int cell = 0; cell < CELLS_S; cell ++) {
-          balancing[c][cell] = (cellVoltages[c][cell] > minCellVal + MAX_DELTA_V);
+          balancing[c][cell] = (cellVoltages[c][cell] > minCellVal + MAX_DELTA_V) && cellVoltages[c][cell] > BAL_MIN_V;
           if (balancing[c][cell]) {
             dischargeCommand[c] |= 1 << cell;
           }
