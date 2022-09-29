@@ -1,6 +1,15 @@
 # shepherd_bms
 Repo for Shepherd BMS development
 
+## For cloning
+
+After you clone via ```git clone git@github.com:Northeastern-Electric-Racing/shepherd_bms.git```
+
+Make sure that you run ```git submodule update --init```
+
+And if you are trying to pull new changes from the submodules (i.e. NERduino library), run
+```git submodule update --remote```
+
 ## Overview of Repo
 ```
 .
