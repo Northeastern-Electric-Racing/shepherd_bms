@@ -39,6 +39,8 @@ class SegmentInterface
             23660, 23170, 22670, 22190, 21720, 21240, 0
         };
 
+        int segmentData[1] = {0}; //placeholder for internal segment data type
+
         uint8_t chipConfigurations[NUM_CHIPS][6];
 
         void pullChipConfigurations();
@@ -62,11 +64,47 @@ class SegmentInterface
 
         ~SegmentInterface();
 
+        /**
+         * @brief Pulls all cell data from the segments and returns all cell data
+         * 
+         * @todo make sure that retrieving cell data doesn't block code too much
+         * 
+         * @return int*
+         */
         int* retrieveSegmentData(); //@todo int* is a placeholder for an actual data type for segment data
 
-        void enableBalancing(uint8_t chipNum);
+        /**
+         * @brief Enables/disables balancing for all cells
+         * 
+         * @param balanceEnable 
+         */
+        void enableBalancing(bool balanceEnable);
 
-        bool isBalancing(uint8_t chipNum);
+        /**
+         * @brief Enables/disables balancing for a specific cell
+         * 
+         * @param chipNum 
+         * @param cellNum 
+         * @param balanceEnable 
+         */
+        void enableBalancing(uint8_t chipNum, uint8_t cellNum, bool balanceEnable);
+
+        /**
+         * @brief Returns if a specific cell is balancing
+         * 
+         * @param chipNum 
+         * @return true 
+         * @return false 
+         */
+        bool isBalancing(uint8_t chipNum, uint8_t cellNum);
+
+        /**
+         * @brief Returns if any cells are balancing
+         * 
+         * @return true 
+         * @return false 
+         */
+        bool isBalancing();
 };
 
 #endif
