@@ -1,0 +1,1 @@
+THESE WERE ALL COPIED FROM https://github.com/analogdevicesinc/Linduino
