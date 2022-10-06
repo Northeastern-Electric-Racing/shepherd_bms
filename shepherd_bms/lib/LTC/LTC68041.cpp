@@ -72,8 +72,6 @@ Copyright 2013 Linear Technology Corp. (LTC)
 #include "LTC68041.h"
 #include <SPI.h>
 
-
-
 /*!
   6804 conversion command variables.
 */

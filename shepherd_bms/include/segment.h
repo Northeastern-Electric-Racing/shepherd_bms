@@ -1,6 +1,7 @@
 #ifndef SEGMENT_H
 #define SEGMENT_H
 
+#include <LTC68041.h>
 #include <nerduino.h>
 #include "datastructs.h"
 
@@ -41,9 +42,13 @@ class SegmentInterface
 
         int segmentData[1] = {0}; //placeholder for internal segment data type
 
+        uint8_t localConfig[NUM_CHIPS][6] = {};
+
         uint8_t chipConfigurations[NUM_CHIPS][6];
 
         void pullChipConfigurations();
+
+        void writeChipConfigurations();
 
         void pullThermistors();
 
