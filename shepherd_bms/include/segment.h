@@ -48,7 +48,7 @@ class SegmentInterface
 
         uint8_t steinhartEst();
 
-        void configureCommRegisters_forI2C(uint8_t dataToWrite[][3], uint8_t commOutput[][6]);
+        void serializeI2CMsg(uint8_t dataToWrite[][3], uint8_t commOutput[][6]);
 
         void configureDischarge(uint8_t chip, uint16_t cells);
 
