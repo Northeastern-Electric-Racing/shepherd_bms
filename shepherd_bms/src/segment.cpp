@@ -45,7 +45,7 @@ void SegmentInterface::pullChipConfigurations()
     }
 }
 
-void SegmentInterface::writeChipConfigurations()
+void SegmentInterface::pushChipConfigurations()
 {
     LTC6804_wrcfg(NUM_CHIPS, localConfig);
 }
