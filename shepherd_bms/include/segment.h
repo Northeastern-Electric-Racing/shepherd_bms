@@ -8,7 +8,6 @@
 #define NUM_SEGMENTS    4
 #define NUM_CHIPS       NUM_SEGMENTS*2
 
-#define THERM_REF       4700            // Reference resistor for thermistor measurments / voltage divider
 #define MIN_VOLT        2.9
 #define MAX_VOLT        4.2
 #define MAX_DELTA_V     0.02
