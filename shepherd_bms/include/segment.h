@@ -31,6 +31,8 @@ class SegmentInterface
             23660, 23170, 22670, 22190, 21720, 21240, 0
         };
 
+        uint32_t thermisterTemp[NUM_CHIPS][32];
+
         int segmentData[1] = {0}; //placeholder for internal segment data type
 
         uint8_t localConfig[NUM_CHIPS][6] = {};
@@ -40,6 +42,10 @@ class SegmentInterface
         void pullChipConfigurations();
 
         void pushChipConfigurations();
+
+        void ConfigureCOMMRegisters(uint8_t numChips, uint8_t dataToWrite[][3], uint8_t commOutput [][6]);
+
+        void SelectTherm(uint8_t therm);
 
         void pullThermistors();
 
