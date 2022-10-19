@@ -1113,6 +1113,9 @@ int8_t LTC6804_rdcomm(uint8_t total_ic, //Number of ICs in the system
 	uint8_t c_ic=0;
 	
 	pec_error = read_68(total_ic, cmd, read_buffer);
+  // Doesn't this already fix the issue?
+  // Does each function require a different PEC check?
+  // How is PEC calculated exactly?
 	
 	for (uint8_t current_ic = 0; current_ic<total_ic; current_ic++)
 	{
