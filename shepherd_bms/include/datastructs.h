@@ -4,9 +4,8 @@
 #include <nerduino.h>
 
 
-//make data types unsigned int 16 bit
 
-/*individual segment data*/
+/*Individual chip data*/
 typedef struct ChipData_t
 {
     uint16_t VoltageReading[12];          //store voltage readings from each chip
@@ -14,9 +13,9 @@ typedef struct ChipData_t
     bool discharge[12];
 };
 
-typedef enum BmsFault_t
+typedef enum BMSFault_t
 {
-    //orion bms faults
+    //Orion BMS faults
     CELLS_NOT_BALANCING;
     CELL_VOLTAGE_TOO_HIGH;
     CELL_VOLTAGE_TOO_LOW;
@@ -45,23 +44,23 @@ typedef enum BmsFault_t
 /*One frame of data from the accumulator*/
 struct AccumulatorData_t
 {
+    /*Array of data from all chips in the system*/
     ChipData_t ChipData[8];
 
-    FaultStatus_t faulted = NOT_FAULTED;
+    FaultStatus_t faultStatus = NOT_FAULTED;
 
     uint16_t currentReading;
 
-    BmsFault_t;
+    BMSFault_t;
 
-    /*max and min thermistor readings*/
+    /*Max and min thermistor readings*/
     uint16_t maxTemp;
     uint16_t minTemp;
 
-    /*max, min, and avg voltage of the cells*/
+    /*Max, min, and avg voltage of the cells*/
     uint16_t maxVoltage;
     uint16_t minVoltage;
     uint16_t avgVoltage;
 };
-
 
 #endif
