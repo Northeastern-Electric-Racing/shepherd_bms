@@ -1,6 +1,15 @@
 #ifndef COMPUTE_H
 #define COMPUTE_H
 
-#include "datastructs.h"
+using namespace std;
 
+class compute_h
+{
+    ChargerComm();
+
+    FanSpeedSet();
+
+    CurrentSensorRead();
+
+};
 #endif
