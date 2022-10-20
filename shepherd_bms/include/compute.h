@@ -3,13 +3,21 @@
 
 using namespace std;
 
-class compute_h
+class ComputeInterface
 {
-    ChargerComm();
+    private:
+        int fanSpeed;
 
-    FanSpeedSet();
+    public: 
+        ComputeInterface();
 
-    CurrentSensorRead();
+        ~ComputeInterface();
+
+        void enableCharging();
+
+        void setFanSpeed(int newFanSpeed);
+
+        int getPackCurrent();
 
 };
 #endif
