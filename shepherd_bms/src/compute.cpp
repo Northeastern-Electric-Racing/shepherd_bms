@@ -4,9 +4,11 @@ ComputeInterface::ComputeInterface(){}
 
 ComputeInterface::~ComputeInterface(){}
 
-void ComputeInterface::enableCharging(){}
+FaultStatus_t ComputeInterface::enableCharging(bool isEnabled){}
 
-void ComputeInterface::setFanSpeed(int newFanSpeed){}
+bool ComputeInterface::isCharging(){}
 
-int ComputeInterface::getPackCurrent(){}
+void ComputeInterface::setFanSpeed(uint8_t newFanSpeed){}
+
+int16_t ComputeInterface::getPackCurrent(){}
 
