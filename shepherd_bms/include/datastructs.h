@@ -7,7 +7,7 @@
  * @brief Individual chip data
  * @note stores thermistor values, voltage readings, and the discharge status
  */
-typedef struct ChipData_t
+struct ChipData_t
 {
     //These are retrieved from the initial LTC comms
     uint16_t voltageReading[12];          //store voltage readings from each chip
@@ -60,7 +60,7 @@ struct CriticalCellValue_t
 
 /**
  * @brief Represents one "frame" of BMS data
- * @note the size of this structure is **9752 bits**, as of October 22, 2022
+ * @note the size of this structure is **9752 bits** (~1.3k bytes), as of October 22, 2022
  */
 #define ACCUMULATOR_FRAME_SIZE sizeof(AccumulatorData_t);
 

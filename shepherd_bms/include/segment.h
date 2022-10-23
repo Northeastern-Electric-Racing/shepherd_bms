@@ -31,7 +31,7 @@ class SegmentInterface
             23660, 23170, 22670, 22190, 21720, 21240, 0
         };
 
-        int segmentData[1] = {0}; //placeholder for internal segment data type
+        ChipData_t *segmentData = NULL;
 
         uint8_t localConfig[NUM_CHIPS][6] = {};
 
@@ -63,7 +63,7 @@ class SegmentInterface
          * 
          * @return int*
          */
-        int* retrieveSegmentData(); //@todo int* is a placeholder for an actual data type for segment data
+        void retrieveSegmentData(ChipData_t databuf[]);
 
         /**
          * @brief Enables/disables balancing for all cells
