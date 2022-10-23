@@ -4,7 +4,7 @@ SegmentInterface::SegmentInterface(){}
 
 SegmentInterface::~SegmentInterface(){}
 
-void SegmentInterface::retrieveSegmentData(ChipData_t databuf[])
+void SegmentInterface::retrieveSegmentData(ChipData_t databuf[NUM_CHIPS])
 {
     segmentData = databuf;
 

@@ -13,6 +13,7 @@ struct ChipData_t
     uint16_t voltageReading[12];          //store voltage readings from each chip
     uint16_t thermistorReading[32];       //store all therm readings from each chip
     bool discharge[12];
+    FaultStatus_t errorReading;
 
     //These are calculated during the analysis of data
     uint16_t cellResistance[12];
@@ -77,7 +78,6 @@ struct AccumulatorData_t
 
     /**
      * @brief Note that this is a 32 bit integer, so there are 32 max possible fault codes
-     * 
      */
     uint32_t faultCode;
 
