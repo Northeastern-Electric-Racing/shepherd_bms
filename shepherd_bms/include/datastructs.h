@@ -9,9 +9,14 @@
  */
 typedef struct ChipData_t
 {
-    uint16_t VoltageReading[12];          //store voltage readings from each chip
+    //These are retrieved from the initial LTC comms
+    uint16_t voltageReading[12];          //store voltage readings from each chip
     uint16_t thermistorReading[32];       //store all therm readings from each chip
     bool discharge[12];
+
+    //These are calculated during the analysis of data
+    uint16_t cellResistance[12];
+    uint16_t openCellVoltage[12];
 };
 
 /**
@@ -25,46 +30,40 @@ enum BMSFault_t
     CELLS_NOT_BALANCING                 = 0x1,
     CELL_VOLTAGE_TOO_HIGH               = 0x2,
     CELL_VOLTAGE_TOO_LOW                = 0x4,
-    CELL_ASIC_FAULT                     = 0x8,      //internal fault with the cell voltage measurement circuitry
-    PACK_TOO_HOT                        = 0x10,
-    CHARGE_INTERLOCK_FAULT              = 0x20,     //both Charge Power (pin 3) and Ready Power (pin 2) are energized at the same time
-    OPEN_WIRING_FAULT                   = 0x40,     //cell tap wire is either weakly connected or not connected 
-    PACK_VOLTAGE_MISMATCH               = 0x80,     //total pack voltage sensor did not match the sum of the individual cell voltage measurements
-    INTERNAL_SOFTWARE_FAULT             = 0x100,
-    INTERNAL_HEATSINK_THERMISTOR        = 0x200,    //internal hardware fault has occurredwith the internal thermistors that monitor the unit temperature
-    INTERNAL_HARDWARE_FAULT             = 0x400,    
-    CELL_BALANCING_STUCK_OFF            = 0x800,
-    CURRENT_SENSOR_FAULT                = 0x1000,
-    INTERNAL_CELL_COMM_FAULT            = 0x2000,
-    LOW_CELL_VOLTAGE                    = 0x4000,   //voltage of a cell falls below 90 mV
-    HIGH_VOLTAGE_ISOLATION_FAULT        = 0x8000,   //isolation breakdown between the high voltage battery and the BMS low voltage power ground
-    PACK_VOLTAGE_SENSOR_FAULT           = 0x10000,  //fault code is set if the total pack voltage sensor reads zero volts
-    WEAK_PACK_FAULT                     = 0x20000,
-    FAN_MONITOR_FAULT                   = 0x40000,
-    EXTERNAL_COMMUNICATION_FAULT        = 0x80000,
-    DISCHARGE_LIMIT_ENFORCEMENT_FAULT   = 0x100000,
-    CHARGER_SAFETY_RELAY                = 0x200000,
-    BATTERY_THERMISTOR                  = 0x400000,
+    PACK_TOO_HOT                        = 0x8,
+    OPEN_WIRING_FAULT                   = 0x10,    //cell tap wire is either weakly connected or not connected
+    INTERNAL_SOFTWARE_FAULT             = 0x20,    //general software fault
+    INTERNAL_THERMAL_ERROR              = 0x40,    //internal hardware fault reulting from too hot of a temperature reading from NERduino
+    INTERNAL_CELL_COMM_FAULT            = 0x80,    //this is due to an invalid CRC from retrieving values
+    CURRENT_SENSOR_FAULT                = 0x100,
+    CHARGE_READING_MISMATCH             = 0x200,   //we detect that there is a charge voltage, but we are not supposed to be charging
+    LOW_CELL_VOLTAGE                    = 0x400,   //voltage of a cell falls below 90 mV
+    WEAK_PACK_FAULT                     = 0x800,
+    EXTERNAL_COMMUNICATION_FAULT        = 0x1000,
+    DISCHARGE_LIMIT_ENFORCEMENT_FAULT   = 0x2000,
+    CHARGER_SAFETY_RELAY                = 0x4000,
+    BATTERY_THERMISTOR                  = 0x8000,
 
     MAX_FAULTS                          = 0x80000000 //Maximum allowable fault code
 };
-
 
 /**
  * @brief Stores critical values for the pack, and where that critical value can be found
  * 
  */
-struct CrticalCellValue_t
+struct CriticalCellValue_t
 {
-    uint16_t val;
+    int16_t val;
     uint8_t chipIndex;
     uint8_t cellNum;
 };
 
 /**
  * @brief Represents one "frame" of BMS data
- * 
+ * @note the size of this structure is **9752 bits**, as of October 22, 2022
  */
+#define ACCUMULATOR_FRAME_SIZE sizeof(AccumulatorData_t);
+
 struct AccumulatorData_t
 {
     /*Array of data from all chips in the system*/
@@ -72,7 +71,9 @@ struct AccumulatorData_t
 
     FaultStatus_t faultStatus = NOT_FAULTED;
 
-    uint16_t currentReading;
+    int16_t packCurrent;
+    uint16_t packVoltage;
+    uint16_t packRes;
 
     /**
      * @brief Note that this is a 32 bit integer, so there are 32 max possible fault codes
@@ -81,13 +82,16 @@ struct AccumulatorData_t
     uint32_t faultCode;
 
     /*Max and min thermistor readings*/
-    CrticalCellValue_t maxTemp;
-    CrticalCellValue_t minTemp;
+    CriticalCellValue_t maxTemp;
+    CriticalCellValue_t minTemp;
+
+    /*Max and min cell resistances*/
+    CriticalCellValue_t maxRes;
+    CriticalCellValue_t minRes;
 
     /*Max, min, and avg voltage of the cells*/
-    CrticalCellValue_t maxVoltage;
-    CrticalCellValue_t minVoltage;
-    uint16_t avgVoltage;
+    CriticalCellValue_t maxVoltage;
+    CriticalCellValue_t minVoltage;
 };
 
 #endif
