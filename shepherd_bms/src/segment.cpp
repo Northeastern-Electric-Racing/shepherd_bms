@@ -4,11 +4,14 @@ SegmentInterface::SegmentInterface(){}
 
 SegmentInterface::~SegmentInterface(){}
 
-int* SegmentInterface::retrieveSegmentData()
+void SegmentInterface::retrieveSegmentData(ChipData_t databuf[NUM_CHIPS])
 {
+    segmentData = databuf;
+
     pullVoltages();
     pullThermistors();
-    return segmentData;
+
+    segmentData = nullptr;
 }
 
 void SegmentInterface::enableBalancing(bool balanceEnable)
