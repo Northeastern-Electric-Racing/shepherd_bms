@@ -40,10 +40,11 @@ enum BMSFault_t
     CHARGE_READING_MISMATCH             = 0x200,   //we detect that there is a charge voltage, but we are not supposed to be charging
     LOW_CELL_VOLTAGE                    = 0x400,   //voltage of a cell falls below 90 mV
     WEAK_PACK_FAULT                     = 0x800,
-    EXTERNAL_COMMUNICATION_FAULT        = 0x1000,
+    EXTERNAL_CAN_FAULT                  = 0x1000,
     DISCHARGE_LIMIT_ENFORCEMENT_FAULT   = 0x2000,
     CHARGER_SAFETY_RELAY                = 0x4000,
     BATTERY_THERMISTOR                  = 0x8000,
+    CHARGER_CAN_FAULT                   = 0x10000,
 
     MAX_FAULTS                          = 0x80000000 //Maximum allowable fault code
 };
