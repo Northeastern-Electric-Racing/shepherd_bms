@@ -186,7 +186,7 @@ static const unsigned int crc15Table[256] = {0x0,0xc599, 0xceab, 0xb32, 0xd8cf, 
 
 #define CS_PIN 10
 
-#define LTC_MAX_RETRIES 5
+#define LTC_MAX_RETRIES 3
 
 
 void LTC6804_initialize();
