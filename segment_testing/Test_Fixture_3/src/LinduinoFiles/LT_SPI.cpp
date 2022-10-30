@@ -163,7 +163,7 @@ void spi_enable(uint8_t spi_clock_divider) // Configures SCK frequency. Use cons
   //pinMode(MOSI, OUTPUT);            //! 2) Setup MOSI as output
   //pinMode(QUIKEVAL_CS, OUTPUT);     //! 3) Setup CS as output
   SPI.begin();
-  SPI.setClockDivider(spi_clock_divider);
+  //SPI.setClockDivider(spi_clock_divider);
 }
 
 // Disable the SPI hardware port
@@ -175,12 +175,12 @@ void spi_disable()
 // Write a data byte using the SPI hardware
 void spi_write(int8_t  data)  // Byte to be written to SPI port
 {
-#if defined(ARDUINO_ARCH_AVR)
-  SPDR = data;                  //! 1) Start the SPI transfer
-  while (!(SPSR & _BV(SPIF)));  //! 2) Wait until transfer complete
-#else
+//#if defined(ARDUINO_ARCH_AVR)
+//  SPDR = data;                  //! 1) Start the SPI transfer
+//  while (!(SPSR & _BV(SPIF)));  //! 2) Wait until transfer complete
+//#else
   SPI.transfer(data);
-#endif
+//#endif
 
 }
 
@@ -188,13 +188,13 @@ void spi_write(int8_t  data)  // Byte to be written to SPI port
 // Returns the data byte read
 int8_t spi_read(int8_t  data) //!The data byte to be written
 {
-#if defined(ARDUINO_ARCH_AVR)
-  SPDR = data;                  //! 1) Start the SPI transfer
-  while (!(SPSR & _BV(SPIF)));  //! 2) Wait until transfer complete
-  return SPDR;                  //! 3) Return the data read
-#else
+//#if defined(ARDUINO_ARCH_AVR)
+//  SPDR = data;                  //! 1) Start the SPI transfer
+//  while (!(SPSR & _BV(SPIF)));  //! 2) Wait until transfer complete
+//  return SPDR;                  //! 3) Return the data read
+//#else
   return SPI.transfer(data);
-#endif
+//#endif
 
 
 }

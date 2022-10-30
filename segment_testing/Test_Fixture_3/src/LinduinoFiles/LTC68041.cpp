@@ -73,7 +73,7 @@ Copyright 2013 Linear Technology Corp. (LTC)
 #include "LTC68041.h"
 #include <SPI.h>
 
-
+const SPISettings ltcSPISettings = SPISettings(1000000, MSBFIRST, SPI_MODE1);
 
 /*!
   6804 conversion command variables.
@@ -93,7 +93,7 @@ uint8_t ADAX[2]; //!< GPIO conversion command.
 void LTC6804_initialize()
 {
   quikeval_SPI_connect();
-  spi_enable(SPI_CLOCK_DIV16); // This will set the Linduino to have a 1MHz Clock
+  //spi_enable(SPI_CLOCK_DIV16); // This will set the Linduino to have a 1MHz Clock
   set_adc(MD_NORMAL,DCP_DISABLED,CELL_CH_ALL,AUX_CH_ALL);
 }
 
@@ -1008,10 +1008,12 @@ void spi_write_array(uint8_t len, // Option: Number of bytes to be written on th
                      uint8_t data[] //Array of bytes to be written on the SPI port
                     )
 {
+  SPI.beginTransaction(ltcSPISettings);
   for (uint8_t i = 0; i < len; i++)
   {
     spi_write((int8_t)data[i]);
   }
+  SPI.endTransaction();
 }
 
 /*!
@@ -1030,6 +1032,7 @@ void spi_write_read(uint8_t tx_Data[],//array of data to be written on SPI port
                     uint8_t rx_len //Option: number of bytes to be read from the SPI port
                    )
 {
+  SPI.beginTransaction(ltcSPISettings);
   for (uint8_t i = 0; i < tx_len; i++)
   {
     spi_write(tx_Data[i]);
@@ -1040,7 +1043,7 @@ void spi_write_read(uint8_t tx_Data[],//array of data to be written on SPI port
   {
     rx_data[i] = (uint8_t)spi_read(0xFF);
   }
-
+  SPI.endTransaction();
 }
 
 void write_68(uint8_t total_ic, //Number of ICs to be written to 
