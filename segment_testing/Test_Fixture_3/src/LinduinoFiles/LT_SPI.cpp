@@ -159,9 +159,9 @@ void quikeval_SPI_init(void)  // Initializes SPI
 // calls this function.
 void spi_enable(uint8_t spi_clock_divider) // Configures SCK frequency. Use constant defined in header file.
 {
-  //pinMode(SCK, OUTPUT);             //! 1) Setup SCK as output
-  //pinMode(MOSI, OUTPUT);            //! 2) Setup MOSI as output
-  //pinMode(QUIKEVAL_CS, OUTPUT);     //! 3) Setup CS as output
+  pinMode(SCK, OUTPUT);             //! 1) Setup SCK as output
+  pinMode(MOSI, OUTPUT);            //! 2) Setup MOSI as output
+  pinMode(QUIKEVAL_CS, OUTPUT);     //! 3) Setup CS as output
   SPI.begin();
   //SPI.setClockDivider(spi_clock_divider);
 }
