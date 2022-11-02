@@ -17,15 +17,15 @@ typedef enum
 class BaseState
 {
     public:
-        BaseState();
+        BaseState(){}
 
-        virtual ~BaseState();
+        virtual ~BaseState(){}
 
         BMSState_t state;
 
-        virtual void handleState();
+        virtual void handleState(){}
 
-        virtual void trasition(BaseState nextState);
+        virtual BaseState transition(BaseState nextState){}
 };
 
 class BootState: public BaseState
@@ -37,7 +37,7 @@ class BootState: public BaseState
 
         void handleState();
 
-        void trasition(BaseState nextState);
+        BaseState transition(BaseState nextState);
 };
 
 
@@ -50,7 +50,7 @@ class IdleState: public BaseState
 
         void handleState();
 
-        void trasition(BaseState nextState);
+        BaseState trasition(BaseState nextState);
 };
 
 class ActiveState: public BaseState
@@ -62,7 +62,7 @@ class ActiveState: public BaseState
 
         void handleState();
 
-        void trasition(BaseState nextState);
+        BaseState transition(BaseState nextState);
 };
 
 class ChargingState: public BaseState
@@ -74,7 +74,7 @@ class ChargingState: public BaseState
 
         void handleState();
 
-        void trasition(BaseState nextState);
+        BaseState transition(BaseState nextState);
 };
 
 class FaultedState: public BaseState
@@ -86,7 +86,7 @@ class FaultedState: public BaseState
 
         void handleState();
 
-        void trasition(BaseState nextState);
+        BaseState transition(BaseState nextState);
 };
 
 #endif

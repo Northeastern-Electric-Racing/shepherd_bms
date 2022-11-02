@@ -5,6 +5,7 @@
 
 class StateMachine
 {
+    //Maybe each state should access the same state machine hmmm
     private:
         BaseState currentState;
 
