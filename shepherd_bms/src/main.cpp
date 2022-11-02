@@ -57,6 +57,17 @@ void setup()
 
 void loop()
 {
+	/**
+	 * @brief Sample flow of how contorl code should flow
+	 *
+	 * 1. Read Cell Data from Segment Interface
+	 * 2. Read other peripheral data from Compute Interface
+	 * 3. Send data to a large container of AccumulaterData structs
+	 * 4. Call the StateMachine.handleState()
+	 * 5. Replenish watchdog
+	 *
+	 */
+
     // Run ADC on cell taps
     LTC6804_adcv(); //this needs to be done before pulling from registers
 
