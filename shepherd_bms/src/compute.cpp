@@ -8,7 +8,11 @@ FaultStatus_t ComputeInterface::enableCharging(bool isEnabled){}
 
 bool ComputeInterface::isCharging(){}
 
-void ComputeInterface::setFanSpeed(uint8_t newFanSpeed){}
+void ComputeInterface::setFanSpeed(uint8_t newFanSpeed)
+{
+    fanSpeed = newFanSpeed;
+    NERduino.setAMCDutyCycle(newFanSpeed);
+}
 
 int16_t ComputeInterface::getPackCurrent(){}
 
