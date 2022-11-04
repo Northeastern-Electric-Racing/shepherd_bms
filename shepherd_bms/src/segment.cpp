@@ -20,7 +20,7 @@ FaultStatus_t SegmentInterface::pullThermistors()
 {
 	disableGPIOPulldowns();
 
-    uint16_t rawTempVoltages[NUM_CHIPS][6];
+    /* uint16_t rawTempVoltages[NUM_CHIPS][6];
 
     for (int therm = 1; therm <= 16; therm++)
 	{
@@ -37,7 +37,7 @@ FaultStatus_t SegmentInterface::pullThermistors()
             segmentData[c].thermistorReading[therm - 1] = steinhartEst(uint16_t(rawTempVoltages[c][0] * (float(rawTempVoltages[c][2]) / 50000)));
             segmentData[c].thermistorReading[therm + 15] = steinhartEst(uint16_t(rawTempVoltages[c][1] * (float(rawTempVoltages[c][2]) / 50000)));
         }
-    }
+    } */
 	return NOT_FAULTED;
 }
 
@@ -166,6 +166,7 @@ bool SegmentInterface::isBalancing()
 
 void SegmentInterface::disableGPIOPulldowns()
 {
+	delay(1000);
 	// Turn OFF GPIO 1 & 2 pull downs
 	pullChipConfigurations();
 	for (int c = 0; c < NUM_CHIPS; c++)
@@ -173,6 +174,19 @@ void SegmentInterface::disableGPIOPulldowns()
 		localConfig[c][0] |= 0x18;
 	}
 	pushChipConfigurations();
+
+	pullChipConfigurations();
+	Serial.print("Chip CFG:\n");
+	for (int c = 0; c < NUM_CHIPS; c++)
+	{
+		for (int byte = 0; byte < 6; byte++)
+		{
+		Serial.print(localConfig[c][byte], HEX);
+		Serial.print("\t");
+		}
+		Serial.println();
+	}
+	Serial.println("Done");
 }
 
 void SegmentInterface::pullChipConfigurations()

@@ -33,9 +33,7 @@ class SegmentInterface
 
         ChipData_t *segmentData = nullptr;
 
-        uint8_t localConfig[NUM_CHIPS][6] = {};
-
-        uint8_t chipConfigurations[NUM_CHIPS][6];
+        uint8_t localConfig[NUM_CHIPS][6];
 
         void pullChipConfigurations();
 
