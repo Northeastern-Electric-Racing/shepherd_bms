@@ -53,11 +53,12 @@ class SegmentInterface
 
         FaultStatus_t configureDischarge(uint8_t chip, uint16_t cells);
 
+        void disableGPIOPulldowns();
+
     public:
         SegmentInterface();
 
         ~SegmentInterface();
-
         /**
          * @brief Pulls all cell data from the segments and returns all cell data
          * 
@@ -100,5 +101,7 @@ class SegmentInterface
          */
         bool isBalancing();
 };
+
+extern SegmentInterface segmentInterface;
 
 #endif
