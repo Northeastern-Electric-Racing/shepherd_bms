@@ -5,14 +5,14 @@
 #include <nerduino.h>
 #include "datastructs.h"
 
-#define NUM_SEGMENTS    4
-#define NUM_CHIPS       NUM_SEGMENTS*2
+#define NUM_SEGMENTS        4
+#define NUM_CHIPS           NUM_SEGMENTS*2
+#define NUM_CELLS_PER_CHIP  9
 
-#define MIN_VOLT        2.9
-#define MAX_VOLT        4.2
-#define MAX_DELTA_V     0.02
-#define BAL_MIN_V       4.00
-
+#define MIN_VOLT            2.9
+#define MAX_VOLT            4.2
+#define MAX_DELTA_V         0.02
+#define BAL_MIN_V           4.00
 
 /**
  * @brief This class serves as the interface for all of the segment boards
@@ -31,9 +31,7 @@ class SegmentInterface
             23660, 23170, 22670, 22190, 21720, 21240, 0
         };
 
-        uint32_t thermisterTemp[NUM_CHIPS][32];
-
-        int segmentData[1] = {0}; //placeholder for internal segment data type
+        ChipData_t *segmentData = nullptr;
 
         uint8_t localConfig[NUM_CHIPS][6] = {};
 
@@ -43,19 +41,17 @@ class SegmentInterface
 
         void pushChipConfigurations();
 
-        void ConfigureCOMMRegisters(uint8_t numChips, uint8_t dataToWrite[][3], uint8_t commOutput [][6]);
-
         void SelectTherm(uint8_t therm);
 
-        void pullThermistors();
+        FaultStatus_t pullThermistors();
 
-        void pullVoltages();
+        FaultStatus_t pullVoltages();
 
-        uint8_t steinhartEst();
+        uint8_t steinhartEst(uint16_t V);
 
         void serializeI2CMsg(uint8_t dataToWrite[][3], uint8_t commOutput[][6]);
 
-        void configureDischarge(uint8_t chip, uint16_t cells);
+        FaultStatus_t configureDischarge(uint8_t chip, uint16_t cells);
 
     public:
         SegmentInterface();
@@ -69,12 +65,12 @@ class SegmentInterface
          * 
          * @return int*
          */
-        int* retrieveSegmentData(); //@todo int* is a placeholder for an actual data type for segment data
+        void retrieveSegmentData(ChipData_t databuf[NUM_CHIPS]);
 
         /**
          * @brief Enables/disables balancing for all cells
          * 
-         * @param balanceEnable 
+         * @param balanceEnable
          */
         void enableBalancing(bool balanceEnable);
 

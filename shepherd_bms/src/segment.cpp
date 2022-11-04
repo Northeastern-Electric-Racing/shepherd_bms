@@ -4,24 +4,14 @@ SegmentInterface::SegmentInterface(){}
 
 SegmentInterface::~SegmentInterface(){}
 
-int* SegmentInterface::retrieveSegmentData()
+void SegmentInterface::retrieveSegmentData(ChipData_t databuf[NUM_CHIPS])
 {
+    segmentData = databuf;
+
     pullVoltages();
     pullThermistors();
-    return segmentData;
-}
 
-void SegmentInterface::ConfigureCOMMRegisters(uint8_t numChips, uint8_t dataToWrite[][3], uint8_t commOutput [][6])
-{
-  for (int chip = 0; chip < numChips; chip++)
-  {
-    commOutput[chip][0] = 0x60 | (dataToWrite[chip][0] >> 4); // START + high side of B0
-    commOutput[chip][1] = (dataToWrite[chip][0] << 4) | 0x00; // low side of B0 + ACK
-    commOutput[chip][2] = 0x00 | (dataToWrite[chip][1] >> 4); // BLANK + high side of B1
-    commOutput[chip][3] = (dataToWrite[chip][1] << 4) | 0x00; // low side of B1 + ACK
-    commOutput[chip][4] = 0x00 | (dataToWrite[chip][2] >> 4); // BLANK + high side of B2
-    commOutput[chip][5] = (dataToWrite[chip][2] << 4) | 0x09; // low side of B2 + STOP & NACK
-  }
+    segmentData = nullptr;
 }
 
 void SegmentInterface::SelectTherm(uint8_t therm) 
@@ -39,7 +29,7 @@ void SegmentInterface::SelectTherm(uint8_t therm)
       i2cWriteData[chip][1] = 0x00;
       i2cWriteData[chip][2] = 0x00;
     }
-    ConfigureCOMMRegisters(NUM_CHIPS, i2cWriteData, commRegData);
+    serializeI2CMsg(i2cWriteData, commRegData);
     LTC6804_wrcomm(NUM_CHIPS, commRegData);
     LTC6804_stcomm(24);
 
@@ -49,7 +39,7 @@ void SegmentInterface::SelectTherm(uint8_t therm)
       i2cWriteData[chip][1] = 0x08 + (therm - 1);
       i2cWriteData[chip][2] = 0x00;
     }
-    ConfigureCOMMRegisters(NUM_CHIPS, i2cWriteData, commRegData);
+    serializeI2CMsg(i2cWriteData, commRegData);
     LTC6804_wrcomm(NUM_CHIPS, commRegData);
     LTC6804_stcomm(24);
   } else if (therm <= 16) {
@@ -59,7 +49,7 @@ void SegmentInterface::SelectTherm(uint8_t therm)
       i2cWriteData[chip][1] = 0x00;
       i2cWriteData[chip][2] = 0x00;
     }
-    ConfigureCOMMRegisters(NUM_CHIPS, i2cWriteData, commRegData);
+    serializeI2CMsg(i2cWriteData, commRegData);
     LTC6804_wrcomm(NUM_CHIPS, commRegData);
     LTC6804_stcomm(24);
 
@@ -69,7 +59,7 @@ void SegmentInterface::SelectTherm(uint8_t therm)
       i2cWriteData[chip][1] = 0x08 + (therm - 9);
       i2cWriteData[chip][2] = 0x00;
     }
-    ConfigureCOMMRegisters(NUM_CHIPS, i2cWriteData, commRegData);
+    serializeI2CMsg(i2cWriteData, commRegData);
     LTC6804_wrcomm(NUM_CHIPS, commRegData);
     LTC6804_stcomm(24);
   } else if (therm <= 24) {
@@ -79,7 +69,7 @@ void SegmentInterface::SelectTherm(uint8_t therm)
       i2cWriteData[chip][1] = 0x00;
       i2cWriteData[chip][2] = 0x00;
     }
-    ConfigureCOMMRegisters(NUM_CHIPS, i2cWriteData, commRegData);
+    serializeI2CMsg(i2cWriteData, commRegData);
     LTC6804_wrcomm(NUM_CHIPS, commRegData);
     LTC6804_stcomm(24);
 
@@ -89,7 +79,7 @@ void SegmentInterface::SelectTherm(uint8_t therm)
       i2cWriteData[chip][1] = 0x08 + (therm - 17);
       i2cWriteData[chip][2] = 0x00;
     }
-    ConfigureCOMMRegisters(NUM_CHIPS, i2cWriteData, commRegData);
+    serializeI2CMsg(i2cWriteData, commRegData);
     LTC6804_wrcomm(NUM_CHIPS, commRegData);
     LTC6804_stcomm(24);
   } else {
@@ -99,7 +89,7 @@ void SegmentInterface::SelectTherm(uint8_t therm)
       i2cWriteData[chip][1] = 0x00;
       i2cWriteData[chip][2] = 0x00;
     }
-    ConfigureCOMMRegisters(NUM_CHIPS, i2cWriteData, commRegData);
+    serializeI2CMsg(i2cWriteData, commRegData);
     LTC6804_wrcomm(NUM_CHIPS, commRegData);
     LTC6804_stcomm(24);
 
@@ -109,21 +99,28 @@ void SegmentInterface::SelectTherm(uint8_t therm)
       i2cWriteData[chip][1] = 0x08 + (therm - 25);
       i2cWriteData[chip][2] = 0x00;
     }
-    ConfigureCOMMRegisters(NUM_CHIPS, i2cWriteData, commRegData);
+    serializeI2CMsg(i2cWriteData, commRegData);
     LTC6804_wrcomm(NUM_CHIPS, commRegData);
     LTC6804_stcomm(24);
   }
 }
 
-const uint32_t VOLT_TEMP_CONV[] = {45140, 44890, 44640, 44370, 44060, 43800, 43510, 43210, 42900, 42560, 42240, 41900, 41550, 41170, 40820, 40450, 40040, 39650, 39220, 38810, 38370, 37950, 37500, 37090, 36650, 36180, 35670, 35220, 34740, 34230, 33770, 33270, 32770, 32280, 31770, 31260, 30750, 30240, 29720, 29220, 28710, 28200, 27680, 27160, 26660, 26140, 25650, 25130, 24650, 24150, 23660, 23170, 22670, 22190, 21720, 21240, 0};
-int voltToTemp(uint32_t V) {
+uint8_t SegmentInterface::steinhartEst(uint16_t V) {
   int i = 0;
   while (V < VOLT_TEMP_CONV[i]) i++;
   return i - 5;
 }
 
-void SegmentInterface::pullThermistors()
+FaultStatus_t SegmentInterface::pullThermistors()
 {
+	//Ensure that GPIO 1 & 2 pull downs are OFF
+	pullChipConfigurations();
+    for (int c = 0; c < NUM_CHIPS; c++)
+    {
+      localConfig[c][0] |= 0x18;
+    }
+    pushChipConfigurations();
+
     uint16_t rawTempVoltages[NUM_CHIPS][6];
     for (int therm = 1; therm <= 16; therm++) {
         SelectTherm(therm);
@@ -133,9 +130,10 @@ void SegmentInterface::pullThermistors()
         LTC6804_adax(); // Run ADC for AUX (GPIOs and refs)
         delay(10);
         LTC6804_rdaux(0, NUM_CHIPS, rawTempVoltages); // Fetch ADC results from AUX registers
+
         for (int c = 0; c < NUM_CHIPS; c++) {
-            thermisterTemp[c][therm - 1] = voltToTemp(uint32_t(rawTempVoltages[c][0] * (float(rawTempVoltages[c][2]) / 50000)));
-            thermisterTemp[c][therm + 15] = voltToTemp(uint32_t(rawTempVoltages[c][1] * (float(rawTempVoltages[c][2]) / 50000)));
+            segmentData[c].thermistorReading[therm - 1] = steinhartEst(uint32_t(rawTempVoltages[c][0] * (float(rawTempVoltages[c][2]) / 50000)));
+            segmentData[c].thermistorReading[therm + 15] = steinhartEst(uint32_t(rawTempVoltages[c][1] * (float(rawTempVoltages[c][2]) / 50000)));
         }
     }
 }
