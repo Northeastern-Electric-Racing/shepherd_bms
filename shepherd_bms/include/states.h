@@ -10,83 +10,127 @@ typedef enum
     FAULTED     //State when BMS has detected a catastrophic fault and we need to hault operations
 }BMSState_t;
 
+class StateMachine;
+
 /**
- * @brief Base state used as parent class for all states defined above
+ * @brief Base state used as parent class for all states defined below
  *
  */
 class BaseState
 {
+    private:
+        StateMachine *bmsDirector;
+
     public:
+        BMSState_t state;
+
         BaseState(){}
 
         virtual ~BaseState(){}
 
-        BMSState_t state;
-
         virtual void handleState(){}
 
-        virtual BaseState transition(BaseState nextState){}
+        virtual void initialize(){}
+
+        friend bool operator==(const BaseState &lhs, const BaseState &rhs);
+};
+
+class StateMachine
+{
+    private:
+        BaseState currentState;
+
+        void switchState(BaseState &nextState);
+
+    public:
+        StateMachine();
+
+        virtual ~StateMachine();
+
+        void handleState();
+
+        void requestTransition(BaseState &nextState);
 };
 
 class BootState: public BaseState
 {
     public:
-        BootState();
+        const BMSState_t state = BOOT;
 
-        ~BootState();
+        BootState(){}
+
+        BootState(StateMachine &stateMachine);
+
+        ~BootState(){}
 
         void handleState();
 
-        BaseState transition(BaseState nextState);
+        void initialize();
 };
 
 
 class IdleState: public BaseState
 {
     public:
-        IdleState();
+        const BMSState_t state = IDLE;
 
-        ~IdleState();
+        IdleState(){}
+
+        IdleState(StateMachine &stateMachine);
+
+        ~IdleState(){}
 
         void handleState();
 
-        BaseState trasition(BaseState nextState);
+        void initialize();
 };
 
 class ActiveState: public BaseState
 {
     public:
-        ActiveState();
+        const BMSState_t state = ACTIVE;
 
-        ~ActiveState();
+        ActiveState(){}
+
+        ActiveState(StateMachine &stateMachine);
+
+        ~ActiveState(){}
 
         void handleState();
 
-        BaseState transition(BaseState nextState);
+        void initialize();
 };
 
 class ChargingState: public BaseState
 {
     public:
-        ChargingState();
+        const BMSState_t state = CHARGING;
 
-        ~ChargingState();
+        ChargingState(){}
+
+        ChargingState(StateMachine &stateMachine);
+
+        ~ChargingState(){}
 
         void handleState();
 
-        BaseState transition(BaseState nextState);
+        void initialize();
 };
 
 class FaultedState: public BaseState
 {
     public:
-        FaultedState();
+        const BMSState_t state = FAULTED;
 
-        ~FaultedState();
+        FaultedState(){}
+
+        FaultedState(StateMachine &stateMachine);
+
+        ~FaultedState(){}
 
         void handleState();
 
-        BaseState transition(BaseState nextState);
+        void initialize();
 };
 
 #endif
