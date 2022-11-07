@@ -306,20 +306,13 @@ uint8_t LTC6804_rdcv(uint8_t reg, // Controls which cell voltage register is rea
           //must increment by two for each parsed cell code
         }
         //a.iii
+        received_pec = (cell_data[data_counter] << 8) + cell_data[data_counter+1]; //The received PEC for the current_ic is transmitted as the 7th and 8th
         //after the 6 cell voltage data bytes
         data_pec = pec15_calc(BYT_IN_REG, &cell_data[current_ic * NUM_RX_BYT]);
-        uint8_t RETRY_COUNT = 0;
-        while (RETRY_COUNT < LTC_MAX_RETRIES) {
-          received_pec = (cell_data[data_counter] << 8) + cell_data[data_counter+1]; //The received PEC for the current_ic is transmitted as the 7th and 8th
-          if (received_pec != data_pec)
-          {
-            pec_error = -1;
-            RETRY_COUNT += 0;
-          } else 
-          {
-            pec_error = 0;
-            break;
-          }
+        if (received_pec != data_pec)
+        {
+          pec_error = -1;                             //The pec_error variable is simply set negative if any PEC errors
+          //are detected in the serial data
         }
         data_counter=data_counter+2;                        //Because the transmitted PEC code is 2 bytes long the data_counter
         //must be incremented by 2 bytes to point to the next ICs cell voltage data
@@ -347,20 +340,13 @@ uint8_t LTC6804_rdcv(uint8_t reg, // Controls which cell voltage register is rea
         //must increment by two for each parsed cell code
       }
       //b.iii
+      received_pec = (cell_data[data_counter] << 8 )+ cell_data[data_counter + 1]; //The received PEC for the current_ic is transmitted as the 7th and 8th
       //after the 6 cell voltage data bytes
       data_pec = pec15_calc(BYT_IN_REG, &cell_data[current_ic * NUM_RX_BYT]);
-      uint8_t RETRY_COUNT = 0;
-      while (RETRY_COUNT < LTC_MAX_RETRIES) {
-        received_pec = (cell_data[data_counter] << 8 )+ cell_data[data_counter + 1]; //The received PEC for the current_ic is transmitted as the 7th and 8th
-        if (received_pec != data_pec)
-        {
-          pec_error = -1;
-          RETRY_COUNT += 0;
-        } else 
-        {
-          pec_error = 0;
-          break;
-        }
+      if (received_pec != data_pec)
+      {
+        pec_error = -1;                             //The pec_error variable is simply set negative if any PEC errors
+        //are detected in the serial data
       }
       data_counter= data_counter + 2;                       //Because the transmitted PEC code is 2 bytes long the data_counter
       //must be incremented by 2 bytes to point to the next ICs cell voltage data
@@ -547,20 +533,13 @@ int8_t LTC6804_rdaux(uint8_t reg, //Determines which GPIO voltage register is re
 
         }
         //a.iii
+        received_pec = (data[data_counter]<<8)+ data[data_counter+1];          //The received PEC for the current_ic is transmitted as the 7th and 8th
         //after the 6 gpio voltage data bytes
         data_pec = pec15_calc(BYT_IN_REG, &data[current_ic*NUM_RX_BYT]);
-        uint8_t RETRY_COUNT = 0;
-        while (RETRY_COUNT < LTC_MAX_RETRIES) {
-          received_pec = (data[data_counter]<<8)+ data[data_counter+1];          //The received PEC for the current_ic is transmitted as the 7th and 8th
-          if (received_pec != data_pec)
-          {
-            pec_error = -1;
-            RETRY_COUNT += 0;
-          } else 
-          {
-            pec_error = 0;
-            break;
-          }
+        if (received_pec != data_pec)
+        {
+          pec_error = -1;                             //The pec_error variable is simply set negative if any PEC errors
+          //are detected in the received serial data
         }
 
         data_counter=data_counter+2;                        //Because the transmitted PEC code is 2 bytes long the data_counter
@@ -591,20 +570,13 @@ int8_t LTC6804_rdaux(uint8_t reg, //Determines which GPIO voltage register is re
         //must increment by two for each parsed gpio voltage code
       }
       //b.iii
+      received_pec = (data[data_counter]<<8) + data[data_counter+1];         //The received PEC for the current_ic is transmitted as the 7th and 8th
       //after the 6 gpio voltage data bytes
       data_pec = pec15_calc(BYT_IN_REG, &data[current_ic*NUM_RX_BYT]);
-      uint8_t RETRY_COUNT = 0;
-      while (RETRY_COUNT < LTC_MAX_RETRIES) {
-        received_pec = (data[data_counter]<<8) + data[data_counter+1];         //The received PEC for the current_ic is transmitted as the 7th and 8th
-        if (received_pec != data_pec)
-		    {
-		      pec_error = -1;
-          RETRY_COUNT += 0;
-		    } else 
-        {
-          pec_error = 0;
-          break;
-        }
+      if (received_pec != data_pec)
+      {
+        pec_error = -1;                               //The pec_error variable is simply set negative if any PEC errors
+        //are detected in the received serial data
       }
 
       data_counter=data_counter+2;                        //Because the transmitted PEC code is 2 bytes long the data_counter
@@ -949,20 +921,11 @@ int8_t LTC6804_rdcfg(uint8_t total_ic, //Number of ICs in the system
       r_config[current_ic][current_byte] = rx_data[current_byte + (current_ic*BYTES_IN_REG)];
     }
     //4.b
+    received_pec = (r_config[current_ic][6]<<8) + r_config[current_ic][7];
     data_pec = pec15_calc(6, &r_config[current_ic][0]);
-    
-    uint8_t RETRY_COUNT = 0;
-    while (RETRY_COUNT < LTC_MAX_RETRIES) {
-      received_pec = (r_config[current_ic][6]<<8) + r_config[current_ic][7];
-      if (received_pec != data_pec)
-		  {
-		    pec_error = -1;
-        RETRY_COUNT += 0;
-		  } else 
-      {
-        pec_error = 0;
-        break;
-      }
+    if (received_pec != data_pec)
+    {
+      pec_error = -1;
     }
   }
 
@@ -1109,22 +1072,7 @@ int8_t LTC6804_rdcomm(uint8_t total_ic, //Number of ICs in the system
 		{
 			readData[current_ic][byte] = read_buffer[byte+(8*current_ic)];
 		}	
-    
-		data_pec = pec15_calc(6, &rx_data[current_ic*8]);
-		uint8_t RETRY_COUNT = 0;
-    while (RETRY_COUNT < LTC_MAX_RETRIES) {
-      received_pec = (rx_data[(current_ic*8)+6]<<8) + rx_data[(current_ic*8)+7];
-      if (received_pec != data_pec)
-		  {
-		    pec_error = -1;
-        RETRY_COUNT += 0;
-		  } else 
-      {
-        pec_error = 0;
-        break;
-      }
-    }
-    return(pec_error);
+    return(0); //todo : PEC Error
   }
 }
 /* Generic function to write 68xx commands and read data. Function calculated PEC for tx_cmd data */
@@ -1158,22 +1106,16 @@ int8_t read_68( uint8_t total_ic, // Number of ICs in the system
 			rx_data[(current_ic*8)+current_byte] = data[current_byte + (current_ic*BYTES_IN_REG)];
 		}
 		
+		received_pec = (rx_data[(current_ic*8)+6]<<8) + rx_data[(current_ic*8)+7];
 		data_pec = pec15_calc(6, &rx_data[current_ic*8]);
 		
-		uint8_t RETRY_COUNT = 0;
-    while (RETRY_COUNT < LTC_MAX_RETRIES) {
-      received_pec = (rx_data[(current_ic*8)+6]<<8) + rx_data[(current_ic*8)+7];
-      if (received_pec != data_pec)
-		  {
-		    pec_error = -1;
-        RETRY_COUNT += 0;
-		  } else 
-      {
-        pec_error = 0;
-        break;
-      }
-    }
-    return(pec_error);
+		if (received_pec != data_pec)
+		{
+		  pec_error = -1;
+		}
+	}
+	
+	return(pec_error);
 }
 
 
