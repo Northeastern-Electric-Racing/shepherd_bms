@@ -11,7 +11,7 @@ uint8_t chipConfigurations[NUM_CHIPS][6];
 void GetChipConfigurations(uint8_t localConfig[][6])
 {
   uint8_t remoteConfig[NUM_CHIPS][8];
-  LTC6804_rdcfg(NUM_CHIPS, remoteConfig);
+  if(LTC6804_rdcfg(NUM_CHIPS, remoteConfig) == -1) return;
   for (int chip = 0; chip < NUM_CHIPS; chip++)
   {
     for(int index = 0; index < 6; index++)
@@ -64,6 +64,9 @@ void setup()
 }
 
 int lastVoltTime = 0;
+int lastTempTime = 0;
+
+ChipData_t testData[NUM_CHIPS];
 
 void loop()
 {
@@ -90,4 +93,18 @@ void loop()
       Serial.println(); //newline
       }
     }
+
+	segmentInterface.retrieveSegmentData(testData);
+	for (int chip = 0; chip < NUM_CHIPS; chip++)
+	{
+		if(testData[chip].thermsUpdated)
+		{
+			for (int cell=0; cell < NUM_CELLS_PER_CHIP; cell++)
+			{
+				Serial.print(testData[chip].thermistorReading[cell]);
+				Serial.print("\t");
+			}
+		Serial.println(); //newline
+		}
+	}
 }

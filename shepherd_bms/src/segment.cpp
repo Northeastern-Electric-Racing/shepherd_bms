@@ -18,9 +18,16 @@ void SegmentInterface::retrieveSegmentData(ChipData_t databuf[NUM_CHIPS])
 
 FaultStatus_t SegmentInterface::pullThermistors()
 {
+	if (!thermTimer.isTimerExpired())
+	{
+		for(uint8_t c=0; c < NUM_CHIPS; c++)
+			segmentData[c].thermsUpdated = false;
+		return NOT_FAULTED;
+	}
+
 	disableGPIOPulldowns();
 
-    /* uint16_t rawTempVoltages[NUM_CHIPS][6];
+    uint16_t rawTempVoltages[NUM_CHIPS][6];
 
     for (int therm = 1; therm <= 16; therm++)
 	{
@@ -36,8 +43,10 @@ FaultStatus_t SegmentInterface::pullThermistors()
 		{
             segmentData[c].thermistorReading[therm - 1] = steinhartEst(uint16_t(rawTempVoltages[c][0] * (float(rawTempVoltages[c][2]) / 50000)));
             segmentData[c].thermistorReading[therm + 15] = steinhartEst(uint16_t(rawTempVoltages[c][1] * (float(rawTempVoltages[c][2]) / 50000)));
+			segmentData[c].thermsUpdated = true;
         }
-    } */
+    }
+	thermTimer.startTimer(THERM_WAIT_TIME);
 	return NOT_FAULTED;
 }
 
@@ -192,7 +201,7 @@ void SegmentInterface::disableGPIOPulldowns()
 void SegmentInterface::pullChipConfigurations()
 {
     uint8_t remoteConfig[NUM_CHIPS][8];
-    LTC6804_rdcfg(NUM_CHIPS, remoteConfig);
+    if(LTC6804_rdcfg(NUM_CHIPS, remoteConfig) == -1) return;
 
     for (int chip = 0; chip < NUM_CHIPS; chip++)
     {

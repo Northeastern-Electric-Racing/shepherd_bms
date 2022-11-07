@@ -18,6 +18,9 @@ struct ChipData_t
     //These are calculated during the analysis of data
     uint16_t cellResistance[12];
     uint16_t openCellVoltage[12];
+
+    bool thermsUpdated;
+    bool voltagesUpdated;
 };
 
 /**
