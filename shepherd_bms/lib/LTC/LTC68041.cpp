@@ -888,50 +888,58 @@ int8_t LTC6804_rdcfg(uint8_t total_ic, //Number of ICs in the system
                      uint8_t r_config[][8] //A two dimensional array that the function stores the read configuration data.
                     )
 {
-  const uint8_t BYTES_IN_REG = 8;
+	const uint8_t BYTES_IN_REG = 8;
 
-  uint8_t cmd[4];
-  uint8_t *rx_data;
-  int8_t pec_error = 0;
-  uint16_t data_pec;
-  uint16_t received_pec;
+	uint8_t cmd[4];
+	uint8_t *rx_data;
+	int8_t pec_error = -1;
+	uint16_t data_pec;
+	uint16_t received_pec;
+	uint8_t retries = 0;
 
-  rx_data = (uint8_t *) malloc((8*total_ic)*sizeof(uint8_t));
+	rx_data = (uint8_t *) malloc((8*total_ic)*sizeof(uint8_t));
 
-  //1
-  cmd[0] = 0x00;
-  cmd[1] = 0x02;
-  cmd[2] = 0x2b;
-  cmd[3] = 0x0A;
+	//1
+	cmd[0] = 0x00;
+	cmd[1] = 0x02;
+	cmd[2] = 0x2b;
+	cmd[3] = 0x0A;
 
-  //2
-  wakeup_idle (); //This will guarantee that the LTC6804 isoSPI port is awake. This command can be removed.
-  //3
-  digitalWrite(SPI1_CS, LOW);
-  NERduino.writereadSPI1(cmd, 4, rx_data, (BYTES_IN_REG*total_ic), ltcSPISettings);         //Read the configuration data of all ICs on the daisy chain into
-  digitalWrite(SPI1_CS, HIGH);                         //rx_data[] array
-
-  for (uint8_t current_ic = 0; current_ic < total_ic; current_ic++)       //executes for each LTC6804 in the daisy chain and packs the data
-  {
-    //into the r_config array as well as check the received Config data
-    //for any bit errors
-    //4.a
-    for (uint8_t current_byte = 0; current_byte < BYTES_IN_REG; current_byte++)
-    {
-      r_config[current_ic][current_byte] = rx_data[current_byte + (current_ic*BYTES_IN_REG)];
-    }
-    //4.b
-    received_pec = (r_config[current_ic][6]<<8) + r_config[current_ic][7];
-    data_pec = pec15_calc(6, &r_config[current_ic][0]);
-    if (received_pec != data_pec)
-    {
-      pec_error = -1;
-    }
-  }
-
-  free(rx_data);
-  //5
-  return(pec_error);
+	while(retries < LTC_MAX_RETRIES && pec_error == -1)
+	{
+		Serial.println("Trying...\n");
+		//2
+		wakeup_idle (); //This will guarantee that the LTC6804 isoSPI port is awake. This command can be removed.
+		//3
+		digitalWrite(SPI1_CS, LOW);
+		NERduino.writereadSPI1(cmd, 4, rx_data, (BYTES_IN_REG*total_ic), ltcSPISettings);         //Read the configuration data of all ICs on the daisy chain into
+		digitalWrite(SPI1_CS, HIGH);                         //rx_data[] array
+		for (uint8_t current_ic = 0; current_ic < total_ic; current_ic++)       //executes for each LTC6804 in the daisy chain and packs the data
+		{
+			//into the r_config array as well as check the received Config data
+			//for any bit errors
+			//4.a
+			for (uint8_t current_byte = 0; current_byte < BYTES_IN_REG; current_byte++)
+			{
+			r_config[current_ic][current_byte] = rx_data[current_byte + (current_ic*BYTES_IN_REG)];
+			}
+			//4.b
+			received_pec = (r_config[current_ic][6]<<8) + r_config[current_ic][7];
+			data_pec = pec15_calc(6, &r_config[current_ic][0]);
+			if (received_pec != data_pec)
+			{
+				pec_error = -1;
+			}else
+			{
+				pec_error = 0;
+				Serial.println((pec_error == -1));
+			}
+		}
+		retries++;
+	}
+	free(rx_data);
+	//5
+	return(pec_error);
 }
 /*
   RDCFG Sequence:
@@ -1058,12 +1066,18 @@ int8_t LTC6804_rdcomm(uint8_t total_ic, //Number of ICs in the system
 {
 	uint8_t cmd[2]= {0x07 , 0x22};
 	uint8_t read_buffer[256];
-	int8_t pec_error = 0;
+	int8_t pec_error = -1;
 	uint16_t data_pec;
 	uint16_t calc_pec;
 	uint8_t c_ic=0;
+	uint8_t retries = 0;
 	
-	pec_error = read_68(total_ic, cmd, read_buffer);
+	while(retries < LTC_MAX_RETRIES && pec_error == -1)
+	{
+		Serial.println("RETRYING...\n");
+		pec_error = read_68(total_ic, cmd, read_buffer);
+		retries++;
+	}
 	
 	for (uint8_t current_ic = 0; current_ic<total_ic; current_ic++)
 	{
@@ -1071,10 +1085,11 @@ int8_t LTC6804_rdcomm(uint8_t total_ic, //Number of ICs in the system
 		for (int byte=0; byte<6; byte++)
 		{
 			readData[current_ic][byte] = read_buffer[byte+(8*current_ic)];
-		}	
-    return(0); //todo : PEC Error
-  }
+		}
+	}
+    return pec_error; //todo : PEC Error
 }
+
 /* Generic function to write 68xx commands and read data. Function calculated PEC for tx_cmd data */
 int8_t read_68( uint8_t total_ic, // Number of ICs in the system 
 				uint8_t tx_cmd[2], // The command to be transmitted 
@@ -1105,16 +1120,16 @@ int8_t read_68( uint8_t total_ic, // Number of ICs in the system
 		{
 			rx_data[(current_ic*8)+current_byte] = data[current_byte + (current_ic*BYTES_IN_REG)];
 		}
-		
+
 		received_pec = (rx_data[(current_ic*8)+6]<<8) + rx_data[(current_ic*8)+7];
 		data_pec = pec15_calc(6, &rx_data[current_ic*8]);
-		
+
 		if (received_pec != data_pec)
 		{
 		  pec_error = -1;
 		}
 	}
-	
+
 	return(pec_error);
 }
 
