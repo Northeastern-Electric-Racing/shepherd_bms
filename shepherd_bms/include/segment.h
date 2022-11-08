@@ -5,13 +5,14 @@
 #include <nerduino.h>
 #include "datastructs.h"
 
-#define NUM_SEGMENTS    4
-#define NUM_CHIPS       NUM_SEGMENTS*2
+#define NUM_SEGMENTS        4
+#define NUM_CHIPS           NUM_SEGMENTS*2
+#define NUM_CELLS_PER_CHIP  9
 
-#define MIN_VOLT        2.9
-#define MAX_VOLT        4.2
-#define MAX_DELTA_V     0.02
-#define BAL_MIN_V       4.00
+#define MIN_VOLT            2.9
+#define MAX_VOLT            4.2
+#define MAX_DELTA_V         0.02
+#define BAL_MIN_V           4.00
 
 /**
  * @brief This class serves as the interface for all of the segment boards
