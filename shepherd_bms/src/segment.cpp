@@ -53,6 +53,21 @@ void SegmentInterface::pushChipConfigurations()
     LTC6804_wrcfg(NUM_CHIPS, localConfig);
 }
 
+FaultStatus_t SegmentInterface::pullVoltages(){
+
+    uint16_t segmentVoltages[NUM_CHIPS][12];
+
+    LTC6804_adcv();
+    uint8_t errorStatus = LTC6804_rdcv(0, NUM_CHIPS, segmentVoltages);
+
+    for (int i = 0; i < NUM_CHIPS; i++){
+        for (int j = 0; j < 12; j++){
+            segmentData[i].voltageReading[j] = segmentVoltages[i][j];
+        }
+    }
+    
+}
+
 void SegmentInterface::serializeI2CMsg(uint8_t dataToWrite[][3], uint8_t commOutput[][6])
 {
     for (int chip = 0; chip < NUM_CHIPS; chip++)
