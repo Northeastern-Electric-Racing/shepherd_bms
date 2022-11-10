@@ -501,88 +501,102 @@ int8_t LTC6804_rdaux(uint8_t reg, //Determines which GPIO voltage register is re
 
 	uint8_t *data;
 	uint8_t data_counter = 0;
-	int8_t pec_error = 0;
+	int8_t pec_error = 1;
+	uint8_t retries = 0;
 	uint16_t parsed_aux;
 	uint16_t received_pec;
 	uint16_t data_pec;
 	data = (uint8_t *) malloc((NUM_RX_BYT*total_ic)*sizeof(uint8_t));
 	//1.a
-		if (reg == 0)
+	if (reg == 0)
+	{
+		//a.i
+		for (uint8_t gpio_reg = 1; gpio_reg<3; gpio_reg++)                //executes once for each of the LTC6804 aux voltage registers
 		{
-			//a.i
-			for (uint8_t gpio_reg = 1; gpio_reg<3; gpio_reg++)                //executes once for each of the LTC6804 aux voltage registers
-			{
-			data_counter = 0;
-			LTC6804_rdaux_reg(gpio_reg, total_ic,data);                 //Reads the raw auxiliary register data into the data[] array
+			if(pec_error != -1) pec_error = 1;
 
-			for (uint8_t current_ic = 0 ; current_ic < total_ic; current_ic++)      // executes for every LTC6804 in the daisy chain
+			while(retries < LTC_MAX_RETRIES && pec_error == -1)
 			{
-				// current_ic is used as the IC counter
+				data_counter = 0;
+				LTC6804_rdaux_reg(gpio_reg, total_ic,data);                 //Reads the raw auxiliary register data into the data[] array
 
-				//a.ii
-				for (uint8_t current_gpio = 0; current_gpio< GPIO_IN_REG; current_gpio++) // This loop parses the read back data into GPIO voltages, it
+				for (uint8_t current_ic = 0 ; current_ic < total_ic; current_ic++)      // executes for every LTC6804 in the daisy chain
 				{
-				// loops once for each of the 3 gpio voltage codes in the register
+					// current_ic is used as the IC counter
 
-				parsed_aux = data[data_counter] + (data[data_counter+1]<<8);              //Each gpio codes is received as two bytes and is combined to
-				// create the parsed gpio voltage code
+					//a.ii
+					for (uint8_t current_gpio = 0; current_gpio< GPIO_IN_REG; current_gpio++) // This loop parses the read back data into GPIO voltages, it
+					{
+					// loops once for each of the 3 gpio voltage codes in the register
 
-				aux_codes[current_ic][current_gpio +((gpio_reg-1)*GPIO_IN_REG)] = parsed_aux;
-				data_counter=data_counter+2;                        //Because gpio voltage codes are two bytes the data counter
-				//must increment by two for each parsed gpio voltage code
+					parsed_aux = data[data_counter] + (data[data_counter+1]<<8);              //Each gpio codes is received as two bytes and is combined to
+					// create the parsed gpio voltage code
 
+					aux_codes[current_ic][current_gpio +((gpio_reg-1)*GPIO_IN_REG)] = parsed_aux;
+					data_counter=data_counter+2;                        //Because gpio voltage codes are two bytes the data counter
+					//must increment by two for each parsed gpio voltage code
+
+					}
+					//a.iii
+					received_pec = (data[data_counter]<<8)+ data[data_counter+1];          //The received PEC for the current_ic is transmitted as the 7th and 8th
+					//after the 6 gpio voltage data bytes
+					data_pec = pec15_calc(BYT_IN_REG, &data[current_ic*NUM_RX_BYT]);
+					if (received_pec == data_pec && (pec_error == 1 || pec_error == 0))
+					{
+						pec_error = 0;                             //The pec_error variable is simply set negative if any PEC errors
+					//are detected in the received serial data
+					}
+					else if (received_pec != data_pec)
+					{
+						pec_error = -1;
+					}
+
+					data_counter=data_counter+2;                        //Because the transmitted PEC code is 2 bytes long the data_counter
+					//must be incremented by 2 bytes to point to the next ICs gpio voltage data
 				}
-				//a.iii
-				received_pec = (data[data_counter]<<8)+ data[data_counter+1];          //The received PEC for the current_ic is transmitted as the 7th and 8th
-				//after the 6 gpio voltage data bytes
-				data_pec = pec15_calc(BYT_IN_REG, &data[current_ic*NUM_RX_BYT]);
-				if (received_pec != data_pec)
-				{
-				pec_error = -1;                             //The pec_error variable is simply set negative if any PEC errors
-				//are detected in the received serial data
-				}
-
-				data_counter=data_counter+2;                        //Because the transmitted PEC code is 2 bytes long the data_counter
-				//must be incremented by 2 bytes to point to the next ICs gpio voltage data
-			}
-
-
-			}
-
-		}
-		else
-		{
-			//b.i
-			LTC6804_rdaux_reg(reg, total_ic, data);
-			for (int current_ic = 0 ; current_ic < total_ic; current_ic++)            // executes for every LTC6804 in the daisy chain
-			{
-			// current_ic is used as an IC counter
-
-			//b.ii
-			for (int current_gpio = 0; current_gpio<GPIO_IN_REG; current_gpio++)    // This loop parses the read back data. Loops
-			{
-				// once for each aux voltage in the register
-
-				parsed_aux = (data[data_counter] + (data[data_counter+1]<<8));        //Each gpio codes is received as two bytes and is combined to
-				// create the parsed gpio voltage code
-				aux_codes[current_ic][current_gpio +((reg-1)*GPIO_IN_REG)] = parsed_aux;
-				data_counter=data_counter+2;                      //Because gpio voltage codes are two bytes the data counter
-				//must increment by two for each parsed gpio voltage code
-			}
-			//b.iii
-			received_pec = (data[data_counter]<<8) + data[data_counter+1];         //The received PEC for the current_ic is transmitted as the 7th and 8th
-			//after the 6 gpio voltage data bytes
-			data_pec = pec15_calc(BYT_IN_REG, &data[current_ic*NUM_RX_BYT]);
-			if (received_pec != data_pec)
-			{
-				pec_error = -1;                               //The pec_error variable is simply set negative if any PEC errors
-				//are detected in the received serial data
-			}
-
-			data_counter=data_counter+2;                        //Because the transmitted PEC code is 2 bytes long the data_counter
-			//must be incremented by 2 bytes to point to the next ICs gpio voltage data
 			}
 		}
+	}
+	else
+	{
+    while(retries < LTC_MAX_RETRIES && pec_error == -1)
+    {
+      //b.i
+      LTC6804_rdaux_reg(reg, total_ic, data);
+      for (int current_ic = 0 ; current_ic < total_ic; current_ic++)            // executes for every LTC6804 in the daisy chain
+      {
+        // current_ic is used as an IC counter
+
+        //b.ii
+        for (int current_gpio = 0; current_gpio<GPIO_IN_REG; current_gpio++)    // This loop parses the read back data. Loops
+        {
+          // once for each aux voltage in the register
+
+          parsed_aux = (data[data_counter] + (data[data_counter+1]<<8));        //Each gpio codes is received as two bytes and is combined to
+          // create the parsed gpio voltage code
+          aux_codes[current_ic][current_gpio +((reg-1)*GPIO_IN_REG)] = parsed_aux;
+          data_counter=data_counter+2;                      //Because gpio voltage codes are two bytes the data counter
+          //must increment by two for each parsed gpio voltage code
+        }
+        //b.iii
+        received_pec = (data[data_counter]<<8) + data[data_counter+1];         //The received PEC for the current_ic is transmitted as the 7th and 8th
+        //after the 6 gpio voltage data bytes
+        data_pec = pec15_calc(BYT_IN_REG, &data[current_ic*NUM_RX_BYT]);
+        if (received_pec != data_pec)
+        {
+          pec_error = -1;                               //The pec_error variable is simply set negative if any PEC errors
+          //are detected in the received serial data
+        }
+        else
+        {
+          pec_error = 0;
+        }
+
+        data_counter=data_counter+2;                        //Because the transmitted PEC code is 2 bytes long the data_counter
+        //must be incremented by 2 bytes to point to the next ICs gpio voltage data
+      }
+    }
+	}
 	free(data);
 	return (pec_error);
 }
@@ -636,38 +650,37 @@ void LTC6804_rdaux_reg(uint8_t reg, //Determines which GPIO voltage register is 
                        uint8_t *data //Array of the unparsed auxiliary codes
                       )
 {
-  const uint8_t REG_LEN = 8; // number of bytes in the register + 2 bytes for the PEC
-  uint8_t cmd[4];
-  uint16_t cmd_pec;
+	const uint8_t REG_LEN = 8; // number of bytes in the register + 2 bytes for the PEC
+	uint8_t cmd[4];
+	uint16_t cmd_pec;
 
-  //1
-  if (reg == 1)     //Read back auxiliary group A
-  {
-    cmd[1] = 0x0C;
-    cmd[0] = 0x00;
-  }
-  else if (reg == 2)  //Read back auxiliary group B
-  {
-    cmd[1] = 0x0e;
-    cmd[0] = 0x00;
-  }
-  else          //Read back auxiliary group A
-  {
-    cmd[1] = 0x0C;
-    cmd[0] = 0x00;
-  }
-  //2
-  cmd_pec = pec15_calc(2, cmd);
-  cmd[2] = (uint8_t)(cmd_pec >> 8);
-  cmd[3] = (uint8_t)(cmd_pec);
+	//1
+	if (reg == 1)     //Read back auxiliary group A
+	{
+		cmd[1] = 0x0C;
+		cmd[0] = 0x00;
+	}
+	else if (reg == 2)  //Read back auxiliary group B
+	{
+		cmd[1] = 0x0e;
+		cmd[0] = 0x00;
+	}
+	else          //Read back auxiliary group A
+	{
+		cmd[1] = 0x0C;
+		cmd[0] = 0x00;
+	}
+	//2
+	cmd_pec = pec15_calc(2, cmd);
+	cmd[2] = (uint8_t)(cmd_pec >> 8);
+	cmd[3] = (uint8_t)(cmd_pec);
 
-  //3
-  wakeup_idle (); //This will guarantee that the LTC6804 isoSPI port is awake, this command can be removed.
-  //4
-  digitalWrite(SPI1_CS, LOW);
-  NERduino.writereadSPI1(cmd,4,data,(REG_LEN*total_ic), ltcSPISettings);
-  digitalWrite(SPI1_CS, HIGH);
-
+	//3
+	wakeup_idle (); //This will guarantee that the LTC6804 isoSPI port is awake, this command can be removed.
+	//4
+	digitalWrite(SPI1_CS, LOW);
+	NERduino.writereadSPI1(cmd,4,data,(REG_LEN*total_ic), ltcSPISettings);
+	digitalWrite(SPI1_CS, HIGH);
 }
 /*
   LTC6804_rdaux_reg Function Process:
