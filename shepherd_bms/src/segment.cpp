@@ -36,7 +36,7 @@ void SegmentInterface::configureDischarge(uint8_t chip, uint16_t cells)
 void SegmentInterface::enableBalancing(bool balanceEnable)
 {
     //Discharging all cells in series
-    static const uint16_t dischargeAllCommand = 0b111111111;
+    static const uint16_t dischargeAllCommand = 0xFFFF >> (16-9); // Shifting 0xFFFF right by 16 minus however many cells in series
 
     pullChipConfigurations();
 
