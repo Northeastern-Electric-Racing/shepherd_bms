@@ -35,31 +35,10 @@ void ConfigureDischarge(uint8_t chip, uint16_t cells)
 void setup()
 {
   NERduino.begin();
-  // put your setup code here, to run once:
   delay(3000); // Allow time to connect and see boot up info
   Serial.println("Hello World!");
-  LTC6804_initialize();
-
-  // Turn OFF GPIO 1 & 2 pull downs
-  GetChipConfigurations(chipConfigurations);
-  for (int c = 0; c < NUM_CHIPS; c++)
-  {
-    chipConfigurations[c][0] |= 0x18;
-    ConfigureDischarge(c, 0);
-  }
-  SetChipConfigurations(chipConfigurations);
-
-  Serial.print("Chip CFG:\n");
-  for (int c = 0; c < NUM_CHIPS; c++)
-  {
-    for (int byte = 0; byte < 6; byte++)
-    {
-      Serial.print(chipConfigurations[c][byte], HEX);
-      Serial.print("\t");
-    }
-    Serial.println();
-  }
-  Serial.println();
+  
+  segment.init();
 }
 ChipData_t *testData;
 Timer mainTimer;
