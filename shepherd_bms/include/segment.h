@@ -85,6 +85,13 @@ class SegmentInterface
         void enableBalancing(uint8_t chipNum, uint8_t cellNum, bool balanceEnable);
 
         /**
+         * @brief Sets each cell to whatever state is passed in the boolean config area
+         * 
+         * @param dischargeConfig 
+         */
+        void configureBalancing(bool dischargeConfig[NUM_CHIPS][NUM_CELLS_PER_CHIP]);
+
+        /**
          * @brief Returns if a specific cell is balancing
          * 
          * @param chipNum 

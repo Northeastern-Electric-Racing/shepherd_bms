@@ -36,7 +36,7 @@ void SegmentInterface::configureDischarge(uint8_t chip, uint16_t cells)
 void SegmentInterface::enableBalancing(bool balanceEnable)
 {
     //Discharging all cells in series
-    static const uint16_t dischargeAllCommand = 0xFFFF >> (16-9); // Shifting 0xFFFF right by 16 minus however many cells in series
+    static const uint16_t dischargeAllCommand = 0xFFFF >> (16-NUM_CELLS_PER_CHIP); // Making the discharge command all 1's for all cells per chip
 
     pullChipConfigurations();
 
@@ -52,7 +52,7 @@ void SegmentInterface::enableBalancing(bool balanceEnable)
     {
         for(int c = 0; c < NUM_CHIPS; c++)
         {
-            for(int cellNum = 0; cellNum < 9; cellNum++)
+            for(int cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
             {
                 configureDischarge(c, dischargeAllCommand);
             }
@@ -61,55 +61,78 @@ void SegmentInterface::enableBalancing(bool balanceEnable)
     }
 }
 
+/**
+ * @todo Revisit after testing 
+ */
 void SegmentInterface::enableBalancing(uint8_t chipNum, uint8_t cellNum, bool balanceEnable)
 {
-    // Variable Declarations
-    int NUM_CELLS = 12;
-    uint16_t rawCellVoltages[NUM_CHIPS][NUM_CELLS];
-    float cellVoltages[NUM_CHIPS][NUM_CELLS];
-    float minCellVal = 100;
-    bool balancing;
+    pullChipConfigurations();
+
     uint16_t dischargeCommand = 0;
-    if(balanceEnable)
+
+    dischargeCommand |= (uint8_t)balanceEnable << cellNum;
+
+    configureDischarge(chipNum, dischargeCommand);
+
+    pushChipConfigurations();
+}
+
+void SegmentInterface::configureBalancing(bool dischargeConfig[NUM_CHIPS][NUM_CELLS_PER_CHIP])
+{
+    pullChipConfigurations();
+
+    uint16_t dischargeCommand[NUM_CHIPS] = {};
+
+    for(int c = 0; c < NUM_CHIPS; c++)
     {
-        LTC6804_adcv(); // Do before pulling cell voltages idk why
-        LTC6804_rdcv(0, NUM_CHIPS, rawCellVoltages); // getting raw cell voltages
-        pullChipConfigurations();
-        // Converting raw cell voltages
-        for(int chip = 0; chip < NUM_CHIPS; chip++) 
+        for(int cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
         {
-            for(int cell = 0; cell < NUM_CELLS; cell++)
-            {
-                cellVoltages[chip][cell] = float(rawCellVoltages[chip][cell]) / 10000;
-            }
+            if(dischargeConfig[c][cell]) dischargeCommand[c] |= 1 << cell;
         }
 
-        balancing = (cellVoltages[chipNum][cellNum] > minCellVal + MAX_DELTA_V) && cellVoltages[chipNum][cellNum] > BAL_MIN_V;
-        if(balancing[chipNum][cellNum])
-        {
-            dischargeCommand |= 1 << cellNum;
-            configureDischarge(chipNum, discharge); 
-            pushChipConfigurations();
-        }
+        configureDischarge(c, dischargeCommand[c]);
     }
-    else
-    {
-        discharge &= 0 << cellNum;
-        configureDischarge(chipNum, discharge);
-        pushChipConfigurations();
-    }
-
+    pushChipConfigurations();
 }
 
 bool SegmentInterface::isBalancing(uint8_t chipNum, uint8_t cellNum)
 {
     pullChipConfigurations();
     
+    //If the cell is one of the first 8, check the 4th register
+    if(cellNum < 8)
+    {
+        return localConfig[chipNum][4] & (1 << cellNum);
+    }
+    //If the cell number is greater than 8, check the 5th register
+    else
+    {
+        return localConfig[chipNum][5] & (1 << (cellNum - 8));
+    }
+
+    return false; //default case
 }
 
 bool SegmentInterface::isBalancing()
 {
-    
+    pullChipConfigurations();
+
+    for(int c = 0; c < NUM_CHIPS; c++)
+    {
+        //Reading from the 4th config register
+        for(int cell = 0; cell < 8; cell++)
+        {
+            if(localConfig[c][4] & (1 << cell)) return true;
+        }
+
+        //Reading from the 5th config register
+        for(int cell = 0; cell < 4; cell++)
+        {
+            if(localConfig[c][5] & (1 << (cell))) return true;
+        }
+    }
+
+    return false;
 }
 
 void SegmentInterface::pullChipConfigurations()
