@@ -67,10 +67,11 @@ Copyright 2013 Linear Technology Corp. (LTC)
 */
 
 #include <stdint.h>
-#include "Linduino.h"
-#include "LT_SPI.h"
 #include "LTC68041.h"
 #include <SPI.h>
+#include <nerduino.h>
+
+const SPISettings ltcSPISettings = SPISettings(1000000, MSBFIRST, SPI_MODE0);
 
 /*!
   6804 conversion command variables.
@@ -89,8 +90,7 @@ uint8_t ADAX[2]; //!< GPIO conversion command.
 
 void LTC6804_initialize()
 {
-  quikeval_SPI_connect();
-  spi_enable(SPI_CLOCK_DIV16); // This will set the Linduino to have a 1MHz Clock
+  NERduino.enableSPI1();
   set_adc(MD_NORMAL,DCP_DISABLED,CELL_CH_ALL,AUX_CH_ALL);
 }
 
@@ -168,9 +168,9 @@ void LTC6804_adcv()
   wakeup_idle (); //This will guarantee that the LTC6804 isoSPI port is awake. This command can be removed.
 
   //4
-  output_low(LTC6804_CS);
-  spi_write_array(4,cmd);
-  output_high(LTC6804_CS);
+  digitalWrite(SPI1_CS, LOW);
+  NERduino.writeSPI1(cmd, 4, ltcSPISettings);
+  digitalWrite(SPI1_CS, HIGH);
 
 }
 /*
@@ -213,9 +213,9 @@ void LTC6804_adax()
   cmd[3] = (uint8_t)(cmd_pec);
 
   wakeup_idle (); //This will guarantee that the LTC6804 isoSPI port is awake. This command can be removed.
-  output_low(LTC6804_CS);
-  spi_write_array(4,cmd);
-  output_high(LTC6804_CS);
+  digitalWrite(SPI1_CS, LOW);
+  NERduino.writeSPI1(cmd, 4, ltcSPISettings);
+  digitalWrite(SPI1_CS, HIGH);
 
 }
 /*
@@ -445,9 +445,9 @@ void LTC6804_rdcv_reg(uint8_t reg, //Determines which cell voltage register is r
   wakeup_idle (); //This will guarantee that the LTC6804 isoSPI port is awake. This command can be removed.
 
   //4
-  output_low(LTC6804_CS);
-  spi_write_read(cmd,4,data,(REG_LEN*total_ic));
-  output_high(LTC6804_CS);
+  digitalWrite(SPI1_CS, LOW);
+  NERduino.writereadSPI1(cmd,4,data,(REG_LEN*total_ic), ltcSPISettings);
+  digitalWrite(SPI1_CS, HIGH);
 
 }
 /*
@@ -664,9 +664,9 @@ void LTC6804_rdaux_reg(uint8_t reg, //Determines which GPIO voltage register is 
   //3
   wakeup_idle (); //This will guarantee that the LTC6804 isoSPI port is awake, this command can be removed.
   //4
-  output_low(LTC6804_CS);
-  spi_write_read(cmd,4,data,(REG_LEN*total_ic));
-  output_high(LTC6804_CS);
+  digitalWrite(SPI1_CS, LOW);
+  NERduino.writereadSPI1(cmd,4,data,(REG_LEN*total_ic), ltcSPISettings);
+  digitalWrite(SPI1_CS, HIGH);
 
 }
 /*
@@ -710,9 +710,9 @@ void LTC6804_clrcell()
   wakeup_idle (); //This will guarantee that the LTC6804 isoSPI port is awake. This command can be removed.
 
   //4
-  output_low(LTC6804_CS);
-  spi_write_read(cmd,4,0,0);
-  output_high(LTC6804_CS);
+  digitalWrite(SPI1_CS, LOW);
+  NERduino.writereadSPI1(cmd,4,0,0, ltcSPISettings);
+  digitalWrite(SPI1_CS, HIGH);
 }
 /*
   LTC6804_clrcell Function sequence:
@@ -756,9 +756,9 @@ void LTC6804_clraux()
   //3
   wakeup_idle (); //This will guarantee that the LTC6804 isoSPI port is awake.This command can be removed.
   //4
-  output_low(LTC6804_CS);
-  spi_write_read(cmd,4,0,0);
-  output_high(LTC6804_CS);
+  digitalWrite(SPI1_CS, LOW);
+  NERduino.writereadSPI1(cmd,4,0,0, ltcSPISettings);
+  digitalWrite(SPI1_CS, HIGH);
 }
 /*
   LTC6804_clraux Function sequence:
@@ -840,9 +840,9 @@ void LTC6804_wrcfg(uint8_t total_ic, //The number of ICs being written to
   //4
   wakeup_idle ();                                 //This will guarantee that the LTC6804 isoSPI port is awake.This command can be removed.
   //5
-  output_low(LTC6804_CS);
-  spi_write_array(CMD_LEN, cmd);
-  output_high(LTC6804_CS);
+  digitalWrite(SPI1_CS, LOW);
+  NERduino.writeSPI1(cmd, CMD_LEN, ltcSPISettings);
+  digitalWrite(SPI1_CS, HIGH);
   free(cmd);
 }
 /*
@@ -907,9 +907,9 @@ int8_t LTC6804_rdcfg(uint8_t total_ic, //Number of ICs in the system
   //2
   wakeup_idle (); //This will guarantee that the LTC6804 isoSPI port is awake. This command can be removed.
   //3
-  output_low(LTC6804_CS);
-  spi_write_read(cmd, 4, rx_data, (BYTES_IN_REG*total_ic));         //Read the configuration data of all ICs on the daisy chain into
-  output_high(LTC6804_CS);                          //rx_data[] array
+  digitalWrite(SPI1_CS, LOW);
+  NERduino.writereadSPI1(cmd, 4, rx_data, (BYTES_IN_REG*total_ic), ltcSPISettings);         //Read the configuration data of all ICs on the daisy chain into
+  digitalWrite(SPI1_CS, HIGH);                         //rx_data[] array
 
   for (uint8_t current_ic = 0; current_ic < total_ic; current_ic++)       //executes for each LTC6804 in the daisy chain and packs the data
   {
@@ -952,9 +952,9 @@ int8_t LTC6804_rdcfg(uint8_t total_ic, //Number of ICs in the system
  *****************************************************/
 void wakeup_idle()
 {
-  output_low(LTC6804_CS);
+  digitalWrite(SPI1_CS, LOW);
   delayMicroseconds(2); //Guarantees the isoSPI will be in ready mode
-  output_high(LTC6804_CS);
+  digitalWrite(SPI1_CS, HIGH);
 }
 
 /*!****************************************************
@@ -964,9 +964,9 @@ void wakeup_idle()
  *****************************************************/
 void wakeup_sleep()
 {
-  output_low(LTC6804_CS);
+  digitalWrite(SPI1_CS, LOW);
   delay(1); // Guarantees the LTC6804 will be in standby
-  output_high(LTC6804_CS);
+  digitalWrite(SPI1_CS, HIGH);
 }
 /*!**********************************************************
  \brief calaculates  and returns the CRC15
@@ -993,52 +993,6 @@ uint16_t pec15_calc(uint8_t len, //Number of bytes that will be used to calculat
   return(remainder*2);//The CRC15 has a 0 in the LSB so the remainder must be multiplied by 2
 }
 
-
-/*!
- \brief Writes an array of bytes out of the SPI port
-
- @param[in] uint8_t len length of the data array being written on the SPI port
- @param[in] uint8_t data[] the data array to be written on the SPI port
-
-*/
-void spi_write_array(uint8_t len, // Option: Number of bytes to be written on the SPI port
-                     uint8_t data[] //Array of bytes to be written on the SPI port
-                    )
-{
-  for (uint8_t i = 0; i < len; i++)
-  {
-    spi_write((int8_t)data[i]);
-  }
-}
-
-/*!
- \brief Writes and read a set number of bytes using the SPI port.
-
-@param[in] uint8_t tx_data[] array of data to be written on the SPI port
-@param[in] uint8_t tx_len length of the tx_data array
-@param[out] uint8_t rx_data array that read data will be written too.
-@param[in] uint8_t rx_len number of bytes to be read from the SPI port.
-
-*/
-
-void spi_write_read(uint8_t tx_Data[],//array of data to be written on SPI port
-                    uint8_t tx_len, //length of the tx data arry
-                    uint8_t *rx_data,//Input: array that will store the data read by the SPI port
-                    uint8_t rx_len //Option: number of bytes to be read from the SPI port
-                   )
-{
-  for (uint8_t i = 0; i < tx_len; i++)
-  {
-    spi_write(tx_Data[i]);
-
-  }
-
-  for (uint8_t i = 0; i < rx_len; i++)
-  {
-    rx_data[i] = (uint8_t)spi_read(0xFF);
-  }
-
-}
 
 void write_68(uint8_t total_ic, //Number of ICs to be written to 
 			  uint8_t tx_cmd[2], //The command to be transmitted 
@@ -1075,9 +1029,9 @@ void write_68(uint8_t total_ic, //Number of ICs to be written to
 	}
 	
   wakeup_idle();
-	output_low(CS_PIN);
-	spi_write_array(CMD_LEN, cmd);
-	output_high(CS_PIN); //this was originally low
+	digitalWrite(SPI1_CS, LOW);
+	NERduino.writeSPI1(cmd, CMD_LEN, ltcSPISettings);
+	digitalWrite(SPI1_CS, HIGH); //this was originally low
 	
 	free(cmd);
 }
@@ -1141,9 +1095,9 @@ int8_t read_68( uint8_t total_ic, // Number of ICs in the system
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
 	cmd[3] = (uint8_t)(cmd_pec);
 	
-	output_low(CS_PIN);
-	spi_write_read(cmd, 4, data, (BYTES_IN_REG*total_ic));         //Transmits the command and reads the configuration data of all ICs on the daisy chain into rx_data[] array
-	output_high(CS_PIN);                                         
+	digitalWrite(SPI1_CS, LOW);
+	NERduino.writereadSPI1(cmd, 4, data, (BYTES_IN_REG*total_ic), ltcSPISettings);         //Transmits the command and reads the configuration data of all ICs on the daisy chain into rx_data[] array
+	digitalWrite(SPI1_CS, HIGH);
 
 	for (uint8_t current_ic = 0; current_ic < total_ic; current_ic++) //Executes for each LTC681x in the daisy chain and packs the data
 	{																//into the rx_data array as well as check the received data for any bit errors
@@ -1177,13 +1131,13 @@ void LTC6804_stcomm(uint8_t len) //Length of data to be transmitted
 	cmd[3] = (uint8_t)(cmd_pec);
 
   //wakeup_idle();
-	output_low(CS_PIN);
-	spi_write_array(4,cmd);
+	digitalWrite(SPI1_CS, LOW);
+	NERduino.writeSPI1(cmd, 4, ltcSPISettings);
 	for (int i = 0; i<len*3; i++)
 	{
 	  spi_read_byte(0xFF);
 	}
-	output_high(CS_PIN);
+	digitalWrite(SPI1_CS, HIGH);
 }
 
 uint8_t spi_read_byte(uint8_t tx_dat)

@@ -1,5 +1,7 @@
 #include "segment.h"
 
+SegmentInterface segment;
+
 SegmentInterface::SegmentInterface(){}
 
 SegmentInterface::~SegmentInterface(){}
@@ -8,8 +10,16 @@ void SegmentInterface::retrieveSegmentData(ChipData_t databuf[NUM_CHIPS])
 {
     segmentData = databuf;
 
-    pullVoltages();
+    /**
+     * Pull voltages and thermistors and indiacte if there was a problem during retrieval
+     */
+    voltageError = pullVoltages();
     pullThermistors();
+
+    /**
+     * Save the contents of the reading so that we can use it to fill in missing data
+     */
+    memcpy(previousData, segmentData, sizeof(ChipData_t)*NUM_CHIPS);
 
     segmentData = nullptr;
 }
@@ -119,6 +129,61 @@ void SegmentInterface::pullChipConfigurations()
 void SegmentInterface::pushChipConfigurations()
 {
     LTC6804_wrcfg(NUM_CHIPS, localConfig);
+}
+
+FaultStatus_t SegmentInterface::pullVoltages()
+{
+    /**
+     * If we haven't waited long enough between pulling voltage data
+     * just copy over the contents of the last good reading and the fault status from the most recent attempt
+     */
+    if(!voltageReadingTimer.isTimerExpired())
+    {
+        for(uint8_t i=0; i<NUM_CHIPS; i++)
+        {
+            memcpy(segmentData[i].voltageReading, previousData[i].voltageReading, sizeof(segmentData[i].voltageReading));
+        }
+        return voltageError;
+    }
+
+    uint16_t segmentVoltages[NUM_CHIPS][12];
+
+    LTC6804_adcv();
+
+    /**
+     * If we received an incorrect PEC indicating a bad read
+     * copy over the data from the last good read and indicate an error
+     */
+    if(LTC6804_rdcv(0, NUM_CHIPS, segmentVoltages) == -1)
+    {
+        for(uint8_t i=0; i<NUM_CHIPS; i++)
+        {
+            memcpy(segmentData[i].voltageReading, previousData[i].voltageReading, sizeof(segmentData[i].voltageReading));
+        }
+        return FAULTED;
+    }
+
+    /**
+     * If the read was successful, copy the voltage data
+     */
+    for (uint8_t i = 0; i < NUM_CHIPS; i++)
+    {
+        for (uint8_t j = 0; j < NUM_CELLS_PER_CHIP; j++)
+        {
+            segmentData[i].voltageReading[j] = segmentVoltages[i][j];
+        }
+    }
+    
+    /**
+     * Start the timer between readings if successful
+     */
+    voltageReadingTimer.startTimer(VOLTAGE_WAIT_TIME);
+    return NOT_FAULTED;
+}
+
+FaultStatus_t SegmentInterface::pullThermistors()
+{
+
 }
 
 void SegmentInterface::serializeI2CMsg(uint8_t dataToWrite[][3], uint8_t commOutput[][6])

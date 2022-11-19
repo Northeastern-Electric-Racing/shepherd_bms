@@ -4,14 +4,14 @@
 #include <LTC68041.h>
 #include <nerduino.h>
 #include "datastructs.h"
+#include "bmsConfig.h"
 
-#define NUM_SEGMENTS    4
-#define NUM_CHIPS       NUM_SEGMENTS*2
+#define MIN_VOLT            2.9
+#define MAX_VOLT            4.2
+#define MAX_DELTA_V         0.02
+#define BAL_MIN_V           4.00
 
-#define MIN_VOLT        2.9
-#define MAX_VOLT        4.2
-#define MAX_DELTA_V     0.02
-#define BAL_MIN_V       4.00
+#define VOLTAGE_WAIT_TIME   500 //ms
 
 /**
  * @brief This class serves as the interface for all of the segment boards
@@ -19,6 +19,10 @@
 class SegmentInterface
 {
     private:
+
+        Timer voltageReadingTimer;
+
+        FaultStatus_t voltageError = NOT_FAULTED;
 
         const uint32_t VOLT_TEMP_CONV[57] = 
         {
@@ -31,6 +35,8 @@ class SegmentInterface
         };
 
         ChipData_t *segmentData = nullptr;
+
+        ChipData_t previousData[NUM_CHIPS];
 
         uint8_t localConfig[NUM_CHIPS][6] = {};
 
@@ -95,5 +101,7 @@ class SegmentInterface
          */
         bool isBalancing();
 };
+
+extern SegmentInterface segment;
 
 #endif
