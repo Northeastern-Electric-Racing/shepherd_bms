@@ -34,8 +34,6 @@ class SegmentInterface
 
         uint8_t localConfig[NUM_CHIPS][6] = {};
 
-        uint8_t chipConfigurations[NUM_CHIPS][6];
-
         void pullChipConfigurations();
 
         void pushChipConfigurations();
@@ -48,7 +46,7 @@ class SegmentInterface
 
         void serializeI2CMsg(uint8_t dataToWrite[][3], uint8_t commOutput[][6]);
 
-        FaultStatus_t configureDischarge(uint8_t chip, uint16_t cells);
+        void configureDischarge(uint8_t chip, uint16_t cells);
 
     public:
         SegmentInterface();
