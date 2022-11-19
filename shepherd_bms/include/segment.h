@@ -60,6 +60,12 @@ class SegmentInterface
         ~SegmentInterface();
 
         /**
+         * @brief Initializes the segments
+         * 
+         */
+        void init();
+
+        /**
          * @brief Pulls all cell data from the segments and returns all cell data
          * 
          * @todo make sure that retrieving cell data doesn't block code too much

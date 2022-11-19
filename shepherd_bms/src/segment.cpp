@@ -6,6 +6,22 @@ SegmentInterface::SegmentInterface(){}
 
 SegmentInterface::~SegmentInterface(){}
 
+void SegmentInterface::init()
+{
+    Serial.println("Initializing Segments...");
+
+    LTC6804_initialize();
+
+    // Turn OFF GPIO 1 & 2 pull downs and set all cells to NOT discharge
+    pullChipConfigurations();
+    for (int c = 0; c < NUM_CHIPS; c++)
+    {
+        chipConfigurations[c][0] |= 0x18;
+        configureDischarge(c, 0);
+    }
+    pushChipConfigurations();
+}
+
 void SegmentInterface::retrieveSegmentData(ChipData_t databuf[NUM_CHIPS])
 {
     segmentData = databuf;
