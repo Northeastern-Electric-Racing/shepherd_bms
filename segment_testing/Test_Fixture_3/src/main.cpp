@@ -284,7 +284,7 @@ void SelectTherm(uint8_t therm) {
     }
     ConfigureCOMMRegisters(CHIPS, i2cWriteData, commRegData);
     LTC6804_wrcomm(CHIPS, commRegData);
-    LTC6804_stcomm(24);
+    LTC6804_stcomm(3);
 
     // Turn on desired thermistor
     for(int chip = 0; chip < CHIPS; chip++) {
@@ -294,7 +294,7 @@ void SelectTherm(uint8_t therm) {
     }
     ConfigureCOMMRegisters(CHIPS, i2cWriteData, commRegData);
     LTC6804_wrcomm(CHIPS, commRegData);
-    LTC6804_stcomm(24);
+    LTC6804_stcomm(3);
   } else if (therm <= 16) {
     // Turn off competing multiplexor (therms 1-8)
     for(int chip = 0; chip < CHIPS; chip++) {
@@ -304,7 +304,7 @@ void SelectTherm(uint8_t therm) {
     }
     ConfigureCOMMRegisters(CHIPS, i2cWriteData, commRegData);
     LTC6804_wrcomm(CHIPS, commRegData);
-    LTC6804_stcomm(24);
+    LTC6804_stcomm(3);
 
     // Turn on desired thermistor
     for(int chip = 0; chip < CHIPS; chip++) {
@@ -314,7 +314,7 @@ void SelectTherm(uint8_t therm) {
     }
     ConfigureCOMMRegisters(CHIPS, i2cWriteData, commRegData);
     LTC6804_wrcomm(CHIPS, commRegData);
-    LTC6804_stcomm(24);
+    LTC6804_stcomm(3);
   } else if (therm <= 24) {
     // Turn off competing multiplexor (therms 25-32)
     for(int chip = 0; chip < CHIPS; chip++) {
@@ -324,7 +324,7 @@ void SelectTherm(uint8_t therm) {
     }
     ConfigureCOMMRegisters(CHIPS, i2cWriteData, commRegData);
     LTC6804_wrcomm(CHIPS, commRegData);
-    LTC6804_stcomm(24);
+    LTC6804_stcomm(3);
 
     // Turn on desired thermistor
     for(int chip = 0; chip < CHIPS; chip++) {
@@ -334,7 +334,7 @@ void SelectTherm(uint8_t therm) {
     }
     ConfigureCOMMRegisters(CHIPS, i2cWriteData, commRegData);
     LTC6804_wrcomm(CHIPS, commRegData);
-    LTC6804_stcomm(24);
+    LTC6804_stcomm(3);
   } else {
     // Turn off competing multiplexor (therms 17-24)
     for(int chip = 0; chip < CHIPS; chip++) {
@@ -344,7 +344,7 @@ void SelectTherm(uint8_t therm) {
     }
     ConfigureCOMMRegisters(CHIPS, i2cWriteData, commRegData);
     LTC6804_wrcomm(CHIPS, commRegData);
-    LTC6804_stcomm(24);
+    LTC6804_stcomm(3);
 
     // Turn on desired thermistor
     for(int chip = 0; chip < CHIPS; chip++) {
@@ -354,7 +354,7 @@ void SelectTherm(uint8_t therm) {
     }
     ConfigureCOMMRegisters(CHIPS, i2cWriteData, commRegData);
     LTC6804_wrcomm(CHIPS, commRegData);
-    LTC6804_stcomm(24);
+    LTC6804_stcomm(3);
   }
 }
 
