@@ -16,7 +16,7 @@ void SegmentInterface::init()
     pullChipConfigurations();
     for (int c = 0; c < NUM_CHIPS; c++)
     {
-        chipConfigurations[c][0] |= 0x18;
+        localConfig[c][0] |= 0x18;
         configureDischarge(c, 0);
     }
     pushChipConfigurations();
