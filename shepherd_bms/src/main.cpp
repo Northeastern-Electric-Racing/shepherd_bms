@@ -36,7 +36,6 @@ void setup()
 {
   NERduino.begin();
   // put your setup code here, to run once:
-  Serial.begin(115200);
   delay(3000); // Allow time to connect and see boot up info
   Serial.println("Hello World!");
   LTC6804_initialize();
@@ -62,32 +61,25 @@ void setup()
   }
   Serial.println();
 }
-
-int lastVoltTime = 0;
+ChipData_t *testData;
+Timer mainTimer;
 
 void loop()
 {
-    int currTime = millis();
+	testData = new ChipData_t[NUM_CHIPS];
+	// Run ADC on cell taps
+	segment.retrieveSegmentData(testData);
 
-    // MEASURE VOLTAGES
-    if (lastVoltTime + 200 < currTime) {
-      // Run ADC on cell taps
-      LTC6804_adcv(); //this needs to be done before pulling from registers
-
-      // Pull and print the cell voltages from registers
-      LTC6804_rdcv(0, NUM_CHIPS, rawCellVoltages);
-
-      lastVoltTime = currTime;
-
-      Serial.print("Voltage:\n");
-      for (int chip = 0; chip < NUM_CHIPS; chip++)
-      {
-        for (int cell=0; cell < NUM_CELLS_PER_CHIP; cell++)
-        {
-              Serial.print(rawCellVoltages[chip][cell]);
-              Serial.print("\t");
-        }
-      Serial.println(); //newline
+	Serial.print("Voltage:\n");
+	for (int chip = 0; chip < NUM_CHIPS; chip++)
+	{
+		for (int cell=0; cell < NUM_CELLS_PER_CHIP; cell++)
+		{
+			Serial.print(testData[chip].voltageReading[cell]);
+			Serial.print("\t");
+		}
+	Serial.println(); //newline
       }
-    }
+    delete[] testData;
+    testData = nullptr;
 }
