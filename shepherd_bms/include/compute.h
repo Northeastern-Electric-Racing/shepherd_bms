@@ -10,6 +10,24 @@ class ComputeInterface
 {
     private:
         uint8_t fanSpeed;
+        bool isChargingEnabled;
+
+        union 
+        {
+           uint8_t chargerMsg[8] = {0, 0, 0, 0, 0, 0, 0xFF, 0xFF};
+
+           struct
+           {
+                uint8_t chargerControl      :8;
+                uint16_t chargerVoltage     :16;
+                uint16_t chargerCurrent     :16;
+                uint8_t chargerLEDs         :8;
+                uint8_t reserved1           :8;
+                uint8_t reserved2           :8;
+           } chargerData;
+           
+        }idkSomeName;
+        
 
         /**
          * @todo These might need to be changed depending on the charging ticket
@@ -27,7 +45,7 @@ class ComputeInterface
         ~ComputeInterface();
 
         /**
-         * @brief Attempts to enable/disable the charger via a second CAN line, and returns a fault if the charger is not responding
+         * @brief sets safeguard bool to check whether charging is enabled or disabled
          *
          * @param isEnabled
          * @return FaultStatus_t
@@ -55,6 +73,15 @@ class ComputeInterface
          * @return int16_t
          */
         int16_t getPackCurrent();
+
+         /**
+         * @brief sends charger message
+         *
+         * @return int16_t
+         */
+        void sendChargingMessage();
+
+
 
 };
 #endif

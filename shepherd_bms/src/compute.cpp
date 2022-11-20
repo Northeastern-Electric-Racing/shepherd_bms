@@ -4,7 +4,27 @@ ComputeInterface::ComputeInterface(){}
 
 ComputeInterface::~ComputeInterface(){}
 
-FaultStatus_t ComputeInterface::enableCharging(bool isEnabled){}
+FaultStatus_t ComputeInterface::enableCharging(bool enableCharging){
+
+    isChargingEnabled = enableCharging ? true : false;
+}
+
+
+void ComputeInterface::sendChargingMessage(){
+
+    if (isChargingEnabled){
+
+        //send correct message
+    }
+
+
+    else{
+
+        //fault - send safe message
+
+    }
+
+}
 
 bool ComputeInterface::isCharging(){}
 
