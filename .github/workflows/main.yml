@@ -30,4 +30,5 @@ jobs:
     - name: Test Shepherd BMS Source Code
       working-directory: ./shepherd_bms
       run: |
+        git submodule update --init
         pio run -e teensy41
