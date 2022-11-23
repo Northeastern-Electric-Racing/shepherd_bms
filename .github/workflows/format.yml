@@ -1,9 +1,12 @@
 name: 'formatting'
 description: 'CI formatting check'
 on: [push]
-runs:
-  using: "composite"
-  steps: 
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps: 
       - name: Install Uncrustify
         run: sudo apt-get install uncrustify
         shell: bash
