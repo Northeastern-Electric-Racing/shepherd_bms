@@ -30,4 +30,4 @@ jobs:
     - name: Test Shepherd BMS Source Code
       working-directory: ./shepherd_bms
       run: |
-        pio run -e <ID_1> -e <ID_2> -e <ID_N>
+        pio run -e teensy41 -e
