@@ -6,6 +6,12 @@ SegmentInterface::SegmentInterface(){}
 
 SegmentInterface::~SegmentInterface(){}
 
+FaultStatus_t SegmentInterface::configureDischarge(uint8_t chip, uint16_t cells)
+{
+  localConfig[chip][4] = uint8_t(cells & 0x00FF);
+  localConfig[chip][5] = (chipConfigurations[chip][5] & 0xF0) + uint8_t(cells >> 8);
+}
+
 void SegmentInterface::init()
 {
     Serial.println("Initializing Segments...");
