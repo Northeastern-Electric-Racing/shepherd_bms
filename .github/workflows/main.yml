@@ -29,5 +29,5 @@ jobs:
         pip install --upgrade platformio
     - name: Test Shepherd BMS Source Code
       working-directory: ./shepherd_bms
-      run: git submodule update --init
-      run: pio run -e <ID_1> -e <ID_2> -e <ID_N>
+      run: |
+        pio run -e <ID_1> -e <ID_2> -e <ID_N>
