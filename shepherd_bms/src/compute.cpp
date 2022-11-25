@@ -15,16 +15,17 @@ FaultStatus_t ComputeInterface::sendChargingMessage(uint8_t voltageToSet, uint8_
     if (!isChargingEnabled)
     {
         chargerMsg.cfg.chargerControl = CHARGE_DISABLED;
+        sendMessageCAN2(CANMSG_CHARGER, 8, chargerMsg.msg);
         return isCharging() ? FAULTED : NOT_FAULTED; //return a fault if we DO detect a voltage after we stop charging
     }
 
     // equations taken from TSM2500 CAN protocol datasheet
     chargerMsg.cfg.chargerVoltage = voltageToSet * 10;
     chargerMsg.cfg.chargerCurrent = (currentToSet - 3200) * 10; //todo double check order of ops
-    chargerMsg.cfg.chargerControl = CHARGE_DISABLED;
+    chargerMsg.cfg.chargerControl = CHARGE_ENABLED;
 
     //todo put charger ID somewhere else
-    sendMessage(0x18E54024, 8, chargerMsg.msg);
+    sendMessageCAN2(CANMSG_CHARGER, 8, chargerMsg.msg);
 
     return isCharging() ? NOT_FAULTED : FAULTED; //return a fault if we DON'T detect a voltage after we begin charging
 }
