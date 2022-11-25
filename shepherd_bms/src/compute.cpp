@@ -1,17 +1,20 @@
 #include "compute.h"
 
-ComputeInterface::ComputeInterface(){}
+ComputeInterface::ComputeInterface()
+{
+    initializeCAN(CANLINE_2, CHARGER_BAUD, &(this->chargerCallback));
+}
 
 ComputeInterface::~ComputeInterface(){}
 
-FaultStatus_t ComputeInterface::enableCharging(bool enableCharging){
+void ComputeInterface::enableCharging(bool enableCharging){
 
     isChargingEnabled = enableCharging ? true : false;
 }
 
 
-FaultStatus_t ComputeInterface::sendChargingMessage(uint8_t voltageToSet, uint8_t currentToSet){
-
+FaultStatus_t ComputeInterface::sendChargingMessage(uint8_t voltageToSet, uint8_t currentToSet)
+{
     if (!isChargingEnabled)
     {
         chargerMsg.cfg.chargerControl = CHARGE_DISABLED;
@@ -33,6 +36,12 @@ FaultStatus_t ComputeInterface::sendChargingMessage(uint8_t voltageToSet, uint8_
 bool ComputeInterface::isCharging()
 {
     return digitalRead(CHARGE_VOLTAGE_PIN);
+}
+
+void ComputeInterface::chargerCallback(const CAN_message_t &msg)
+{
+    Serial.println("Callback called!");
+    return;
 }
 
 void ComputeInterface::setFanSpeed(uint8_t newFanSpeed){}

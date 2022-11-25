@@ -5,6 +5,7 @@
 #include "nerduino.h"
 
 #define CHARGE_VOLTAGE_PIN 3
+#define CHARGER_BAUD 250000U
 
 class ComputeInterface
 {
@@ -43,9 +44,8 @@ class ComputeInterface
          * @brief sets safeguard bool to check whether charging is enabled or disabled
          *
          * @param isEnabled
-         * @return FaultStatus_t
          */
-        FaultStatus_t enableCharging(bool isEnabled);
+        void enableCharging(bool isEnabled);
 
         /**
          * @brief sends charger message
@@ -64,6 +64,13 @@ class ComputeInterface
          * @return false
          */
         bool isCharging();
+
+        /**
+         * @brief Handle any messages received from the charger
+         * 
+         * @param msg 
+         */
+        static void chargerCallback(const CAN_message_t &msg);
 
         /**
          * @brief Sets the desired fan speed
