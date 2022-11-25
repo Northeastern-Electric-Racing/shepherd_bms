@@ -31,6 +31,8 @@ int ComputeInterface::sendChargingMessage(int voltageToSet, int currentToSet){
         startCharging.chargerData.chargerCurrentByte4 = currentByte4;
         startCharging.chargerData.chargerCurrentByte5 = currentByte5;
 
+        startCharging.chargerData.chargerControl = 252; // 111111 - reserved + 00 = start charging
+
         sendMessage(0x18E54024, 8, startCharging.chargerMsg); // first param is charger control address
 
         return 0; // no fault return value 
