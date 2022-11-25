@@ -14,32 +14,19 @@ class ComputeInterface
 
         union 
         {
-           uint8_t chargerMsg[8] = {0, 0, 0, 0, 0, 0, 0xFF, 0xFF};
+           uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0xFF, 0xFF};
 
            struct
            {
-                uint8_t chargerControl       :8;
-                uint8_t chargerVoltageByte2  :8;
-                uint8_t chargerVoltageByte3  :8;
-                uint8_t chargerCurrentByte4  :8;
-                uint8_t chargerCurrentByte5  :8;
-                uint8_t chargerLEDs          :8;
-                uint8_t reserved1            :8;
-                uint8_t reserved2            :8;
-           } chargerData;
+                bool chargerControl         :8;
+                uint16_t chargerVoltage     :16;    //Note the charger voltage sent over should be 0.1*desired voltage
+                uint16_t chargerCurrentByte :16;    //Note the charge current sent over should be -3200+desired current
+                uint8_t chargerLEDs         :8;
+                uint8_t reserved1           :8;
+                uint8_t reserved2           :8;
+           } cfg;
            
-        }startCharging;
-        
-
-        /**
-         * @todo These might need to be changed depending on the charging ticket
-         */
-        const uint8_t startChargingMsg[];
-        const uint8_t endChargingMsg[];
-
-        void startChargerComms();
-
-        void endChargerComms();
+        } chargerMsg;
 
     public:
         ComputeInterface();
@@ -53,6 +40,16 @@ class ComputeInterface
          * @return FaultStatus_t
          */
         FaultStatus_t enableCharging(bool isEnabled);
+
+        /**
+         * @brief sends charger message
+         * 
+         * @param voltageToSet
+         * @param currentToSet
+         *
+         * @return Returns a fault if we are not able to communicate with charger
+         */
+        FaultStatus_t sendChargingMessage(int voltageToSet, int currentToSet);
 
         /**
          * @brief Returns if we are detecting a charging voltage
@@ -75,18 +72,5 @@ class ComputeInterface
          * @return int16_t
          */
         int16_t getPackCurrent();
-
-         /**
-         * @brief sends charger message
-         * 
-         * @param voltageToSet
-         * @param currentToSet
-         *
-         * @return int (error code 0 = message sent, 1 = not sent)
-         */
-        int sendChargingMessage(int voltageToSet, int currentToSet);
-
-
-
 };
 #endif
