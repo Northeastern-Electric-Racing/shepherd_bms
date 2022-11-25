@@ -1,43 +1,19 @@
-name: C++ Formatting
+name: clang-tidy-review
 
+# You can be more specific, but it currently only works on pull requests
 on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
-    steps: 
-      - name: Install Uncrustify
-        run: sudo apt-get install uncrustify
-        
-      - name: Run Uncrustify
-        working-directory: ${{ inputs.path }}
-        run: |
-          # Run uncrustify on C files while ignoring symlinks.
-          find . -iname "*.[hcpp]" -type f -exec uncrustify --check -c $GITHUB_ACTION_PATH/uncrustify.cfg -l C {} +
-        shell: bash
-      - name: Check For Trailing Whitespace
-        working-directory: ${{ inputs.path }}
-        run: |
-          set +e
-          grep --exclude={README.md,${{ inputs.exclude-files }}} --exclude-dir={${{ inputs.exclude-dirs }},'.git'} -rnI -e "[[:blank:]]$" .
-          if [ "$?" = "0" ]; then
-            echo "Files have trailing whitespace."
-            exit 1
-          else
-            exit 0
-          fi
-        shell: bash
-      - name: Check for CRLF
-        working-directory: ${{ inputs.path }}
-        run: |
-          set +e
-          find . -path ./.git -prune -o -exec file {} + |  grep "CRLF"
-          if [ "$?" = "0" ]; then
-            echo "Files have CRLF line endings."
-            exit 1
-          else
-            exit 0
-          fi
-        shell: bash
+    steps:
+    - uses: actions/checkout@v3
+
+    # Optionally generate compile_commands.json
+
+    - uses: ZedThree/clang-tidy-review@v0.10.0
+      id: review
+    # If there are any comments, fail the check
+    - if: steps.review.outputs.total_comments > 0
+      run: exit 1
