@@ -40,6 +40,7 @@ void setup() {
   for (int c = 0; c < CHIPS; c++)
   {
     chipConfigurations[c][0] |= 0x18;
+    ConfigureDischarge(c, 0);
   }
   SetChipConfigurations(chipConfigurations);
 
