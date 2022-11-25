@@ -18,15 +18,17 @@ class ComputeInterface
 
            struct
            {
-                uint8_t chargerControl      :8;
-                uint16_t chargerVoltage     :16;
-                uint16_t chargerCurrent     :16;
-                uint8_t chargerLEDs         :8;
-                uint8_t reserved1           :8;
-                uint8_t reserved2           :8;
+                uint8_t chargerControl       :8;
+                uint8_t chargerVoltageByte2  :8;
+                uint8_t chargerVoltageByte3  :8;
+                uint8_t chargerCurrentByte4  :8;
+                uint8_t chargerCurrentByte5  :8;
+                uint8_t chargerLEDs          :8;
+                uint8_t reserved1            :8;
+                uint8_t reserved2            :8;
            } chargerData;
            
-        }idkSomeName;
+        }startCharging;
         
 
         /**
@@ -76,10 +78,13 @@ class ComputeInterface
 
          /**
          * @brief sends charger message
+         * 
+         * @param voltageToSet
+         * @param currentToSet
          *
-         * @return int16_t
+         * @return int (error code 0 = message sent, 1 = not sent)
          */
-        void sendChargingMessage();
+        int sendChargingMessage(int voltageToSet, int currentToSet);
 
 
 
