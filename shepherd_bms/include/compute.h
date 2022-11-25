@@ -4,13 +4,19 @@
 #include "datastructs.h"
 #include "nerduino.h"
 
-using namespace std;
+#define CHARGE_VOLTAGE_PIN 3
 
 class ComputeInterface
 {
     private:
         uint8_t fanSpeed;
         bool isChargingEnabled;
+
+        enum
+        {
+            CHARGE_ENABLED,
+            CHARGE_DISABLED
+        };
 
         union 
         {
@@ -19,8 +25,8 @@ class ComputeInterface
            struct
            {
                 bool chargerControl         :8;
-                uint16_t chargerVoltage     :16;    //Note the charger voltage sent over should be 0.1*desired voltage
-                uint16_t chargerCurrentByte :16;    //Note the charge current sent over should be -3200+desired current
+                uint16_t chargerVoltage     :16;    //Note the charger voltage sent over should be 10*desired voltage
+                uint16_t chargerCurrent     :16;    //Note the charge current sent over should be -3200+desired current*10
                 uint8_t chargerLEDs         :8;
                 uint8_t reserved1           :8;
                 uint8_t reserved2           :8;
@@ -49,7 +55,7 @@ class ComputeInterface
          *
          * @return Returns a fault if we are not able to communicate with charger
          */
-        FaultStatus_t sendChargingMessage(int voltageToSet, int currentToSet);
+        FaultStatus_t sendChargingMessage(uint8_t voltageToSet, uint8_t currentToSet);
 
         /**
          * @brief Returns if we are detecting a charging voltage
