@@ -54,24 +54,23 @@ void SegmentInterface::enableBalancing(bool balanceEnable)
     //Discharging all cells in series
     static const uint16_t dischargeAllCommand = 0xFFFF >> (16-NUM_CELLS_PER_CHIP); // Making the discharge command all 1's for all cells per chip
 
-    pullChipConfigurations();
+	pullChipConfigurations();
 
     if(balanceEnable)
     {
-        for (int c = 0; c < NUM_CHIPS; c++)
+		for(int c = 0; c < NUM_CHIPS; c++)
         {
-            configureDischarge(c, 0);
+            configureDischarge(c, dischargeAllCommand);
+			dischargeCommands[c] = dischargeAllCommand;
         }
         pushChipConfigurations();
     }
     else
     {
-        for(int c = 0; c < NUM_CHIPS; c++)
+        for (int c = 0; c < NUM_CHIPS; c++)
         {
-            for(int cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
-            {
-                configureDischarge(c, dischargeAllCommand);
-            }
+            configureDischarge(c, 0);
+			dischargeCommands[c] = 0;
         }
         pushChipConfigurations();
     }
@@ -84,11 +83,12 @@ void SegmentInterface::enableBalancing(uint8_t chipNum, uint8_t cellNum, bool ba
 {
     pullChipConfigurations();
 
-    uint16_t dischargeCommand = 0;
+	if(balanceEnable) 
+		dischargeCommands[chipNum] |= (1 << cellNum);
+	else
+		dischargeCommands[chipNum] &= ~(1 << cellNum);
 
-    dischargeCommand |= (uint8_t)balanceEnable << cellNum;
-
-    configureDischarge(chipNum, dischargeCommand);
+    configureDischarge(chipNum, dischargeCommands[chipNum]);
 
     pushChipConfigurations();
 }
@@ -97,16 +97,17 @@ void SegmentInterface::configureBalancing(bool dischargeConfig[NUM_CHIPS][NUM_CE
 {
     pullChipConfigurations();
 
-    uint16_t dischargeCommand[NUM_CHIPS] = {};
-
     for(int c = 0; c < NUM_CHIPS; c++)
     {
         for(int cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
         {
-            if(dischargeConfig[c][cell]) dischargeCommand[c] |= 1 << cell;
+            if(dischargeConfig[c][cell]) 
+				dischargeCommands[c] |= 1 << cell;
+			else 
+				dischargeCommands[c] &= ~(1 << cell);
         }
 
-        configureDischarge(c, dischargeCommand[c]);
+        configureDischarge(c, dischargeCommands[c]);
     }
     pushChipConfigurations();
 }

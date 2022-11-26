@@ -40,6 +40,8 @@ class SegmentInterface
 
         uint8_t localConfig[NUM_CHIPS][6] = {};
 
+        uint16_t dischargeCommands[NUM_CHIPS] = {};
+
         void pullChipConfigurations();
 
         void pushChipConfigurations();
