@@ -99,12 +99,13 @@ void loop()
 	{
 		if(testData[chip].thermsUpdated)
 		{
-			for (int cell=0; cell < NUM_CELLS_PER_CHIP; cell++)
+			for (int cell=0; cell < NUM_THERMS; cell++)
 			{
 				Serial.print(testData[chip].thermistorReading[cell]);
 				Serial.print("\t");
+        if(cell == 15) Serial.println();
 			}
-		Serial.println(); //newline
+		  Serial.println(); //newline
 		}
 	}
 }

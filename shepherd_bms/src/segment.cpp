@@ -25,18 +25,24 @@ FaultStatus_t SegmentInterface::pullThermistors()
 		return NOT_FAULTED;
 	}
 
-	disableGPIOPulldowns();
+	for (int c = 0; c < NUM_CHIPS; c++)
+		{
+			localConfig[c][0] |= 0x18;
+		}
+		pushChipConfigurations();
 
     uint16_t rawTempVoltages[NUM_CHIPS][6];
 
     for (int therm = 1; therm <= 16; therm++)
 	{
         SelectTherm(therm);
-        delay(5);
+        delay(10);
         SelectTherm(therm + 16);
-        delay(10);
+        delay(15);
+		
+		pushChipConfigurations();
         LTC6804_adax(); // Run ADC for AUX (GPIOs and refs)
-        delay(10);
+        delay(20);
         LTC6804_rdaux(0, NUM_CHIPS, rawTempVoltages); // Fetch ADC results from AUX registers
 
         for (int c = 0; c < NUM_CHIPS; c++)

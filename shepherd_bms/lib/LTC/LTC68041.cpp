@@ -514,8 +514,9 @@ int8_t LTC6804_rdaux(uint8_t reg, //Determines which GPIO voltage register is re
 		for (uint8_t gpio_reg = 1; gpio_reg<3; gpio_reg++)                //executes once for each of the LTC6804 aux voltage registers
 		{
 			if(pec_error != -1) pec_error = 1;
+      retries = 0;
 
-			while(retries < LTC_MAX_RETRIES && pec_error == -1)
+			while(retries < LTC_MAX_RETRIES && (pec_error == -1 || pec_error == 1))
 			{
 				data_counter = 0;
 				LTC6804_rdaux_reg(gpio_reg, total_ic,data);                 //Reads the raw auxiliary register data into the data[] array
@@ -541,7 +542,7 @@ int8_t LTC6804_rdaux(uint8_t reg, //Determines which GPIO voltage register is re
 					received_pec = (data[data_counter]<<8)+ data[data_counter+1];          //The received PEC for the current_ic is transmitted as the 7th and 8th
 					//after the 6 gpio voltage data bytes
 					data_pec = pec15_calc(BYT_IN_REG, &data[current_ic*NUM_RX_BYT]);
-					if (received_pec == data_pec && (pec_error == 1 || pec_error == 0))
+					if (received_pec == data_pec)
 					{
 						pec_error = 0;                             //The pec_error variable is simply set negative if any PEC errors
 					//are detected in the received serial data
@@ -550,6 +551,8 @@ int8_t LTC6804_rdaux(uint8_t reg, //Determines which GPIO voltage register is re
 					{
 						pec_error = -1;
 					}
+
+          retries++;
 
 					data_counter=data_counter+2;                        //Because the transmitted PEC code is 2 bytes long the data_counter
 					//must be incremented by 2 bytes to point to the next ICs gpio voltage data
