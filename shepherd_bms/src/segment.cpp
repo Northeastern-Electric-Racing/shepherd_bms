@@ -1,35 +1,111 @@
 #include "segment.h"
 
-SegmentInterface segmentInterface;
+SegmentInterface segment;
 
 SegmentInterface::SegmentInterface(){}
 
 SegmentInterface::~SegmentInterface(){}
 
+FaultStatus_t SegmentInterface::configureDischarge(uint8_t chip, uint16_t cells)
+{
+  localConfig[chip][4] = uint8_t(cells & 0x00FF);
+  localConfig[chip][5] = (localConfig[chip][5] & 0xF0) + uint8_t(cells >> 8);
+}
+
+void SegmentInterface::init()
+{
+    Serial.println("Initializing Segments...");
+
+    LTC6804_initialize();
+
+    // Turn OFF GPIO 1 & 2 pull downs and set all cells to NOT discharge
+    pullChipConfigurations();
+    for (int c = 0; c < NUM_CHIPS; c++)
+    {
+        localConfig[c][0] |= 0x18;
+        configureDischarge(c, 0);
+    }
+    pushChipConfigurations();
+}
+
 void SegmentInterface::retrieveSegmentData(ChipData_t databuf[NUM_CHIPS])
 {
     segmentData = databuf;
 
-    pullVoltages();
+    /**
+     * Pull voltages and thermistors and indiacte if there was a problem during retrieval
+     */
+    voltageError = pullVoltages();
     pullThermistors();
 
+    /**
+     * Save the contents of the reading so that we can use it to fill in missing data
+     */
+    memcpy(previousData, segmentData, sizeof(ChipData_t)*NUM_CHIPS);
+
     segmentData = nullptr;
+}
+
+FaultStatus_t SegmentInterface::pullVoltages()
+{
+    /**
+     * If we haven't waited long enough between pulling voltage data
+     * just copy over the contents of the last good reading and the fault status from the most recent attempt
+     */
+    if(!voltageReadingTimer.isTimerExpired())
+    {
+        for(uint8_t i=0; i<NUM_CHIPS; i++)
+        {
+            memcpy(segmentData[i].voltageReading, previousData[i].voltageReading, sizeof(segmentData[i].voltageReading));
+        }
+        return voltageError;
+    }
+
+    uint16_t segmentVoltages[NUM_CHIPS][12];
+
+    LTC6804_adcv();
+
+    /**
+     * If we received an incorrect PEC indicating a bad read
+     * copy over the data from the last good read and indicate an error
+     */
+    if(LTC6804_rdcv(0, NUM_CHIPS, segmentVoltages) == -1)
+    {
+        for(uint8_t i=0; i<NUM_CHIPS; i++)
+        {
+            memcpy(segmentData[i].voltageReading, previousData[i].voltageReading, sizeof(segmentData[i].voltageReading));
+        }
+        return FAULTED;
+    }
+
+    /**
+     * If the read was successful, copy the voltage data
+     */
+    for (uint8_t i = 0; i < NUM_CHIPS; i++)
+    {
+        for (uint8_t j = 0; j < NUM_CELLS_PER_CHIP; j++)
+        {
+            segmentData[i].voltageReading[j] = segmentVoltages[i][j];
+        }
+    }
+    
+    /**
+     * Start the timer between readings if successful
+     */
+    voltageReadingTimer.startTimer(VOLTAGE_WAIT_TIME);
+    return NOT_FAULTED;
 }
 
 FaultStatus_t SegmentInterface::pullThermistors()
 {
 	if (!thermTimer.isTimerExpired())
 	{
-		for(uint8_t c=0; c < NUM_CHIPS; c++)
-			segmentData[c].thermsUpdated = false;
-		return NOT_FAULTED;
+		for(uint8_t i=0; i<NUM_CHIPS; i++)
+        {
+            memcpy(segmentData[i].thermistorReading, previousData[i].thermistorReading, sizeof(segmentData[i].thermistorReading));
+        }
+        return voltageError;
 	}
-
-	for (int c = 0; c < NUM_CHIPS; c++)
-		{
-			localConfig[c][0] |= 0x18;
-		}
-		pushChipConfigurations();
 
     uint16_t rawTempVoltages[NUM_CHIPS][6];
 
@@ -49,15 +125,9 @@ FaultStatus_t SegmentInterface::pullThermistors()
 		{
             segmentData[c].thermistorReading[therm - 1] = steinhartEst(uint16_t(rawTempVoltages[c][0] * (float(rawTempVoltages[c][2]) / 50000)));
             segmentData[c].thermistorReading[therm + 15] = steinhartEst(uint16_t(rawTempVoltages[c][1] * (float(rawTempVoltages[c][2]) / 50000)));
-			segmentData[c].thermsUpdated = true;
         }
     }
 	thermTimer.startTimer(THERM_WAIT_TIME);
-	return NOT_FAULTED;
-}
-
-FaultStatus_t SegmentInterface::pullVoltages()
-{
 	return NOT_FAULTED;
 }
 

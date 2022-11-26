@@ -2,6 +2,7 @@
 #define DATASTRUCTS_H
 
 #include <nerduino.h>
+#include "bmsConfig.h"
 
 /**
  * @brief Individual chip data
@@ -10,17 +11,14 @@
 struct ChipData_t
 {
     //These are retrieved from the initial LTC comms
-    uint16_t voltageReading[12];          //store voltage readings from each chip
-    uint16_t thermistorReading[32];       //store all therm readings from each chip
-    bool discharge[12];
+    uint16_t voltageReading[NUM_CELLS_PER_CHIP];          //store voltage readings from each chip
+    uint16_t thermistorReading[NUM_THERMS_PER_CHIP];       //store all therm readings from each chip
+    bool discharge[NUM_CELLS_PER_CHIP];
     FaultStatus_t errorReading;
 
     //These are calculated during the analysis of data
-    uint16_t cellResistance[12];
-    uint16_t openCellVoltage[12];
-
-    bool thermsUpdated;
-    bool voltagesUpdated;
+    uint16_t cellResistance[NUM_CELLS_PER_CHIP];
+    uint16_t openCellVoltage[NUM_CELLS_PER_CHIP];
 };
 
 /**

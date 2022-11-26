@@ -4,11 +4,7 @@
 #include <LTC68041.h>
 #include <nerduino.h>
 #include "datastructs.h"
-
-#define NUM_SEGMENTS        4
-#define NUM_CHIPS           1//NUM_SEGMENTS*2
-#define NUM_CELLS_PER_CHIP  9
-#define NUM_THERMS          32
+#include "bmsConfig.h"
 
 #define MIN_VOLT            2.9
 #define MAX_VOLT            4.2
@@ -16,6 +12,7 @@
 #define BAL_MIN_V           4.00
 
 #define THERM_WAIT_TIME     800 //ms
+#define VOLTAGE_WAIT_TIME   500 //ms
 
 /**
  * @brief This class serves as the interface for all of the segment boards
@@ -25,6 +22,10 @@ class SegmentInterface
     private:
 
         Timer thermTimer;
+        Timer voltageReadingTimer;
+
+        FaultStatus_t voltageError = NOT_FAULTED;
+        FaultStatus_t thermError = NOT_FAULTED;
 
         const uint32_t VOLT_TEMP_CONV[57] = 
         {
@@ -38,7 +39,9 @@ class SegmentInterface
 
         ChipData_t *segmentData = nullptr;
 
-        uint8_t localConfig[NUM_CHIPS][6];
+        ChipData_t previousData[NUM_CHIPS];
+
+        uint8_t localConfig[NUM_CHIPS][6] = {};
 
         void pullChipConfigurations();
 
@@ -62,6 +65,12 @@ class SegmentInterface
         SegmentInterface();
 
         ~SegmentInterface();
+        /**
+         * @brief Initializes the segments
+         * 
+         */
+        void init();
+
         /**
          * @brief Pulls all cell data from the segments and returns all cell data
          * 
@@ -105,6 +114,6 @@ class SegmentInterface
         bool isBalancing();
 };
 
-extern SegmentInterface segmentInterface;
+extern SegmentInterface segment;
 
 #endif
