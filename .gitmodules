@@ -1,6 +1,6 @@
-[submodule "shepherd_bms/lib/NERduino"]
-	path = shepherd_bms/lib/NERduino
-	url = git@github.com:Northeastern-Electric-Racing/NERduino.git
 [submodule "shepherd_bms/lib/WDT_T4"]
 	path = shepherd_bms/lib/WDT_T4
 	url = git@github.com:tonton81/WDT_T4.git
+[submodule "shepherd_bms/lib/NERduino"]
+	path = shepherd_bms/lib/NERduino
+	url = git@github.com:Northeastern-Electric-Racing/NERduino.git
