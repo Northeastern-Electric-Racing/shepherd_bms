@@ -6,12 +6,6 @@ SegmentInterface::SegmentInterface(){}
 
 SegmentInterface::~SegmentInterface(){}
 
-FaultStatus_t SegmentInterface::configureDischarge(uint8_t chip, uint16_t cells)
-{
-  localConfig[chip][4] = uint8_t(cells & 0x00FF);
-  localConfig[chip][5] = (localConfig[chip][5] & 0xF0) + uint8_t(cells >> 8);
-}
-
 void SegmentInterface::init()
 {
     Serial.println("Initializing Segments...");
@@ -44,6 +38,137 @@ void SegmentInterface::retrieveSegmentData(ChipData_t databuf[NUM_CHIPS])
     memcpy(previousData, segmentData, sizeof(ChipData_t)*NUM_CHIPS);
 
     segmentData = nullptr;
+}
+
+void SegmentInterface::configureDischarge(uint8_t chip, uint16_t cells) 
+{
+  // chipConfigurations[chip][4] == chipConfigurations[Literally what chip you want][register]
+  // 4 and 5 are registers to discharge chips
+  localConfig[chip][4] = uint8_t(cells & 0x00FF);
+  // Register 5 is split in half, so we maintain the upper half and add in the bottom half to discharge cells
+  localConfig[chip][5] = (localConfig[chip][5] & 0xF0) + uint8_t(cells >> 8);
+}
+
+void SegmentInterface::enableBalancing(bool balanceEnable)
+{
+    //Discharging all cells in series
+    static const uint16_t dischargeAllCommand = 0xFFFF >> (16-NUM_CELLS_PER_CHIP); // Making the discharge command all 1's for all cells per chip
+
+	pullChipConfigurations();
+
+    if(balanceEnable)
+    {
+		for(int c = 0; c < NUM_CHIPS; c++)
+        {
+            configureDischarge(c, dischargeAllCommand);
+			dischargeCommands[c] = dischargeAllCommand;
+        }
+        pushChipConfigurations();
+    }
+    else
+    {
+        for (int c = 0; c < NUM_CHIPS; c++)
+        {
+            configureDischarge(c, 0);
+			dischargeCommands[c] = 0;
+        }
+        pushChipConfigurations();
+    }
+}
+
+/**
+ * @todo Revisit after testing 
+ */
+void SegmentInterface::enableBalancing(uint8_t chipNum, uint8_t cellNum, bool balanceEnable)
+{
+    pullChipConfigurations();
+
+	if(balanceEnable) 
+		dischargeCommands[chipNum] |= (1 << cellNum);
+	else
+		dischargeCommands[chipNum] &= ~(1 << cellNum);
+
+    configureDischarge(chipNum, dischargeCommands[chipNum]);
+
+    pushChipConfigurations();
+}
+
+void SegmentInterface::configureBalancing(bool dischargeConfig[NUM_CHIPS][NUM_CELLS_PER_CHIP])
+{
+    pullChipConfigurations();
+
+    for(int c = 0; c < NUM_CHIPS; c++)
+    {
+        for(int cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+        {
+            if(dischargeConfig[c][cell]) 
+				dischargeCommands[c] |= 1 << cell;
+			else 
+				dischargeCommands[c] &= ~(1 << cell);
+        }
+
+        configureDischarge(c, dischargeCommands[c]);
+    }
+    pushChipConfigurations();
+}
+
+bool SegmentInterface::isBalancing(uint8_t chipNum, uint8_t cellNum)
+{
+    pullChipConfigurations();
+    
+    //If the cell is one of the first 8, check the 4th register
+    if(cellNum < 8)
+    {
+        return localConfig[chipNum][4] & (1 << cellNum);
+    }
+    //If the cell number is greater than 8, check the 5th register
+    else
+    {
+        return localConfig[chipNum][5] & (1 << (cellNum - 8));
+    }
+
+    return false; //default case
+}
+
+bool SegmentInterface::isBalancing()
+{
+    pullChipConfigurations();
+
+    for(int c = 0; c < NUM_CHIPS; c++)
+    {
+        //Reading from the 4th config register
+        for(int cell = 0; cell < 8; cell++)
+        {
+            if(localConfig[c][4] & (1 << cell)) return true;
+        }
+
+        //Reading from the 5th config register
+        for(int cell = 0; cell < 4; cell++)
+        {
+            if(localConfig[c][5] & (1 << (cell))) return true;
+        }
+    }
+
+    return false;
+}
+
+void SegmentInterface::pullChipConfigurations()
+{
+    uint8_t remoteConfig[NUM_CHIPS][8];
+    LTC6804_rdcfg(NUM_CHIPS, remoteConfig);
+
+    for (int chip = 0; chip < NUM_CHIPS; chip++)
+    {
+        for(int index = 0; index < 6; index++)
+        {
+            localConfig[chip][index] = remoteConfig[chip][index];
+        }
+    }
+}
+
+void SegmentInterface::pushChipConfigurations()
+{
+    LTC6804_wrcfg(NUM_CHIPS, localConfig);
 }
 
 FaultStatus_t SegmentInterface::pullVoltages()
@@ -229,26 +354,6 @@ uint8_t SegmentInterface::steinhartEst(uint16_t V)
   return i - 5;
 }
 
-void SegmentInterface::enableBalancing(bool balanceEnable)
-{
-
-}
-
-void SegmentInterface::enableBalancing(uint8_t chipNum, uint8_t cellNum, bool balanceEnable)
-{
-
-}
-
-bool SegmentInterface::isBalancing(uint8_t chipNum, uint8_t cellNum)
-{
-
-}
-
-bool SegmentInterface::isBalancing()
-{
-    
-}
-
 void SegmentInterface::disableGPIOPulldowns()
 {
 	delay(1000);
@@ -272,25 +377,6 @@ void SegmentInterface::disableGPIOPulldowns()
 		Serial.println();
 	}
 	Serial.println("Done");
-}
-
-void SegmentInterface::pullChipConfigurations()
-{
-    uint8_t remoteConfig[NUM_CHIPS][8];
-    if(LTC6804_rdcfg(NUM_CHIPS, remoteConfig) == -1) return;
-
-    for (int chip = 0; chip < NUM_CHIPS; chip++)
-    {
-        for(int index = 0; index < 6; index++)
-        {
-            localConfig[chip][index] = remoteConfig[chip][index];
-        }
-    }
-}
-
-void SegmentInterface::pushChipConfigurations()
-{
-    LTC6804_wrcfg(NUM_CHIPS, localConfig);
 }
 
 void SegmentInterface::serializeI2CMsg(uint8_t dataToWrite[][3], uint8_t commOutput[][6])

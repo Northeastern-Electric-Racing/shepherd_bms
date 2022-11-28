@@ -43,6 +43,8 @@ class SegmentInterface
 
         uint8_t localConfig[NUM_CHIPS][6] = {};
 
+        uint16_t dischargeCommands[NUM_CHIPS] = {};
+
         void pullChipConfigurations();
 
         void pushChipConfigurations();
@@ -57,7 +59,7 @@ class SegmentInterface
 
         void serializeI2CMsg(uint8_t dataToWrite[][3], uint8_t commOutput[][6]);
 
-        FaultStatus_t configureDischarge(uint8_t chip, uint16_t cells);
+        void configureDischarge(uint8_t chip, uint16_t cells);
 
         void disableGPIOPulldowns();
 
@@ -95,6 +97,13 @@ class SegmentInterface
          * @param balanceEnable 
          */
         void enableBalancing(uint8_t chipNum, uint8_t cellNum, bool balanceEnable);
+
+        /**
+         * @brief Sets each cell to whatever state is passed in the boolean config area
+         * 
+         * @param dischargeConfig 
+         */
+        void configureBalancing(bool dischargeConfig[NUM_CHIPS][NUM_CELLS_PER_CHIP]);
 
         /**
          * @brief Returns if a specific cell is balancing
