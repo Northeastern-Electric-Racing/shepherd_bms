@@ -11,6 +11,7 @@
 #define MAX_DELTA_V         0.02
 #define BAL_MIN_V           4.00
 
+#define THERM_WAIT_TIME     800 //ms
 #define VOLTAGE_WAIT_TIME   500 //ms
 
 /**
@@ -20,9 +21,11 @@ class SegmentInterface
 {
     private:
 
+        Timer thermTimer;
         Timer voltageReadingTimer;
 
         FaultStatus_t voltageError = NOT_FAULTED;
+        FaultStatus_t thermError = NOT_FAULTED;
 
         const uint32_t VOLT_TEMP_CONV[57] = 
         {
@@ -46,21 +49,24 @@ class SegmentInterface
 
         void pushChipConfigurations();
 
+        void SelectTherm(uint8_t therm);
+
         FaultStatus_t pullThermistors();
 
         FaultStatus_t pullVoltages();
 
-        uint8_t steinhartEst();
+        uint8_t steinhartEst(uint16_t V);
 
         void serializeI2CMsg(uint8_t dataToWrite[][3], uint8_t commOutput[][6]);
 
         void configureDischarge(uint8_t chip, uint16_t cells);
 
+        void disableGPIOPulldowns();
+
     public:
         SegmentInterface();
 
         ~SegmentInterface();
-
         /**
          * @brief Initializes the segments
          * 
