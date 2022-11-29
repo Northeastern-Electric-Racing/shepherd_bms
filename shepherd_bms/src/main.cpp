@@ -20,7 +20,6 @@ void loop()
 	// Run ADC on cell taps
 	segment.retrieveSegmentData(testData);
 
-	Serial.print("Voltage:\n");
 	for (int chip = 0; chip < NUM_CHIPS; chip++)
 	{
 		for (int cell=0; cell < NUM_CELLS_PER_CHIP; cell++)
@@ -28,8 +27,19 @@ void loop()
 			Serial.print(testData[chip].voltageReading[cell]);
 			Serial.print("\t");
 		}
+
+	  	Serial.println(); //newline
+
+		for (int therm=0; therm < NUM_THERMS_PER_CHIP; therm++)
+		{
+			Serial.print(testData[chip].thermistorReading[therm]);
+			Serial.print("\t");
+			if (therm == 15) Serial.println();
+		}
+		Serial.println(); //newline
+  	}
 	Serial.println(); //newline
-      }
     delete[] testData;
     testData = nullptr;
+	delay(1000);
 }

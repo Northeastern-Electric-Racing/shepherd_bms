@@ -1182,6 +1182,7 @@ void LTC6804_stcomm(uint8_t len) //Length of data to be transmitted
 {
 	uint8_t cmd[4];
 	uint16_t cmd_pec;
+  uint8_t trash[len*24];
 
 	cmd[0] = 0x07;
 	cmd[1] = 0x23;
@@ -1190,19 +1191,7 @@ void LTC6804_stcomm(uint8_t len) //Length of data to be transmitted
 	cmd[3] = (uint8_t)(cmd_pec);
 
   //wakeup_idle();
-	output_low(CS_PIN);
-	spi_write_array(4,cmd);
-	for (int i = 0; i<len*3; i++)
-	{
-	  spi_read_byte(0xFF);
-	}
-	output_high(CS_PIN);
+	output_low(LTC6804_CS);
+  spi_write_read(cmd, 4, trash, len * 24);
+	output_high(LTC6804_CS);
 }
-
-uint8_t spi_read_byte(uint8_t tx_dat)
-{
-  uint8_t data;
-  data = (uint8_t)SPI.transfer(0xFF);
-  return(data);
-}
-
