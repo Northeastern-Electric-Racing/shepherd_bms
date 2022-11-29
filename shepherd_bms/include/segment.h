@@ -4,15 +4,15 @@
 #include <LTC68041.h>
 #include <nerduino.h>
 #include "datastructs.h"
-
-#define NUM_SEGMENTS        4
-#define NUM_CHIPS           NUM_SEGMENTS*2
-#define NUM_CELLS_PER_CHIP  9
+#include "bmsConfig.h"
 
 #define MIN_VOLT            2.9
 #define MAX_VOLT            4.2
 #define MAX_DELTA_V         0.02
 #define BAL_MIN_V           4.00
+
+#define THERM_WAIT_TIME     800 //ms
+#define VOLTAGE_WAIT_TIME   500 //ms
 
 /**
  * @brief This class serves as the interface for all of the segment boards
@@ -20,6 +20,12 @@
 class SegmentInterface
 {
     private:
+
+        Timer thermTimer;
+        Timer voltageReadingTimer;
+
+        FaultStatus_t voltageError = NOT_FAULTED;
+        FaultStatus_t thermError = NOT_FAULTED;
 
         const uint32_t VOLT_TEMP_CONV[57] = 
         {
@@ -33,28 +39,39 @@ class SegmentInterface
 
         ChipData_t *segmentData = nullptr;
 
+        ChipData_t previousData[NUM_CHIPS];
+
         uint8_t localConfig[NUM_CHIPS][6] = {};
 
-        uint8_t chipConfigurations[NUM_CHIPS][6];
+        uint16_t dischargeCommands[NUM_CHIPS] = {};
 
         void pullChipConfigurations();
 
         void pushChipConfigurations();
 
+        void SelectTherm(uint8_t therm);
+
         FaultStatus_t pullThermistors();
 
         FaultStatus_t pullVoltages();
 
-        uint8_t steinhartEst();
+        uint8_t steinhartEst(uint16_t V);
 
         void serializeI2CMsg(uint8_t dataToWrite[][3], uint8_t commOutput[][6]);
 
-        FaultStatus_t configureDischarge(uint8_t chip, uint16_t cells);
+        void configureDischarge(uint8_t chip, uint16_t cells);
+
+        void disableGPIOPulldowns();
 
     public:
         SegmentInterface();
 
         ~SegmentInterface();
+        /**
+         * @brief Initializes the segments
+         * 
+         */
+        void init();
 
         /**
          * @brief Pulls all cell data from the segments and returns all cell data
@@ -82,6 +99,13 @@ class SegmentInterface
         void enableBalancing(uint8_t chipNum, uint8_t cellNum, bool balanceEnable);
 
         /**
+         * @brief Sets each cell to whatever state is passed in the boolean config area
+         * 
+         * @param dischargeConfig 
+         */
+        void configureBalancing(bool dischargeConfig[NUM_CHIPS][NUM_CELLS_PER_CHIP]);
+
+        /**
          * @brief Returns if a specific cell is balancing
          * 
          * @param chipNum 
@@ -98,5 +122,7 @@ class SegmentInterface
          */
         bool isBalancing();
 };
+
+extern SegmentInterface segment;
 
 #endif

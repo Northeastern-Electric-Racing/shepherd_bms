@@ -3,75 +3,43 @@
 #include <segment.h>
 #include <compute.h>
 
-uint16_t rawCellVoltages[NUM_CHIPS][12];
-float cellVoltages[NUM_CHIPS][12];
-uint8_t chipConfigurations[NUM_CHIPS][6];
-
-//last two bytes of recieved index are PEC and we want to dump them
-void GetChipConfigurations(uint8_t localConfig[][6])
-{
-  uint8_t remoteConfig[NUM_CHIPS][8];
-  LTC6804_rdcfg(NUM_CHIPS, remoteConfig);
-  for (int chip = 0; chip < NUM_CHIPS; chip++)
-  {
-    for(int index = 0; index < 6; index++)
-    {
-      localConfig[chip][index] = remoteConfig[chip][index];
-    }
-  }
-}
-
-void SetChipConfigurations(uint8_t localConfig[][6])
-{
-  LTC6804_wrcfg(NUM_CHIPS, localConfig);
-}
-
 void setup()
 {
   NERduino.begin();
-  LTC6804_initialize();
-
-  // Turn OFF GPIO 1 & 2 pull downs
-  GetChipConfigurations(chipConfigurations);
-  for (int c = 0; c < NUM_CHIPS; c++)
-  {
-    chipConfigurations[c][0] |= 0x18;
-  }
-  SetChipConfigurations(chipConfigurations);
-
-  GetChipConfigurations(chipConfigurations);
-
-  Serial.print("Chip CFG:\n");
-  for (int c = 0; c < NUM_CHIPS; c++)
-  {
-    for (int byte = 0; byte < 6; byte++)
-    {
-      Serial.print(chipConfigurations[c][byte], HEX);
-      Serial.print("\t");
-    }
-    Serial.println();
-  }
-  Serial.println("Done");
-  delay(3000);
+  delay(3000); // Allow time to connect and see boot up info
+  Serial.println("Hello World!");
+  
+  segment.init();
 }
+ChipData_t *testData;
+Timer mainTimer;
 
 void loop()
 {
-    // Run ADC on cell taps
-    LTC6804_adcv(); //this needs to be done before pulling from registers
+	testData = new ChipData_t[NUM_CHIPS];
+	// Run ADC on cell taps
+	segment.retrieveSegmentData(testData);
 
-    // Pull and print the cell voltages from registers
-    LTC6804_rdcv(0, NUM_CHIPS, rawCellVoltages);
+	for (int chip = 0; chip < NUM_CHIPS; chip++)
+	{
+		for (int cell=0; cell < NUM_CELLS_PER_CHIP; cell++)
+		{
+			Serial.print(testData[chip].voltageReading[cell]);
+			Serial.print("\t");
+		}
 
-    Serial.print("Voltage:\n");
-    for (int chip = 0; chip < NUM_CHIPS; chip++)
-    {
-      for (int cell=0; cell < NUM_CELLS_PER_CHIP; cell++)
-      {
-            Serial.print(rawCellVoltages[chip][cell]);
-            Serial.print("\t");
-      }
+	  	Serial.println(); //newline
+
+		for (int therm=0; therm < NUM_THERMS_PER_CHIP; therm++)
+		{
+			Serial.print(testData[chip].thermistorReading[therm]);
+			Serial.print("\t");
+			if (therm == 15) Serial.println();
+		}
 		Serial.println(); //newline
-	}
-  delay(1000);
+  	}
+	Serial.println(); //newline
+    delete[] testData;
+    testData = nullptr;
+	delay(1000);
 }
