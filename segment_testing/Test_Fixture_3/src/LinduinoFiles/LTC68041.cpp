@@ -73,7 +73,7 @@ Copyright 2013 Linear Technology Corp. (LTC)
 #include "LTC68041.h"
 #include <SPI.h>
 
-const SPISettings ltcSPISettings = SPISettings(1000000, MSBFIRST, SPI_MODE0);
+const SPISettings ltcSPISettings = SPISettings(1000000, MSBFIRST, SPI_MODE3);
 
 /*!
   6804 conversion command variables.
