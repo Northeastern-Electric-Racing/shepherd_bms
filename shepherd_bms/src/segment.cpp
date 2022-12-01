@@ -7,12 +7,10 @@ SegmentInterface::SegmentInterface(){}
 SegmentInterface::~SegmentInterface(){}
 
 void SegmentInterface::init()
-{
+{   
     #ifdef SEGMENT_DEBUG
-        Serial.println("SEGMENT_DEBUG was defined at compile time\n");
+        Serial.println("Initializing Segments...");
     #endif // DEBUG
-    
-    Serial.println("Initializing Segments...");
 
     LTC6804_initialize();
 
@@ -33,7 +31,14 @@ void SegmentInterface::retrieveSegmentData(ChipData_t databuf[NUM_CHIPS])
     /**
      * Pull voltages and thermistors and indiacte if there was a problem during retrieval
      */
+    #ifdef SEGMENT_DEBUG
+        Serial.println("Pulling voltages...\n");
+    #endif // DEBUG
     voltageError = pullVoltages();
+    
+    #ifdef SEGMENT_DEBUG
+        Serial.println("Pulling thermistors...\n");
+    #endif // DEBUG
     pullThermistors();
 
     /**
@@ -189,6 +194,10 @@ FaultStatus_t SegmentInterface::pullVoltages()
         }
         return voltageError;
     }
+    #ifdef SEGMENT_DEBUG
+        Serial.println("Voltage reading timer expired\n");
+    #endif // DEBUG
+
 
     uint16_t segmentVoltages[NUM_CHIPS][12];
 
@@ -201,6 +210,10 @@ FaultStatus_t SegmentInterface::pullVoltages()
      */
     if(LTC6804_rdcv(0, NUM_CHIPS, segmentVoltages) == -1)
     {
+        #ifdef SEGMENT_DEBUG
+            Serial.println("RDCV BAD READ\n");
+        #endif // DEBUG
+
         // BAD READING
         for(uint8_t i=0; i<NUM_CHIPS; i++)
         {
@@ -231,12 +244,16 @@ FaultStatus_t SegmentInterface::pullThermistors()
 {
 	if (!thermTimer.isTimerExpired())
 	{
+
 		for(uint8_t i=0; i<NUM_CHIPS; i++)
         {
             memcpy(segmentData[i].thermistorReading, previousData[i].thermistorReading, sizeof(segmentData[i].thermistorReading));
         }
         return voltageError;
 	}
+    #ifdef SEGMENT_DEBUG
+        Serial.println("Thermistor timer expired\n");
+    #endif // DEBUG
 
     uint16_t rawTempVoltages[NUM_CHIPS][6];
 
