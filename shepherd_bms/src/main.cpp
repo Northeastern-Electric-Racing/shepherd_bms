@@ -1,4 +1,5 @@
 #include <nerduino.h>
+#include <Watchdog_t4.h>
 #include <LTC68041.h>
 #include "segment.h"
 #include "compute.h"
@@ -18,6 +19,7 @@ bool dischargeConfig[NUM_CHIPS][NUM_CELLS_PER_CHIP] = {};
 ChipData_t *testData;
 Timer mainTimer;
 ComputeInterface compute;
+WDT_T4<WDT1> wdt;
 
 uint32_t bmsFault = FAULTS_CLEAR;
 
@@ -263,6 +265,11 @@ void setup()
   segment.init();
 
   compute.setFault(NOT_FAULTED);
+
+  WDT_timings_t config;
+  config.trigger = 5;         /* in seconds, 0->128 */
+  config.timeout = 15;        /* in seconds, 0->128 */
+  wdt.begin(config);
 }
 
 void loop()
@@ -275,6 +282,7 @@ void loop()
 	 */
 	//testSegments();
 	shepherdMain();
+	wdt.feed();
 	
 	delay(10);
 }
