@@ -8,6 +8,10 @@ SegmentInterface::~SegmentInterface(){}
 
 void SegmentInterface::init()
 {
+    #ifdef SEGMENT_DEBUG
+        Serial.println("SEGMENT_DEBUG was defined at compile time\n");
+    #endif // DEBUG
+    
     Serial.println("Initializing Segments...");
 
     LTC6804_initialize();
@@ -96,6 +100,7 @@ FaultStatus_t SegmentInterface::pullVoltages()
 
     uint16_t segmentVoltages[NUM_CHIPS][12];
 
+    // ADCV
     LTC6804_adcv();
 
     /**
@@ -104,6 +109,7 @@ FaultStatus_t SegmentInterface::pullVoltages()
      */
     if(LTC6804_rdcv(0, NUM_CHIPS, segmentVoltages) == -1)
     {
+        // BAD READING
         for(uint8_t i=0; i<NUM_CHIPS; i++)
         {
             memcpy(segmentData[i].voltageReading, previousData[i].voltageReading, sizeof(segmentData[i].voltageReading));

@@ -116,6 +116,7 @@ void set_adc(uint8_t MD, //ADC Mode
              uint8_t CHG //GPIO Channels to be measured
             )
 {
+
   uint8_t md_bits;
 
   md_bits = (MD & 0x02) >> 1;
@@ -151,7 +152,6 @@ Command Code:
 ***********************************************************************************************/
 void LTC6804_adcv()
 {
-
   uint8_t cmd[4];
   uint16_t cmd_pec;
 
