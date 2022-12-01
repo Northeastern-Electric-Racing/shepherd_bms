@@ -3,6 +3,7 @@
 
 #include "datastructs.h"
 #include "nerduino.h"
+#include "canMsgHandler.h"
 
 using namespace std;
 
@@ -10,6 +11,19 @@ class ComputeInterface
 {
     private:
         uint8_t fanSpeed;
+
+        union 
+        {
+            uint8_t msg[4] = {0,0,0,0};
+
+            struct
+            {
+                uint16_t maxDischarge;
+                uint16_t maxCharge;
+
+            }config;
+        }mcMsg;
+    
 
         /**
          * @todo These might need to be changed depending on the charging ticket
@@ -56,5 +70,16 @@ class ComputeInterface
          */
         int16_t getPackCurrent();
 
+        /**
+         * @brief sends max charge/discharge current to Motor Controller
+         *
+         * @param maxCharge
+         * @param maxDischarge
+         */
+        void sendMCMsg(uint16_t maxCharge, uint16_t maxDischarge);
+
 };
+
+extern ComputeInterface compute;
+
 #endif
