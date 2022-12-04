@@ -237,19 +237,19 @@ FaultStatus_t SegmentInterface::pullThermistors()
     for (int therm = 1; therm <= 16; therm++)
 	{
         SelectTherm(therm);
-        delay(10);
+        delay(25);
         SelectTherm(therm + 16);
-        delay(15);
+        delay(25);
 		
 		pushChipConfigurations();
         LTC6804_adax(); // Run ADC for AUX (GPIOs and refs)
-        delay(20);
+        delay(10);
         LTC6804_rdaux(0, NUM_CHIPS, rawTempVoltages); // Fetch ADC results from AUX registers
 
         for (int c = 0; c < NUM_CHIPS; c++)
 		{
-            segmentData[c].thermistorReading[therm - 1] = steinhartEst(uint16_t(rawTempVoltages[c][0] * (float(rawTempVoltages[c][2]) / 50000)));
-            segmentData[c].thermistorReading[therm + 15] = steinhartEst(uint16_t(rawTempVoltages[c][1] * (float(rawTempVoltages[c][2]) / 50000)));
+            segmentData[c].thermistorReading[therm - 1] = uint16_t(rawTempVoltages[c][0] * (float(rawTempVoltages[c][2]) / 50000));
+            segmentData[c].thermistorReading[therm + 15] = uint16_t(rawTempVoltages[c][1] * (float(rawTempVoltages[c][2]) / 50000));
         }
     }
 	thermTimer.startTimer(THERM_WAIT_TIME);
