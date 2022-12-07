@@ -1161,7 +1161,7 @@ void LTC6804_stcomm(uint8_t len) //Length of data to be transmitted
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
 	cmd[3] = (uint8_t)(cmd_pec);
 
-  //wakeup_idle();
+  wakeup_idle();
 	digitalWrite(SPI1_CS, LOW);
 	NERduino.writeSPI1(cmd, 4, ltcSPISettings);
 	for (int i = 0; i<len*3; i++)
