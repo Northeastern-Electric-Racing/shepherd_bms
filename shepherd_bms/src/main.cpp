@@ -66,12 +66,13 @@ void loop()
 	{ 	
       	for (uint8_t c = 0; c < NUM_CHIPS; c++)
 		{
-			//Flipping the bit based on if the cellTestIter is divisible by the 2^(each cell)
-			for(uint8_t i = 0; i < NUM_CELLS_PER_CHIP; i++)
-			{
-				if(cellTestIter % (1 << i) == 0)
-					dischargeConfig[c][i] = !dischargeConfig[c][i];
+			for (uint8_t i = 0; i <NUM_CELLS_PER_CHIP; i++){
+
+				dischargeConfig[c][i] == false;
 			}
+
+			dischargeConfig[c][cellTestIter % NUM_CELLS_PER_CHIP] = true;
+			
       	}
 
 		//Configures the segments to discharge based on the boolean area passed
@@ -84,5 +85,5 @@ void loop()
 		segment.enableBalancing(false);
 	}
 
-	delay(100);
+	delay(1000);
 }
