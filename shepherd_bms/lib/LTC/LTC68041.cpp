@@ -923,7 +923,6 @@ int8_t LTC6804_rdcfg(uint8_t total_ic, //Number of ICs in the system
 
 	while(retries < LTC_MAX_RETRIES && pec_error == -1)
 	{
-		Serial.println("Trying...\n");
 		//2
 		wakeup_idle (); //This will guarantee that the LTC6804 isoSPI port is awake. This command can be removed.
 		//3
@@ -948,7 +947,6 @@ int8_t LTC6804_rdcfg(uint8_t total_ic, //Number of ICs in the system
 			}else
 			{
 				pec_error = 0;
-				Serial.println((pec_error == -1));
 			}
 		}
 		retries++;
