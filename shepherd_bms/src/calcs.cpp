@@ -42,7 +42,7 @@ int16_t calcCurrentLimit(AccumulatorData_t *bmsdata)
 
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
-
+        //take the minimum current limit of all the cells
     }
 
     return currentLimit;

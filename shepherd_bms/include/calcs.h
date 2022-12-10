@@ -12,6 +12,23 @@ const uint16_t TEMP_TO_CELL_RES[60] =
     
 };
 
+/**
+ * @brief Mapping the Relevant Thermistors for each cell based on cell #
+ * 
+ */
+const std::vector<int> RelevantThermMap[NUM_CELLS_PER_CHIP] = 
+{
+    {1,2},
+    {1,2},
+    {1,2,3,4},
+    {3,4},
+    {3,4,5,6,7},
+    {5,6,7,8,9},
+    {8,9},
+    {8,9,10,11},
+    {10,11}
+};
+
 void calcCellResistances(AccumulatorData_t *bmsdata);
 
 void calcCellTemps(AccumulatorData_t *bmsdata);
