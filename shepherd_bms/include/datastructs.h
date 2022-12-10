@@ -3,6 +3,7 @@
 
 #include <nerduino.h>
 #include "bmsConfig.h"
+#include <vector>
 
 /**
  * @brief Individual chip data
@@ -13,12 +14,29 @@ struct ChipData_t
     //These are retrieved from the initial LTC comms
     uint16_t voltageReading[NUM_CELLS_PER_CHIP];          //store voltage readings from each chip
     uint16_t thermistorReading[NUM_THERMS_PER_CHIP];       //store all therm readings from each chip
-    bool discharge[NUM_CELLS_PER_CHIP];
     FaultStatus_t errorReading;
 
     //These are calculated during the analysis of data
+    uint16_t cellTemp[NUM_CELLS_PER_CHIP];
     uint16_t cellResistance[NUM_CELLS_PER_CHIP];
     uint16_t openCellVoltage[NUM_CELLS_PER_CHIP];
+};
+
+/**
+ * @brief Mapping the Relevant Thermistors for each cell based on cell #
+ * 
+ */
+const std::vector<int> RelevantThermMap[NUM_CELLS_PER_CHIP] = 
+{
+    {1,2},
+    {1,2},
+    {1,2,3,4},
+    {3,4},
+    {3,4,5,6,7},
+    {5,6,7,8,9},
+    {8,9},
+    {8,9,10,11},
+    {10,11}
 };
 
 /**
@@ -70,13 +88,16 @@ struct CriticalCellValue_t
 struct AccumulatorData_t
 {
     /*Array of data from all chips in the system*/
-    ChipData_t ChipData[8];
+    ChipData_t ChipData[NUM_CHIPS];
 
     FaultStatus_t faultStatus = NOT_FAULTED;
 
     int16_t packCurrent;
     uint16_t packVoltage;
     uint16_t packRes;
+
+    int16_t dischargeLimit;
+    int16_t chargeLimit;
 
     /**
      * @brief Note that this is a 32 bit integer, so there are 32 max possible fault codes
