@@ -14,12 +14,16 @@ void SegmentInterface::init()
 
     LTC6804_initialize();
 
-    // Turn OFF GPIO 1 & 2 pull downs and set all cells to NOT discharge
-    pullChipConfigurations();
+    //pullChipConfigurations();
+    
     for (int c = 0; c < NUM_CHIPS; c++)
     {
-        localConfig[c][0] |= 0x18;
-        configureDischarge(c, 0);
+    localConfig[c][0] = 0xF8;
+    localConfig[c][1] = 0x19; // VUV = 0x619 = 1561 -> 2.4992V
+    localConfig[c][2] = 0x06; // VOV = 0xA60 = 2656 -> 4.2496V
+    localConfig[c][3] = 0xA6;
+    localConfig[c][4] = 0x00;
+    localConfig[c][5] = 0x00;
     }
     pushChipConfigurations();
 }
@@ -201,7 +205,8 @@ FaultStatus_t SegmentInterface::pullVoltages()
 
     uint16_t segmentVoltages[NUM_CHIPS][12];
 
-    // ADCV
+    pushChipConfigurations();
+
     LTC6804_adcv();
 
     /**
@@ -260,19 +265,18 @@ FaultStatus_t SegmentInterface::pullThermistors()
     for (int therm = 1; therm <= 16; therm++)
 	{
         SelectTherm(therm);
-        delay(10);
+        delay(5);
         SelectTherm(therm + 16);
-        delay(15);
+        delay(5);
 		
 		pushChipConfigurations();
         LTC6804_adax(); // Run ADC for AUX (GPIOs and refs)
-        delay(20);
         LTC6804_rdaux(0, NUM_CHIPS, rawTempVoltages); // Fetch ADC results from AUX registers
 
         for (int c = 0; c < NUM_CHIPS; c++)
 		{
-            segmentData[c].thermistorReading[therm - 1] = steinhartEst(uint16_t(rawTempVoltages[c][0] * (float(rawTempVoltages[c][2]) / 50000)));
-            segmentData[c].thermistorReading[therm + 15] = steinhartEst(uint16_t(rawTempVoltages[c][1] * (float(rawTempVoltages[c][2]) / 50000)));
+            segmentData[c].thermistorReading[therm - 1] = uint16_t(rawTempVoltages[c][0] * (float(rawTempVoltages[c][2]) / 50000));
+            segmentData[c].thermistorReading[therm + 15] = uint16_t(rawTempVoltages[c][1] * (float(rawTempVoltages[c][2]) / 50000));
         }
     }
 	thermTimer.startTimer(THERM_WAIT_TIME);
@@ -295,6 +299,7 @@ void SegmentInterface::SelectTherm(uint8_t therm)
 		i2cWriteData[chip][2] = 0x00;
 		}
 		serializeI2CMsg(i2cWriteData, commRegData);
+        pushChipConfigurations();
 		LTC6804_wrcomm(NUM_CHIPS, commRegData);
 		LTC6804_stcomm(24);
 
@@ -305,6 +310,7 @@ void SegmentInterface::SelectTherm(uint8_t therm)
 		i2cWriteData[chip][2] = 0x00;
 		}
 		serializeI2CMsg(i2cWriteData, commRegData);
+        pushChipConfigurations();
 		LTC6804_wrcomm(NUM_CHIPS, commRegData);
 		LTC6804_stcomm(24);
 	} else if (therm <= 16) {
@@ -315,6 +321,7 @@ void SegmentInterface::SelectTherm(uint8_t therm)
 		i2cWriteData[chip][2] = 0x00;
 		}
 		serializeI2CMsg(i2cWriteData, commRegData);
+        pushChipConfigurations();
 		LTC6804_wrcomm(NUM_CHIPS, commRegData);
 		LTC6804_stcomm(24);
 
@@ -325,6 +332,7 @@ void SegmentInterface::SelectTherm(uint8_t therm)
 		i2cWriteData[chip][2] = 0x00;
 		}
 		serializeI2CMsg(i2cWriteData, commRegData);
+        pushChipConfigurations();
 		LTC6804_wrcomm(NUM_CHIPS, commRegData);
 		LTC6804_stcomm(24);
 	} else if (therm <= 24) {
@@ -335,6 +343,7 @@ void SegmentInterface::SelectTherm(uint8_t therm)
 		i2cWriteData[chip][2] = 0x00;
 		}
 		serializeI2CMsg(i2cWriteData, commRegData);
+        pushChipConfigurations();
 		LTC6804_wrcomm(NUM_CHIPS, commRegData);
 		LTC6804_stcomm(24);
 
@@ -345,6 +354,7 @@ void SegmentInterface::SelectTherm(uint8_t therm)
 		i2cWriteData[chip][2] = 0x00;
 		}
 		serializeI2CMsg(i2cWriteData, commRegData);
+        pushChipConfigurations();
 		LTC6804_wrcomm(NUM_CHIPS, commRegData);
 		LTC6804_stcomm(24);
 	} else {
@@ -355,6 +365,7 @@ void SegmentInterface::SelectTherm(uint8_t therm)
 		i2cWriteData[chip][2] = 0x00;
 		}
 		serializeI2CMsg(i2cWriteData, commRegData);
+        pushChipConfigurations();
 		LTC6804_wrcomm(NUM_CHIPS, commRegData);
 		LTC6804_stcomm(24);
 
@@ -365,6 +376,7 @@ void SegmentInterface::SelectTherm(uint8_t therm)
 		i2cWriteData[chip][2] = 0x00;
 		}
 		serializeI2CMsg(i2cWriteData, commRegData);
+        pushChipConfigurations();
 		LTC6804_wrcomm(NUM_CHIPS, commRegData);
 		LTC6804_stcomm(24);
 	}

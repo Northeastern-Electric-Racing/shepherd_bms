@@ -11,13 +11,20 @@ void setup()
   
   segment.init();
 }
+
+bool dischargeEnabled = false;
+uint16_t cellTestIter = 0;
+bool dischargeConfig[NUM_CHIPS][NUM_CELLS_PER_CHIP] = {};
+
 ChipData_t *testData;
 Timer mainTimer;
 
 void loop()
 {
+	//Handle Segment data collection test logic
 	testData = new ChipData_t[NUM_CHIPS];
-	// Run ADC on cell taps
+
+	//Retrieve ALL segment data (therms and voltage)
 	segment.retrieveSegmentData(testData);
 
 	for (int chip = 0; chip < NUM_CHIPS; chip++)
@@ -41,5 +48,42 @@ void loop()
 	Serial.println(); //newline
     delete[] testData;
     testData = nullptr;
+
+	delay(100);
+
+	//Handle discharge test logic
+	if (Serial.available()) 
+	{ // Check for key presses
+    	char keyPress = Serial.read(); // Read key
+    	if (keyPress == ' ') 
+		{
+			Serial.println(dischargeEnabled ? "STOPPING DISCHARGE COUNTING..." : "STARTING DISCHARGE COUNTING...");
+			dischargeEnabled = !dischargeEnabled;
+    	}
+  	}
+	
+	if(dischargeEnabled)
+	{ 	
+      	for (uint8_t c = 0; c < NUM_CHIPS; c++)
+		{
+			for (uint8_t i = 0; i <NUM_CELLS_PER_CHIP; i++){
+
+				dischargeConfig[c][i] == false;
+			}
+
+			dischargeConfig[c][cellTestIter % NUM_CELLS_PER_CHIP] = true;
+			
+      	}
+
+		//Configures the segments to discharge based on the boolean area passed
+		segment.configureBalancing(dischargeConfig);
+		cellTestIter++;
+	}
+	else
+	{
+		//Sets all cells to not discharge
+		segment.enableBalancing(false);
+	}
+
 	delay(1000);
 }
