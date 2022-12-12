@@ -37,7 +37,7 @@ void loop()
 
 	  	Serial.println(); //newline
 
-		for (int therm=0; therm < NUM_THERMS_PER_CHIP; therm++)
+		for (int therm=17; therm < 28; therm++)
 		{
 			Serial.print(testData[chip].thermistorReading[therm]);
 			Serial.print("\t");
@@ -66,18 +66,19 @@ void loop()
 	{ 	
       	for (uint8_t c = 0; c < NUM_CHIPS; c++)
 		{
-			for (uint8_t i = 0; i <NUM_CELLS_PER_CHIP; i++){
-
-				dischargeConfig[c][i] == false;
+			for (uint8_t i = 0; i < NUM_CELLS_PER_CHIP; i++){
+				dischargeConfig[c][i] = false;
 			}
 
 			dischargeConfig[c][cellTestIter % NUM_CELLS_PER_CHIP] = true;
-			
       	}
 
 		//Configures the segments to discharge based on the boolean area passed
 		segment.configureBalancing(dischargeConfig);
 		cellTestIter++;
+		if (cellTestIter > 8) {
+			cellTestIter = 0;
+		}
 	}
 	else
 	{
