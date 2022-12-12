@@ -17,9 +17,9 @@ struct ChipData_t
     FaultStatus_t errorReading;
 
     //These are calculated during the analysis of data
-    uint16_t cellTemp[NUM_CELLS_PER_CHIP];
-    uint16_t cellResistance[NUM_CELLS_PER_CHIP];
-    uint16_t openCellVoltage[NUM_CELLS_PER_CHIP];
+    uint8_t cellTemp[NUM_CELLS_PER_CHIP];
+    float cellResistance[NUM_CELLS_PER_CHIP];
+    uint8_t openCellVoltage[NUM_CELLS_PER_CHIP];
 };
 
 /**
@@ -71,7 +71,7 @@ struct CriticalCellValue_t
 struct AccumulatorData_t
 {
     /*Array of data from all chips in the system*/
-    ChipData_t ChipData[NUM_CHIPS];
+    ChipData_t chipData[NUM_CHIPS];
 
     FaultStatus_t faultStatus = NOT_FAULTED;
 

@@ -1,16 +1,9 @@
 #include <nerduino.h>
 #include <LTC68041.h>
-#include <segment.h>
-#include <compute.h>
-
-void setup()
-{
-  NERduino.begin();
-  delay(3000); // Allow time to connect and see boot up info
-  Serial.println("Hello World!");
-  
-  segment.init();
-}
+#include "segment.h"
+#include "compute.h"
+#include "calcs.h"
+#include "datastructs.h"
 
 bool dischargeEnabled = false;
 uint16_t cellTestIter = 0;
@@ -19,7 +12,7 @@ bool dischargeConfig[NUM_CHIPS][NUM_CELLS_PER_CHIP] = {};
 ChipData_t *testData;
 Timer mainTimer;
 
-void loop()
+void testSegments()
 {
 	//Handle Segment data collection test logic
 	testData = new ChipData_t[NUM_CHIPS];
@@ -78,12 +71,61 @@ void loop()
 		//Configures the segments to discharge based on the boolean area passed
 		segment.configureBalancing(dischargeConfig);
 		cellTestIter++;
+		
 	}
 	else
 	{
 		//Sets all cells to not discharge
 		segment.enableBalancing(false);
 	}
-
 	delay(1000);
+}
+
+void shepherdMain()
+{
+	//Implement some simple controls and calcs behind shepherd
+
+	//Create a dynamically allocated structure
+	//@note this will move to a specialized container with a list of these structs
+	AccumulatorData_t *accData = new AccumulatorData_t;
+
+	//Collect all the segment data needed to perform analysis
+	//Not state specific
+	segment.retrieveSegmentData(accData->chipData);
+	//compute.getPackCurrent();
+	//compute.getTSGLV();
+	//etc
+
+	//Perform calculations on the data in the frame
+	//Some calculations might be state dependent
+	calcCellTemps(accData);
+	calcCellResistances(accData);
+	calcDCL(accData);
+
+	//Send out what needs to happen now (depends on state)
+	//compute.sendMCMsg(CCL, DCL);
+	//compute.sendChargerMsg();
+	//sendCanMsg(all the data we wanna send out)
+	//etc
+}
+
+void setup()
+{
+  NERduino.begin();
+  delay(3000); // Allow time to connect and see boot up info
+  Serial.println("Hello World!");
+  
+  segment.init();
+}
+
+void loop()
+{
+	/**
+	 * @brief These are two functions that can determine the mode that 
+	 * 		we are operating in (either testing the segments or actually running the car)
+	 * @note eventually, we'll need to find a formal place for the testSegments() function,
+	 * 		probably in some HIL automated testing, **THIS IS A TEMPORARY FIX**
+	 */
+	//testSegments();
+	shepherdMain();
 }
