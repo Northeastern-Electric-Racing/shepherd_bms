@@ -4,12 +4,26 @@
 #include "datastructs.h"
 #include "nerduino.h"
 
-using namespace std;
+#define CURRENT_SENSOR_PIN_L    10
+#define CURRENT_SENSOR_PIN_H    11
+
+#define MAX_ADC_RESOLUTION      1023 // 13 bit ADC
 
 class ComputeInterface
 {
     private:
         uint8_t fanSpeed;
+
+        const int16_t current_lowChannelMax = 50; //Amps
+        const int16_t current_lowChannelMin = -50; //Amps
+        const int16_t current_highChannelMax = 320; //Amps
+        const int16_t current_highChannelMin = -450; //Amps
+
+        const int16_t current_lowChannelOffset = MAX_ADC_RESOLUTION * (2.5/5); //2.5V
+        const int16_t current_highChannelOffset = MAX_ADC_RESOLUTION * (2.8/5); //2.8V
+
+        const float highChannelResolution = (abs(current_lowChannelMin) + current_lowChannelMax) / MAX_ADC_RESOLUTION;
+        const float lowChannelResolution = (abs(current_highChannelMin) + current_highChannelMax) / MAX_ADC_RESOLUTION;
 
         /**
          * @todo These might need to be changed depending on the charging ticket
