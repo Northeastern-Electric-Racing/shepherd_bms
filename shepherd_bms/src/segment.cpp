@@ -58,8 +58,6 @@ void SegmentInterface::enableBalancing(bool balanceEnable)
     //Discharging all cells in series
     static const uint16_t dischargeAllCommand = 0xFFFF >> (16-NUM_CELLS_PER_CHIP); // Making the discharge command all 1's for all cells per chip
 
-	pullChipConfigurations();
-
     if(balanceEnable)
     {
 		for(int c = 0; c < NUM_CHIPS; c++)
@@ -99,8 +97,6 @@ void SegmentInterface::enableBalancing(uint8_t chipNum, uint8_t cellNum, bool ba
 
 void SegmentInterface::configureBalancing(bool dischargeConfig[NUM_CHIPS][NUM_CELLS_PER_CHIP])
 {
-    pullChipConfigurations();
-
     for(int c = 0; c < NUM_CHIPS; c++)
     {
         for(int cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
