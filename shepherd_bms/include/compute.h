@@ -14,16 +14,18 @@ class ComputeInterface
     private:
         uint8_t fanSpeed;
 
-        const int16_t current_lowChannelMax = 70; //Amps
-        const int16_t current_lowChannelMin = -70; //Amps
+        const float current_lowChannelMax = 75.0; //Amps
+        const float current_lowChannelMin = -75.0; //Amps
         const int16_t current_highChannelMax = 500; //Amps
         const int16_t current_highChannelMin = -500; //Amps
+        const float current_supplyVoltage = 5.038;
+        const float current_ADCResolution = 5.0 / MAX_ADC_RESOLUTION;
 
-        const int16_t current_lowChannelOffset = MAX_ADC_RESOLUTION * (2.5/5); //2.5V
-        const int16_t current_highChannelOffset = MAX_ADC_RESOLUTION * (2.5/5); //2.5V
+        const float current_lowChannelOffset = 2.58; // Calibrated with current = 0A
+        const float current_highChannelOffset = 2.57; // Calibrated with current = 0A
 
-        const float highChannelResolution = (abs(current_lowChannelMin) + current_lowChannelMax) / MAX_ADC_RESOLUTION;
-        const float lowChannelResolution = (abs(current_highChannelMin) + current_highChannelMax) / MAX_ADC_RESOLUTION;
+        const float highChannelGain = 1 / 0.0040;
+        const float lowChannelGain = 1 / 0.0267;
 
         /**
          * @todo These might need to be changed depending on the charging ticket
@@ -71,4 +73,5 @@ class ComputeInterface
         int16_t getPackCurrent();
 
 };
+
 #endif
