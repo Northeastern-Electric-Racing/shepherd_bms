@@ -20,15 +20,15 @@ void ComputeInterface::setFanSpeed(uint8_t newFanSpeed)
 
 int16_t ComputeInterface::getPackCurrent()
 {
-    uint16_t highCurrent = analogRead(CURRENT_SENSOR_PIN_H); //Channel has a large range with low resolution
-    uint16_t lowCurrent = analogRead(CURRENT_SENSOR_PIN_L); //Channel has a small range with high resolution
+    uint16_t highCurrent = analogRead(CURRENT_SENSOR_PIN_H) * highChannelResolution - current_highChannelOffset; // Channel has a large range with low resolution
+    uint16_t lowCurrent = analogRead(CURRENT_SENSOR_PIN_L) * lowChannelResolution - current_lowChannelOffset; // Channel has a small range with high resolution
 
-    //If the current is scoped within the range of the low channel, use the low channel
-    if(highCurrent < current_lowChannelMax || highCurrent > current_lowChannelMin)
+    // If the current is scoped within the range of the low channel, use the low channel
+    if(lowCurrent < current_lowChannelMax || lowCurrent > current_lowChannelMin)
     {
-        return (lowCurrent - current_lowChannelOffset) * lowChannelResolution;
+        return lowCurrent;
     }
 
-    return (highCurrent - current_highChannelOffset) * highChannelResolution;
+    return highCurrent;
 }
 

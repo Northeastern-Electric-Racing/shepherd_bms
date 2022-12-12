@@ -4,8 +4,8 @@
 #include "datastructs.h"
 #include "nerduino.h"
 
-#define CURRENT_SENSOR_PIN_L    10
-#define CURRENT_SENSOR_PIN_H    11
+#define CURRENT_SENSOR_PIN_L    A1
+#define CURRENT_SENSOR_PIN_H    A0
 
 #define MAX_ADC_RESOLUTION      1023 // 13 bit ADC
 
