@@ -121,6 +121,8 @@ void shepherdMain()
 	//compute.sendChargerMsg();
 	//sendCanMsg(all the data we wanna send out)
 	//etc
+
+	delete accData;
 }
 
 void setup()
