@@ -11,6 +11,7 @@ bool dischargeConfig[NUM_CHIPS][NUM_CELLS_PER_CHIP] = {};
 
 ChipData_t *testData;
 Timer mainTimer;
+ComputeInterface compute;
 
 void testSegments()
 {
@@ -93,7 +94,7 @@ void shepherdMain()
 	//Collect all the segment data needed to perform analysis
 	//Not state specific
 	segment.retrieveSegmentData(accData->chipData);
-	//compute.getPackCurrent();
+	compute.getPackCurrent();
 	//compute.getTSGLV();
 	//etc
 

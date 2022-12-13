@@ -15,4 +15,3 @@ void ComputeInterface::setFanSpeed(uint8_t newFanSpeed)
 }
 
 int16_t ComputeInterface::getPackCurrent(){}
-
