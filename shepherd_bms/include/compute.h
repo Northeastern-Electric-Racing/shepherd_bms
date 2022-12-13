@@ -3,6 +3,7 @@
 
 #include "datastructs.h"
 #include "nerduino.h"
+#include "canMsgHandler.h"
 
 #define CURRENT_SENSOR_PIN_L    A1
 #define CURRENT_SENSOR_PIN_H    A0
@@ -13,6 +14,18 @@ class ComputeInterface
 {
     private:
         uint8_t fanSpeed;
+
+        union 
+        {
+            uint8_t msg[4] = {0,0,0,0};
+
+            struct
+            {
+                uint16_t maxDischarge;
+                uint16_t maxCharge;
+
+            }config;
+        }mcMsg;
 
         const float current_lowChannelMax = 75.0; //Amps
         const float current_lowChannelMin = -75.0; //Amps
@@ -71,6 +84,14 @@ class ComputeInterface
          * @return int16_t
          */
         int16_t getPackCurrent();
+
+        /**
+         * @brief sends max charge/discharge current to Motor Controller
+         *
+         * @param maxCharge
+         * @param maxDischarge
+         */
+        void sendMCMsg(uint16_t maxCharge, uint16_t maxDischarge);
 
 };
 
