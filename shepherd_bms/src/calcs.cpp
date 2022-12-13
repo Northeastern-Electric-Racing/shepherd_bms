@@ -66,7 +66,7 @@ void calcCellResistances(AccumulatorData_t *bmsdata)
 
 void calcDCL(AccumulatorData_t *bmsdata)
 {
-    int16_t currentLimit = 0xFFFF;
+    int16_t currentLimit = 0x7FFF;
 
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
