@@ -135,6 +135,7 @@ void shepherdMain()
 	Serial.print("DCL: ");
 	Serial.println(accData->dischargeLimit);
 
+	/*
 	Serial.println("Cell Resistances:");
 	for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
@@ -144,13 +145,15 @@ void shepherdMain()
 			Serial.print("\t");
 		}
 		Serial.println();
-	}
+	}*/
 
 	//Send out what needs to happen now (depends on state)
 	compute.sendMCMsg(0, accData->dischargeLimit);
 	//compute.sendChargerMsg();
 	//sendCanMsg(all the data we wanna send out)
 	//etc
+
+	compute.setFault(false);
 
 	delete accData;
 }
@@ -176,5 +179,5 @@ void loop()
 	//testSegments();
 	shepherdMain();
 	
-	delay(1000);
+	delay(500);
 }

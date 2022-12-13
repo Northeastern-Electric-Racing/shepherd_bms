@@ -7,6 +7,7 @@
 
 #define CURRENT_SENSOR_PIN_L    A1
 #define CURRENT_SENSOR_PIN_H    A0
+#define FAULT_PIN               2
 
 #define MAX_ADC_RESOLUTION      1023 // 13 bit ADC
 
@@ -92,6 +93,13 @@ class ComputeInterface
          * @param maxDischarge
          */
         void sendMCMsg(uint16_t maxCharge, uint16_t maxDischarge);
+
+        /**
+         * @brief updates fault relay
+         *
+         * @param faultState
+         */
+        void setFault(bool faultState);
 
 };
 

@@ -4,6 +4,7 @@ ComputeInterface::ComputeInterface()
 {
     pinMode(CURRENT_SENSOR_PIN_H, INPUT);
     pinMode(CURRENT_SENSOR_PIN_L, INPUT);
+    pinMode(FAULT_PIN, OUTPUT);
 }
 
 ComputeInterface::~ComputeInterface(){}
@@ -16,6 +17,11 @@ void ComputeInterface::setFanSpeed(uint8_t newFanSpeed)
 {
     fanSpeed = newFanSpeed;
     NERduino.setAMCDutyCycle(newFanSpeed);
+}
+
+void ComputeInterface::setFault(bool faultState)
+{
+    digitalWrite(FAULT_PIN, faultState);
 }
 
 int16_t ComputeInterface::getPackCurrent()
