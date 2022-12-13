@@ -85,6 +85,16 @@ void testSegments()
 			//Sets all cells to not discharge
 			segment.enableBalancing(false);
 		}
+		Serial.println(); //newline
+  	}
+	Serial.println(); //newline
+    delete[] testData;
+    testData = nullptr;
+	delay(1000);
+
+	uint16_t tempMaxCharge = 0;			// to be changed when the actual values are calculated
+	uint16_t tempMaxDischarge = 0;
+	compute.sendMCMsg(tempMaxCharge, tempMaxDischarge);
 	}
 	
 	if (lastPackCurr + 100 < currTime) {

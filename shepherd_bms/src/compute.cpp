@@ -32,3 +32,11 @@ int16_t ComputeInterface::getPackCurrent()
     return highCurrent;
 }
 
+void ComputeInterface::sendMCMsg(uint16_t userMaxCharge, uint16_t userMaxDischarge){
+
+    mcMsg.config.maxCharge = userMaxCharge;
+    mcMsg.config.maxDischarge = userMaxDischarge;
+    sendMessage(0x202, 4, mcMsg.msg);
+
+}
+
