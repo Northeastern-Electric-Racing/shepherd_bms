@@ -11,30 +11,85 @@ void setup()
   
   segment.init();
 }
+
+int currTime = 0;
+int lastPackCurr = 0;
+int lastVoltTemp = 0;
+
+bool dischargeEnabled = false;
+uint16_t cellTestIter = 0;
+bool dischargeConfig[NUM_CHIPS][NUM_CELLS_PER_CHIP] = {};
+
 ChipData_t *testData;
 Timer mainTimer;
+ComputeInterface compute;
 
 void loop()
 {
-	testData = new ChipData_t[NUM_CHIPS];
-	// Run ADC on cell taps
-	segment.retrieveSegmentData(testData);
+	currTime = millis();
+	if (lastVoltTemp + 1000 < currTime) {
+		lastVoltTemp = currTime;
+		//Handle Segment data collection test logic
+		testData = new ChipData_t[NUM_CHIPS];
 
-	for (int chip = 0; chip < NUM_CHIPS; chip++)
-	{
-		for (int cell=0; cell < NUM_CELLS_PER_CHIP; cell++)
+		//Retrieve ALL segment data (therms and voltage)
+		segment.retrieveSegmentData(testData);
+
+		for (int chip = 0; chip < NUM_CHIPS; chip++)
 		{
-			Serial.print(testData[chip].voltageReading[cell]);
-			Serial.print("\t");
+			for (int cell=0; cell < NUM_CELLS_PER_CHIP; cell++)
+			{
+				Serial.print(testData[chip].voltageReading[cell]);
+				Serial.print("\t");
+			}
+
+			Serial.println(); //newline
+
+			for (int therm=17; therm < 28; therm++)
+			{
+				Serial.print(testData[chip].thermistorReading[therm]);
+				Serial.print("\t");
+				if (therm == 15) Serial.println();
+			}
+			Serial.println(); //newline
 		}
+		Serial.println(); //newline
+		delete[] testData;
+		testData = nullptr;
 
-	  	Serial.println(); //newline
+		//Handle discharge test logic
+		if (Serial.available()) 
+		{ // Check for key presses
+			char keyPress = Serial.read(); // Read key
+			if (keyPress == ' ') 
+			{
+				Serial.println(dischargeEnabled ? "STOPPING DISCHARGE COUNTING..." : "STARTING DISCHARGE COUNTING...");
+				dischargeEnabled = !dischargeEnabled;
+			}
+		}
+		
+		if(dischargeEnabled)
+		{ 	
+			for (uint8_t c = 0; c < NUM_CHIPS; c++)
+			{
+				for (uint8_t i = 0; i < NUM_CELLS_PER_CHIP; i++){
+					dischargeConfig[c][i] = false;
+				}
 
-		for (int therm=0; therm < NUM_THERMS_PER_CHIP; therm++)
+				dischargeConfig[c][cellTestIter % NUM_CELLS_PER_CHIP] = true;
+			}
+
+			//Configures the segments to discharge based on the boolean area passed
+			segment.configureBalancing(dischargeConfig);
+			cellTestIter++;
+			if (cellTestIter > 8) {
+				cellTestIter = 0;
+			}
+		}
+		else
 		{
-			Serial.print(testData[chip].thermistorReading[therm]);
-			Serial.print("\t");
-			if (therm == 15) Serial.println();
+			//Sets all cells to not discharge
+			segment.enableBalancing(false);
 		}
 		Serial.println(); //newline
   	}
@@ -46,5 +101,11 @@ void loop()
 	uint16_t tempMaxCharge = 0;			// to be changed when the actual values are calculated
 	uint16_t tempMaxDischarge = 0;
 	compute.sendMCMsg(tempMaxCharge, tempMaxDischarge);
-
+	}
+	
+	if (lastPackCurr + 100 < currTime) {
+		lastPackCurr = currTime;
+		// Get pack current and print
+		Serial.println(compute.getPackCurrent());
+	}
 }

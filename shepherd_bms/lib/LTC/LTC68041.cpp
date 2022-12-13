@@ -923,7 +923,6 @@ int8_t LTC6804_rdcfg(uint8_t total_ic, //Number of ICs in the system
 
 	while(retries < LTC_MAX_RETRIES && pec_error == -1)
 	{
-		Serial.println("Trying...\n");
 		//2
 		wakeup_idle (); //This will guarantee that the LTC6804 isoSPI port is awake. This command can be removed.
 		//3
@@ -948,7 +947,6 @@ int8_t LTC6804_rdcfg(uint8_t total_ic, //Number of ICs in the system
 			}else
 			{
 				pec_error = 0;
-				Serial.println((pec_error == -1));
 			}
 		}
 		retries++;
@@ -1161,7 +1159,7 @@ void LTC6804_stcomm(uint8_t len) //Length of data to be transmitted
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
 	cmd[3] = (uint8_t)(cmd_pec);
 
-  //wakeup_idle();
+  wakeup_idle();
 	digitalWrite(SPI1_CS, LOW);
 	NERduino.writeSPI1(cmd, 4, ltcSPISettings);
 	for (int i = 0; i<len*3; i++)
