@@ -153,8 +153,6 @@ void shepherdMain()
 	//sendCanMsg(all the data we wanna send out)
 	//etc
 
-	compute.setFault(false);
-
 	delete accData;
 }
 
@@ -166,6 +164,8 @@ void setup()
   Serial.println("Hello World!");
   
   segment.init();
+
+  compute.setFault(NOT_FAULTED);
 }
 
 void loop()

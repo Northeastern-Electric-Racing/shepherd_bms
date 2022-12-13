@@ -19,7 +19,7 @@ void ComputeInterface::setFanSpeed(uint8_t newFanSpeed)
     NERduino.setAMCDutyCycle(newFanSpeed);
 }
 
-void ComputeInterface::setFault(bool faultState)
+void ComputeInterface::setFault(FaultStatus_t faultState)
 {
     digitalWrite(FAULT_PIN, faultState);
 }
