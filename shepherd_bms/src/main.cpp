@@ -71,8 +71,6 @@ void testSegments()
 
 				dischargeConfig[c][cellTestIter % NUM_CELLS_PER_CHIP] = true;
 			}
-
-			dischargeConfig[c][cellTestIter % NUM_CELLS_PER_CHIP] = true;
       	}
 
 		//Configures the segments to discharge based on the boolean area passed
