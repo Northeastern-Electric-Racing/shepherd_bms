@@ -78,4 +78,6 @@ void calcPackTemps(AccumulatorData_t *bmsdata);
 
 void calcDCL(AccumulatorData_t *bmsdata);
 
+void calcCCL(AccumulatorData_t *bmsdata);
+
 #endif
