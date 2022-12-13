@@ -138,7 +138,7 @@ void shepherdMain()
 	Serial.println("Cell Temps:");
 	for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
-        for(uint8_t cell = 1; cell < 12; cell++)
+        for(uint8_t cell = 17; cell < 28; cell++)
         {
 			Serial.print(accData->chipData[c].thermistorReading[cell]);
 			Serial.print("\t");

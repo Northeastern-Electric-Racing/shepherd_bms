@@ -37,6 +37,8 @@ class SegmentInterface
             14640, 14230, 13850, 13450, 13070, 12710, 0
         };
 
+        const int32_t VOLT_TEMP_CALIB_OFFSET = 0;
+
         ChipData_t *segmentData = nullptr;
 
         ChipData_t previousData[NUM_CHIPS];

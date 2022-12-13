@@ -28,9 +28,9 @@ void calcPackTemps(AccumulatorData_t *bmsdata)
     bmsdata->maxTemp = {MIN_TEMP, 0, 0};
     bmsdata->minTemp = {MAX_TEMP, 0, 0};
     int totalTemp = 0;
-    for(uint8_t c = 0; c < NUM_CHIPS; c++)
+    for(uint8_t c = 1; c < NUM_CHIPS; c += 2)
     {
-        for(uint8_t therm = 1; therm < 12; therm++) {
+        for(uint8_t therm = 17; therm < 28; therm++) {
             if (bmsdata->chipData[c].thermistorReading[therm] > bmsdata->maxTemp.val) {
                 bmsdata->maxTemp = {bmsdata->chipData[c].thermistorReading[therm], c, therm};
             } else if (bmsdata->chipData[c].thermistorReading[therm] < bmsdata->minTemp.val) {
