@@ -91,3 +91,32 @@ void calcDCL(AccumulatorData_t *bmsdata)
 
     bmsdata->dischargeLimit = currentLimit;
 }
+
+
+void calcCCL(AccumulatorData_t *bmsdata)
+{
+    int16_t currentLimit = 0x7FFF;
+
+    for(uint8_t c = 0; c < NUM_CHIPS; c++)
+    {
+        for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+        {
+            uint8_t cellTemp = bmsdata->chipData[c].cellTemp[cell];
+            uint8_t resIndex = (cellTemp - MIN_TEMP) / 5;  //resistance LUT increments by 5C for each index
+            
+            uint8_t tmpCCL = TEMP_TO_CCL[resIndex];
+
+            //Linear interpolation to more accurately represent current in between increments of 5C
+            if(cellTemp != MAX_TEMP)
+            {
+                float interpolation = (TEMP_TO_CCL[resIndex+1] - TEMP_TO_CCL[resIndex]) / 5;
+                bmsdata->chipData[c].cellResistance[cell] += (interpolation * (cellTemp % 5));
+            }
+
+            //Taking the minimum DCL of all the cells
+            if(tmpCCL < currentLimit) currentLimit = tmpCCL;
+        }
+    }
+
+    bmsdata->dischargeLimit = currentLimit;
+}

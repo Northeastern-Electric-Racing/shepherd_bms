@@ -132,6 +132,7 @@ void shepherdMain()
 	Serial.println(accData->avgTemp);
 	calcCellResistances(accData);
 	calcDCL(accData);
+	calcCCL(accData);
 	Serial.print("DCL: ");
 	Serial.println(accData->dischargeLimit);
 
