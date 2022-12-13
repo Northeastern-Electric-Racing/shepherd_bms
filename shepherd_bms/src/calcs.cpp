@@ -23,6 +23,26 @@ void calcCellTemps(AccumulatorData_t *bmsdata)
     }
 }
 
+void calcPackTemps(AccumulatorData_t *bmsdata)
+{
+    bmsdata->maxTemp = {MIN_TEMP, 0, 0};
+    bmsdata->minTemp = {MAX_TEMP, 0, 0};
+    int totalTemp = 0;
+    for(uint8_t c = 0; c < NUM_CHIPS; c++)
+    {
+        for(uint8_t therm = 1; therm < 12; therm++) {
+            if (bmsdata->chipData[c].thermistorReading[therm] > bmsdata->maxTemp.val) {
+                bmsdata->maxTemp = {bmsdata->chipData[c].thermistorReading[therm], c, therm};
+            } else if (bmsdata->chipData[c].thermistorReading[therm] < bmsdata->minTemp.val) {
+                bmsdata->minTemp = {bmsdata->chipData[c].thermistorReading[therm], c, therm};
+            }
+            
+            totalTemp += bmsdata->chipData[c].thermistorReading[therm];
+        }
+    }
+    bmsdata->avgTemp = totalTemp / 44;
+}
+
 void calcCellResistances(AccumulatorData_t *bmsdata)
 {
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
@@ -53,7 +73,7 @@ void calcDCL(AccumulatorData_t *bmsdata)
         for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
         {
             uint8_t cellTemp = bmsdata->chipData[c].cellTemp[cell];
-            uint8_t resIndex = cellTemp / 5;  //resistance LUT increments by 5C for each index
+            uint8_t resIndex = (cellTemp - MIN_TEMP) / 5;  //resistance LUT increments by 5C for each index
             
             uint8_t tmpDCL = TEMP_TO_DCL[resIndex];
 

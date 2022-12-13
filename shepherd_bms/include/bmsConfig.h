@@ -7,5 +7,6 @@
 #define NUM_THERMS_PER_CHIP 32
 
 #define MAX_TEMP            65 //degrees C
+#define MIN_TEMP            -5 // deg C
 
 #endif

@@ -248,8 +248,8 @@ FaultStatus_t SegmentInterface::pullThermistors()
 
         for (int c = 0; c < NUM_CHIPS; c++)
 		{
-            segmentData[c].thermistorReading[therm - 1] = uint16_t(rawTempVoltages[c][0] * (float(rawTempVoltages[c][2]) / 50000));
-            segmentData[c].thermistorReading[therm + 15] = uint16_t(rawTempVoltages[c][1] * (float(rawTempVoltages[c][2]) / 50000));
+            segmentData[c].thermistorReading[therm - 1] = steinhartEst(rawTempVoltages[c][0] * (float(rawTempVoltages[c][2]) / 50000));
+            segmentData[c].thermistorReading[therm + 15] = steinhartEst(rawTempVoltages[c][1] * (float(rawTempVoltages[c][2]) / 50000));
         }
     }
 	thermTimer.startTimer(THERM_WAIT_TIME);
@@ -359,7 +359,7 @@ uint8_t SegmentInterface::steinhartEst(uint16_t V)
 {
   int i = 0;
   while (V < VOLT_TEMP_CONV[i]) i++;
-  return i - 5;
+  return i - MIN_TEMP;
 }
 
 void SegmentInterface::disableGPIOPulldowns()

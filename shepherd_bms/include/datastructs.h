@@ -13,7 +13,7 @@ struct ChipData_t
 {
     //These are retrieved from the initial LTC comms
     uint16_t voltageReading[NUM_CELLS_PER_CHIP];          //store voltage readings from each chip
-    uint16_t thermistorReading[NUM_THERMS_PER_CHIP];       //store all therm readings from each chip
+    int8_t thermistorReading[NUM_THERMS_PER_CHIP];       //store all therm readings from each chip
     FaultStatus_t errorReading;
 
     //These are calculated during the analysis of data
@@ -90,6 +90,7 @@ struct AccumulatorData_t
     /*Max and min thermistor readings*/
     CriticalCellValue_t maxTemp;
     CriticalCellValue_t minTemp;
+    uint8_t avgTemp;
 
     /*Max and min cell resistances*/
     CriticalCellValue_t maxRes;

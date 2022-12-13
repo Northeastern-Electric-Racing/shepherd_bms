@@ -106,15 +106,25 @@ void shepherdMain()
 	//Collect all the segment data needed to perform analysis
 	//Not state specific
 	segment.retrieveSegmentData(accData->chipData);
-	compute.getPackCurrent();
+	Serial.print("Current: ");
+	Serial.println(compute.getPackCurrent());
 	//compute.getTSGLV();
 	//etc
 
 	//Perform calculations on the data in the frame
 	//Some calculations might be state dependent
 	calcCellTemps(accData);
+	calcPackTemps(accData);
+	Serial.print("Min, Max, Avg Temps: ");
+	Serial.print(accData->minTemp.val);
+	Serial.print(",  ");
+	Serial.print(accData->maxTemp.val);
+	Serial.print(",  ");
+	Serial.println(accData->avgTemp);
 	calcCellResistances(accData);
 	calcDCL(accData);
+	Serial.print("DCL: ");
+	Serial.println(accData->dischargeLimit);
 
 	//Send out what needs to happen now (depends on state)
 	//compute.sendMCMsg(CCL, DCL);
@@ -144,4 +154,5 @@ void loop()
 	 */
 	//testSegments();
 	shepherdMain();
+	delay(100);
 }
