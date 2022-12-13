@@ -147,7 +147,7 @@ void shepherdMain()
 	}
 
 	//Send out what needs to happen now (depends on state)
-	//compute.sendMCMsg(CCL, DCL);
+	compute.sendMCMsg(0, accData->dischargeLimit);
 	//compute.sendChargerMsg();
 	//sendCanMsg(all the data we wanna send out)
 	//etc
@@ -158,6 +158,7 @@ void shepherdMain()
 void setup()
 {
   NERduino.begin();
+  initializeCAN(1);
   delay(3000); // Allow time to connect and see boot up info
   Serial.println("Hello World!");
   
