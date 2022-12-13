@@ -95,7 +95,6 @@ void testSegments()
 	uint16_t tempMaxCharge = 0;			// to be changed when the actual values are calculated
 	uint16_t tempMaxDischarge = 0;
 	compute.sendMCMsg(tempMaxCharge, tempMaxDischarge);
-	}
 	
 	if (lastPackCurr + 100 < currTime) {
 		lastPackCurr = currTime;
