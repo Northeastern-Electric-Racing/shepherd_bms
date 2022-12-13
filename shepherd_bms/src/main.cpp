@@ -179,5 +179,5 @@ void loop()
 	//testSegments();
 	shepherdMain();
 	
-	delay(500);
+	delay(10);
 }

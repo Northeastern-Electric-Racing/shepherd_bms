@@ -21,7 +21,7 @@ void ComputeInterface::setFanSpeed(uint8_t newFanSpeed)
 
 void ComputeInterface::setFault(FaultStatus_t faultState)
 {
-    digitalWrite(FAULT_PIN, faultState);
+    digitalWrite(FAULT_PIN, !faultState);
 }
 
 int16_t ComputeInterface::getPackCurrent()
@@ -43,6 +43,5 @@ void ComputeInterface::sendMCMsg(uint16_t userMaxCharge, uint16_t userMaxDischar
     mcMsg.config.maxCharge = userMaxCharge;
     mcMsg.config.maxDischarge = userMaxDischarge;
     sendMessage(0x202, 4, mcMsg.msg);
-
 }
 
