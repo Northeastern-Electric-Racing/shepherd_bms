@@ -135,17 +135,16 @@ void shepherdMain()
 	Serial.print("DCL: ");
 	Serial.println(accData->dischargeLimit);
 
-	/*
-	Serial.println("Cell Resistances:");
+	Serial.println("Cell Temps:");
 	for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
-        for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+        for(uint8_t cell = 1; cell < 12; cell++)
         {
-			Serial.print(accData->chipData[c].cellResistance[cell]);
+			Serial.print(accData->chipData[c].thermistorReading[cell]);
 			Serial.print("\t");
 		}
 		Serial.println();
-	}*/
+	}
 
 	//Send out what needs to happen now (depends on state)
 	compute.sendMCMsg(0, accData->dischargeLimit);

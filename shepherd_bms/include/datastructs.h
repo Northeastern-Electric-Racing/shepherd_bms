@@ -81,6 +81,7 @@ struct AccumulatorData_t
 
     int16_t dischargeLimit;
     int16_t chargeLimit;
+    int16_t contDCL;
 
     /**
      * @brief Note that this is a 32 bit integer, so there are 32 max possible fault codes
