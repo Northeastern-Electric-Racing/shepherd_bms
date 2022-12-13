@@ -17,8 +17,8 @@ using namespace std;
  */
 const float TEMP_TO_CELL_RES[14] = 
 {
-    10.17, 9.34, 8.78, 8.44, 8.25, 8.18, 8.17,
-    8.16, 8.14, 8.06, 7.83, 7.42, 6.8, 6.8
+    5.52, 4.84, 4.27, 3.68, 3.16, 2.74, 2.4,
+    2.12, 1.98, 1.92, 1.90, 1.90, 1.90, 1.90
 };
 
 /**
@@ -33,8 +33,24 @@ const float TEMP_TO_CELL_RES[14] =
  */
 const uint8_t TEMP_TO_DCL[14] =
 {
-    65, 85, 105, 105, 105, 105, 
-    105, 105, 105, 55, 5, 0, 0, 0
+    110, 125, 140, 140, 140, 140, 
+    140, 140, 140, 100, 60, 20, 0, 0
+};
+
+/**
+ * @brief Mapping Cell temperatue to the charge current limit based on the 
+ *      temperature charge limit curve profile of the Samsung 186500 INR
+ *      in the Orion BMS software utility app
+ * 
+ * @note Units are in Amps and indicies are in (degrees C)/5, stops at 65C
+ * @note Limit should be *interpolated* from these values (i.e. if we are
+ *      at 27C, we should take the limit that is halfway between 25C and 30C)
+ * 
+ */
+const uint8_t TEMP_TO_CCL[14] =
+{
+    0, 25, 25, 25, 25, 25, 25, 25,
+    20, 15, 10, 5, 1, 1
 };
 
 /**
