@@ -187,6 +187,12 @@ void shepherdMain()
 		if (accData->maxVoltage.val > MAX_VOLT) {
 			bmsFault = CELL_VOLTAGE_TOO_HIGH;
 		}
+		if (accData->maxTemp.val > MAX_CELL_TEMP) {
+			bmsFault = PACK_TOO_HOT;
+		}
+		if (accData->minVoltage.val < 900) { // 90mV
+			bmsFault = LOW_CELL_VOLTAGE;
+		}
 	}
 
 	// FAULT STATE
