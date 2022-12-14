@@ -152,7 +152,7 @@ void shepherdMain()
 	Serial.println(accData->dischargeLimit);
 
 	Serial.print("CCL: ");
-	Serial.println(accData->dischargeLimit);
+	Serial.println(accData->chargeLimit);
 
 	/*
 	Serial.println("Cell Temps:");
@@ -215,7 +215,7 @@ void shepherdMain()
 		Serial.print("BMS FAULT: ");
 		Serial.println(bmsFault);
 		Serial.println("Hit Spacebar to clear");
-		delay(3000);
+		delay(1000);
 		if (Serial.available()) 
 		{ // Check for key presses
 			char keyPress = Serial.read(); // Read key
