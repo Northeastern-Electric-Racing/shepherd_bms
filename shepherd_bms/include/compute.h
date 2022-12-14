@@ -5,6 +5,8 @@
 #include "nerduino.h"
 
 #define CHARGE_VOLTAGE_PIN 3
+#define CHARGE_SAFETY_RELAY 6
+#define CHARGE_DETECT 7
 #define CHARGER_BAUD 250000U
 
 class ComputeInterface
@@ -27,7 +29,7 @@ class ComputeInterface
            {
                 bool chargerControl         :8;
                 uint16_t chargerVoltage     :16;    //Note the charger voltage sent over should be 10*desired voltage
-                uint16_t chargerCurrent     :16;    //Note the charge current sent over should be -3200+desired current*10
+                uint16_t chargerCurrent     :16;    //Note the charge current sent over should be 10*desired current + 3200
                 uint8_t chargerLEDs         :8;
                 uint8_t reserved1           :8;
                 uint8_t reserved2           :8;
