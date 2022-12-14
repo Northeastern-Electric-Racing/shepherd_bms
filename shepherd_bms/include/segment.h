@@ -11,8 +11,10 @@
 #define MAX_DELTA_V         0.02
 #define BAL_MIN_V           4.00
 
-#define THERM_WAIT_TIME     800 //ms
-#define VOLTAGE_WAIT_TIME   500 //ms
+#define THERM_WAIT_TIME     500 //ms
+#define VOLTAGE_WAIT_TIME   250 //ms
+
+#define THERM_AVG           5 // Number of values to average
 
 /**
  * @brief This class serves as the interface for all of the segment boards
@@ -26,6 +28,8 @@ class SegmentInterface
 
         FaultStatus_t voltageError = NOT_FAULTED;
         FaultStatus_t thermError = NOT_FAULTED;
+
+        uint16_t thermSettleTime = 0;
 
         const uint32_t VOLT_TEMP_CONV[57] = 
         {

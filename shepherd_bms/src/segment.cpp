@@ -248,10 +248,29 @@ FaultStatus_t SegmentInterface::pullThermistors()
 
         for (int c = 0; c < NUM_CHIPS; c++)
 		{
-            // TODO: Add noise rejection here. Basically, if voltage is above or below the min and max values of the array, keep previous value and count a fault
+            // TODO: Add noise rejection here. Basically, if voltage is above or below the min and max values of the array, keep previous value and count a fault.
+            // Or better yet maybe we do a rolling average and then just noise reject without having to keep last
 
             segmentData[c].thermistorReading[therm - 1] = steinhartEst(rawTempVoltages[c][0] * (float(rawTempVoltages[c][2]) / 50000) + VOLT_TEMP_CALIB_OFFSET);
             segmentData[c].thermistorReading[therm + 15] = steinhartEst(rawTempVoltages[c][1] * (float(rawTempVoltages[c][2]) / 50000) + VOLT_TEMP_CALIB_OFFSET);
+
+            if (segmentData[c].thermistorReading[therm - 1] > -5 && segmentData[c].thermistorReading[therm - 1] < 60) {
+                segmentData[c].thermistorValue[therm - 1] = segmentData[c].thermistorReading[therm - 1];
+            }
+
+            if (segmentData[c].thermistorReading[therm + 15] > -5 && segmentData[c].thermistorReading[therm + 15] < 60) {
+                segmentData[c].thermistorValue[therm + 15] = segmentData[c].thermistorReading[therm + 15];
+            }
+
+            /* WIP
+            if (thermSettleTime < THERM_AVG * 10) {
+                segmentData[c].thermistorValue[therm - 1] = segmentData[c].thermistorReading[therm - 1];
+                segmentData[c].thermistorValue[therm + 15] = segmentData[c].thermistorReading[therm + 15];
+                thermSettleTime++;
+            } else {
+                segmentData[c].thermistorValue[therm - 1] = (int64_t(segmentData[c].thermistorValue[therm - 1] * (THERM_AVG - 1)) + int64_t(segmentData[c].thermistorReading[therm - 1])) / THERM_AVG;
+                segmentData[c].thermistorValue[therm + 15] = (int64_t(segmentData[c].thermistorValue[therm + 15] * (THERM_AVG - 1)) + int64_t(segmentData[c].thermistorReading[therm + 15])) / THERM_AVG;
+            }*/
         }
     }
 	thermTimer.startTimer(THERM_WAIT_TIME);

@@ -146,8 +146,20 @@ void shepherdMain()
 		Serial.println();
 	}
 
+	Serial.println("Cell Temps Avg:");
+	for(uint8_t c = 0; c < NUM_CHIPS; c++)
+    {
+        for(uint8_t cell = 17; cell < 28; cell++)
+        {
+			Serial.print(accData->chipData[c].thermistorValue[cell]);
+			Serial.print("\t");
+		}
+		Serial.println();
+	}
+
 	//Send out what needs to happen now (depends on state)
 	compute.sendMCMsg(0, accData->dischargeLimit);
+
 	//compute.sendChargerMsg();
 	//sendCanMsg(all the data we wanna send out)
 	//etc
