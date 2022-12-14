@@ -226,10 +226,15 @@ void shepherdMain()
 		}
 	}
 
+	uint16_t packChargeVolt = 300;
+
 	// CHARGE STATE
-	if (digitalRead(CHARGE_DETECT) == HIGH && bmsFault == FAULTS_CLEAR) {
+	if (digitalRead(CHARGE_DETECT) == LOW && bmsFault == FAULTS_CLEAR) {
+		digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
 		compute.enableCharging(true);
-		compute.sendChargingMessage(300, accData->chargeLimit);
+		compute.sendChargingMessage(packChargeVolt, accData->chargeLimit);
+	} else if (bmsFault == FAULTS_CLEAR) {
+		digitalWrite(CHARGE_SAFETY_RELAY, LOW);
 	}
 
 	//compute.sendChargerMsg();

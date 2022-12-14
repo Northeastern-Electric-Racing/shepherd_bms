@@ -58,6 +58,7 @@ void ComputeInterface::setFanSpeed(uint8_t newFanSpeed)
 void ComputeInterface::setFault(FaultStatus_t faultState)
 {
     digitalWrite(FAULT_PIN, !faultState);
+    if (FAULTED) digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
 }
 
 int16_t ComputeInterface::getPackCurrent()
