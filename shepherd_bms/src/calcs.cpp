@@ -94,8 +94,6 @@ void calcDCL(AccumulatorData_t *bmsdata)
 
 void calcContDCL(AccumulatorData_t *bmsdata)
 {
-    int16_t currentLimit = 0x7FFF;
-    
     uint8_t minResIndex = (bmsdata->minTemp.val - MIN_TEMP) / 5;  //resistance LUT increments by 5C for each index
     uint8_t maxResIndex = (bmsdata->maxTemp.val - MIN_TEMP) / 5;
 
@@ -108,14 +106,12 @@ void calcContDCL(AccumulatorData_t *bmsdata)
 
 void calcContCCL(AccumulatorData_t *bmsdata)
 {
-    int16_t currentLimit = 0x7FFF;
-    
     uint8_t minResIndex = (bmsdata->minTemp.val - MIN_TEMP) / 5;  //resistance LUT increments by 5C for each index
     uint8_t maxResIndex = (bmsdata->maxTemp.val - MIN_TEMP) / 5;
 
-    if (TEMP_TO_DCL[minResIndex] < TEMP_TO_DCL[maxResIndex]) {
-        bmsdata->contDCL = TEMP_TO_DCL[minResIndex];
+    if (TEMP_TO_CCL[minResIndex] < TEMP_TO_CCL[maxResIndex]) {
+        bmsdata->chargeLimit = TEMP_TO_CCL[minResIndex];
     } else {
-        bmsdata->contDCL = TEMP_TO_DCL[maxResIndex];
+        bmsdata->chargeLimit = TEMP_TO_CCL[maxResIndex];
     }
 }

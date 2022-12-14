@@ -17,6 +17,8 @@ ChipData_t *testData;
 Timer mainTimer;
 ComputeInterface compute;
 
+BMSFault_t bmsFault = FAULTS_CLEAR;
+
 void testSegments()
 {
 	currTime = millis();
@@ -111,12 +113,15 @@ void shepherdMain()
 	//Create a dynamically allocated structure
 	//@note this will move to a specialized container with a list of these structs
 	AccumulatorData_t *accData = new AccumulatorData_t;
+	
 
 	//Collect all the segment data needed to perform analysis
 	//Not state specific
 	segment.retrieveSegmentData(accData->chipData);
+
+	int16_t current = compute.getPackCurrent();
 	Serial.print("Current: ");
-	Serial.println(compute.getPackCurrent());
+	Serial.println(current);
 	//compute.getTSGLV();
 	//etc
 
@@ -132,9 +137,15 @@ void shepherdMain()
 	Serial.println(accData->avgTemp);
 	calcCellResistances(accData);
 	calcDCL(accData);
+	calcContDCL(accData);
+	calcContCCL(accData);
 	Serial.print("DCL: ");
 	Serial.println(accData->dischargeLimit);
 
+	Serial.print("CCL: ");
+	Serial.println(accData->dischargeLimit);
+
+	/*
 	Serial.println("Cell Temps:");
 	for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
@@ -155,10 +166,45 @@ void shepherdMain()
 			Serial.print("\t");
 		}
 		Serial.println();
+	}*/
+
+	
+
+	// ACTIVE/NORMAL STATE
+	if (bmsFault == FAULTS_CLEAR) {
+		compute.sendMCMsg(0, accData->dischargeLimit);
+
+		// Check for fuckies
+		if (current > accData->contDCL) {
+			bmsFault = DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
+		}
+		if (current < 0 && abs(current) > accData->chargeLimit) {
+			bmsFault = CHARGE_LIMIT_ENFORCEMENT_FAULT;
+		}
+		if (accData->minVoltage.val < MIN_VOLT) {
+			bmsFault = CELL_VOLTAGE_TOO_LOW;
+		} 
+		if (accData->maxVoltage.val > MAX_VOLT) {
+			bmsFault = CELL_VOLTAGE_TOO_HIGH;
+		}
 	}
 
-	//Send out what needs to happen now (depends on state)
-	compute.sendMCMsg(0, accData->dischargeLimit);
+	// FAULT STATE
+	if (bmsFault != FAULTS_CLEAR) {
+		compute.setFault(FAULTED);
+		Serial.print("BMS FAULT: ");
+		Serial.println(bmsFault);
+		Serial.println("Hit Spacebar to clear");
+		//Handle discharge test logic
+		if (Serial.available()) 
+		{ // Check for key presses
+			char keyPress = Serial.read(); // Read key
+			if (keyPress == ' ') 
+			{
+				bmsFault = FAULTS_CLEAR;
+			}
+		}
+	}
 
 	//compute.sendChargerMsg();
 	//sendCanMsg(all the data we wanna send out)

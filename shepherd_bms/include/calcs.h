@@ -80,4 +80,6 @@ void calcDCL(AccumulatorData_t *bmsdata);
 
 void calcContDCL(AccumulatorData_t *bmsdata);
 
+void calcContCCL(AccumulatorData_t *bmsdata);
+
 #endif

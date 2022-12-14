@@ -30,6 +30,8 @@ struct ChipData_t
  */
 enum BMSFault_t
 {
+    FAULTS_CLEAR                        = 0x0,
+
     //Orion BMS faults
     CELLS_NOT_BALANCING                 = 0x1,
     CELL_VOLTAGE_TOO_HIGH               = 0x2,
