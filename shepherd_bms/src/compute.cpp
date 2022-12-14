@@ -6,6 +6,7 @@ ComputeInterface::ComputeInterface()
     pinMode(CURRENT_SENSOR_PIN_L, INPUT);
     pinMode(FAULT_PIN, OUTPUT);
     initializeCAN(CANLINE_2, CHARGER_BAUD, &(this->chargerCallback));
+    initializeCAN(CANLINE_1, MC_BAUD, &(this->MCCallback));
 }
 
 ComputeInterface::~ComputeInterface(){}
@@ -77,6 +78,10 @@ void ComputeInterface::sendMCMsg(uint16_t userMaxCharge, uint16_t userMaxDischar
 
     mcMsg.config.maxCharge = userMaxCharge;
     mcMsg.config.maxDischarge = userMaxDischarge;
-    sendMessage(0x202, 4, mcMsg.msg);
+    sendMessageCAN1(0x202, 4, mcMsg.msg);
 }
 
+void ComputeInterface::MCCallback(const CAN_message_t &msg)
+{
+    return;
+}

@@ -12,6 +12,7 @@
 #define CHARGE_SAFETY_RELAY 6
 #define CHARGE_DETECT 7
 #define CHARGER_BAUD 250000U
+#define MC_BAUD 1000000U
 
 #define MAX_ADC_RESOLUTION      1023 // 13 bit ADC
 
@@ -26,6 +27,7 @@ class ComputeInterface
             CHARGE_ENABLED,
             CHARGE_DISABLED
         };
+
         union 
         {
             uint8_t msg[4] = {0,0,0,0};
@@ -109,6 +111,8 @@ class ComputeInterface
          * @param msg 
          */
         static void chargerCallback(const CAN_message_t &msg);
+
+        static void MCCallback(const CAN_message_t &msg);
 
         /**
          * @brief Sets the desired fan speed

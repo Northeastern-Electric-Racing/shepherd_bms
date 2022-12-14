@@ -226,6 +226,12 @@ void shepherdMain()
 		}
 	}
 
+	// CHARGE STATE
+	if (digitalRead(CHARGE_DETECT) == HIGH && bmsFault == FAULTS_CLEAR) {
+		compute.enableCharging(true);
+		compute.sendChargingMessage(300, accData->chargeLimit);
+	}
+
 	//compute.sendChargerMsg();
 	//sendCanMsg(all the data we wanna send out)
 	//etc
@@ -236,7 +242,6 @@ void shepherdMain()
 void setup()
 {
   NERduino.begin();
-  initializeCAN(1);
   delay(3000); // Allow time to connect and see boot up info
   Serial.println("Hello World!");
   
