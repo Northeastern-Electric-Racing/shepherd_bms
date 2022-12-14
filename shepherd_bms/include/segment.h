@@ -10,6 +10,7 @@
 #define MAX_VOLT            4.2
 #define MAX_DELTA_V         0.02
 #define BAL_MIN_V           4.00
+#define MAX_CELL_TEMP       55
 
 #define THERM_WAIT_TIME     500 //ms
 #define VOLTAGE_WAIT_TIME   250 //ms

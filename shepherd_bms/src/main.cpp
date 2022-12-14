@@ -129,12 +129,21 @@ void shepherdMain()
 	//Some calculations might be state dependent
 	calcCellTemps(accData);
 	calcPackTemps(accData);
+	calcPackVoltageStats(accData);
 	Serial.print("Min, Max, Avg Temps: ");
 	Serial.print(accData->minTemp.val);
 	Serial.print(",  ");
 	Serial.print(accData->maxTemp.val);
 	Serial.print(",  ");
 	Serial.println(accData->avgTemp);
+	Serial.print("Min, Max, Avg, Delta Voltages: ");
+	Serial.print(accData->minVoltage.val);
+	Serial.print(",  ");
+	Serial.print(accData->maxVoltage.val);
+	Serial.print(",  ");
+	Serial.print(accData->avgVoltage);
+	Serial.print(",  ");
+	Serial.println(accData->deltVoltage);
 	calcCellResistances(accData);
 	calcDCL(accData);
 	calcContDCL(accData);
@@ -168,7 +177,7 @@ void shepherdMain()
 		Serial.println();
 	}*/
 
-	
+	uint16_t overVoltCount = 0;
 
 	// ACTIVE/NORMAL STATE
 	if (bmsFault == FAULTS_CLEAR) {
@@ -183,9 +192,14 @@ void shepherdMain()
 		}
 		if (accData->minVoltage.val < MIN_VOLT) {
 			bmsFault = CELL_VOLTAGE_TOO_LOW;
-		} 
-		if (accData->maxVoltage.val > MAX_VOLT) {
-			bmsFault = CELL_VOLTAGE_TOO_HIGH;
+		}
+		if (accData->maxVoltage.val > MAX_VOLT) { // Needs to be reimplemented with a flag for every cell in case multiple go over
+			overVoltCount++;
+			if (overVoltCount > 1000) { // 10 seconds @ 100Hz rate
+				bmsFault = CELL_VOLTAGE_TOO_HIGH;
+			}
+		} else {
+			overVoltCount = 0;
 		}
 		if (accData->maxTemp.val > MAX_CELL_TEMP) {
 			bmsFault = PACK_TOO_HOT;
@@ -201,7 +215,7 @@ void shepherdMain()
 		Serial.print("BMS FAULT: ");
 		Serial.println(bmsFault);
 		Serial.println("Hit Spacebar to clear");
-		//Handle discharge test logic
+		delay(3000);
 		if (Serial.available()) 
 		{ // Check for key presses
 			char keyPress = Serial.read(); // Read key

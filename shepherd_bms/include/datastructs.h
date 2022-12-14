@@ -50,6 +50,7 @@ enum BMSFault_t
     CHARGER_SAFETY_RELAY                = 0x4000,
     BATTERY_THERMISTOR                  = 0x8000,
     CHARGER_CAN_FAULT                   = 0x10000,
+    CHARGE_LIMIT_ENFORCEMENT_FAULT      = 0x20000,
 
     MAX_FAULTS                          = 0x80000000 //Maximum allowable fault code
 };
@@ -60,7 +61,7 @@ enum BMSFault_t
  */
 struct CriticalCellValue_t
 {
-    int16_t val;
+    int32_t val;
     uint8_t chipIndex;
     uint8_t cellNum;
 };
@@ -91,7 +92,7 @@ struct AccumulatorData_t
      */
     uint32_t faultCode;
 
-    /*Max and min thermistor readings*/
+    /*Max, min, and avg thermistor readings*/
     CriticalCellValue_t maxTemp;
     CriticalCellValue_t minTemp;
     uint8_t avgTemp;
@@ -103,6 +104,8 @@ struct AccumulatorData_t
     /*Max, min, and avg voltage of the cells*/
     CriticalCellValue_t maxVoltage;
     CriticalCellValue_t minVoltage;
+    uint16_t avgVoltage;
+    uint16_t deltVoltage;
 };
 
 #endif

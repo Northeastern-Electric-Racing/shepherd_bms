@@ -70,6 +70,8 @@ const std::vector<int> RelevantThermMap[NUM_CELLS_PER_CHIP] =
     {26,27}
 };
 
+void calcPackVoltageStats(AccumulatorData_t *bmsdata);
+
 void calcCellResistances(AccumulatorData_t *bmsdata);
 
 void calcCellTemps(AccumulatorData_t *bmsdata);

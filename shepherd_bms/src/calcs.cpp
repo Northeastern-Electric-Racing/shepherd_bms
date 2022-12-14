@@ -10,7 +10,7 @@ void calcCellTemps(AccumulatorData_t *bmsdata)
             for(uint8_t therm = 0; therm < RelevantThermMap[cell].size(); therm++)
             {
                 uint8_t thermNum = RelevantThermMap[cell][therm];
-                tempSum += bmsdata->chipData[c].thermistorReading[thermNum];
+                tempSum += bmsdata->chipData[c].thermistorValue[thermNum];
             }
         
             //Takes the average temperature of all the relevant thermistors
@@ -31,16 +31,36 @@ void calcPackTemps(AccumulatorData_t *bmsdata)
     for(uint8_t c = 1; c < NUM_CHIPS; c += 2)
     {
         for(uint8_t therm = 17; therm < 28; therm++) {
-            if (bmsdata->chipData[c].thermistorReading[therm] > bmsdata->maxTemp.val) {
-                bmsdata->maxTemp = {bmsdata->chipData[c].thermistorReading[therm], c, therm};
-            } else if (bmsdata->chipData[c].thermistorReading[therm] < bmsdata->minTemp.val) {
-                bmsdata->minTemp = {bmsdata->chipData[c].thermistorReading[therm], c, therm};
+            if (bmsdata->chipData[c].thermistorValue[therm] > bmsdata->maxTemp.val) {
+                bmsdata->maxTemp = {bmsdata->chipData[c].thermistorValue[therm], c, therm};
+            } else if (bmsdata->chipData[c].thermistorValue[therm] < bmsdata->minTemp.val) {
+                bmsdata->minTemp = {bmsdata->chipData[c].thermistorValue[therm], c, therm};
             }
             
-            totalTemp += bmsdata->chipData[c].thermistorReading[therm];
+            totalTemp += bmsdata->chipData[c].thermistorValue[therm];
         }
     }
     bmsdata->avgTemp = totalTemp / 44;
+}
+
+void calcPackVoltageStats(AccumulatorData_t *bmsdata) {
+    bmsdata->maxVoltage = {MIN_VOLT_MEAS, 0, 0};
+    bmsdata->minVoltage = {MAX_VOLT_MEAS, 0, 0};
+    int totalVolt = 0;
+    for(uint8_t c = 0; c < NUM_CHIPS; c++)
+    {
+        for(uint8_t cell = 0; cell < 9; cell++) {
+            if (bmsdata->chipData[c].voltageReading[cell] > bmsdata->maxVoltage.val) {
+                bmsdata->maxVoltage = {bmsdata->chipData[c].voltageReading[cell], c, cell};
+            } else if (bmsdata->chipData[c].voltageReading[cell] < bmsdata->minVoltage.val) {
+                bmsdata->minVoltage = {bmsdata->chipData[c].voltageReading[cell], c, cell};
+            }
+            
+            totalVolt += bmsdata->chipData[c].voltageReading[cell];
+        }
+    }
+    bmsdata->avgVoltage = totalVolt / (NUM_CELLS_PER_CHIP * NUM_CHIPS);
+    bmsdata->deltVoltage = bmsdata->maxVoltage.val - bmsdata->minVoltage.val;
 }
 
 void calcCellResistances(AccumulatorData_t *bmsdata)

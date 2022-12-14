@@ -6,7 +6,11 @@
 #define NUM_CELLS_PER_CHIP  9
 #define NUM_THERMS_PER_CHIP 32
 
+// Hardware limits
 #define MAX_TEMP            65 //degrees C
 #define MIN_TEMP            -5 // deg C
+
+#define MAX_VOLT_MEAS       65535
+#define MIN_VOLT_MEAS       0
 
 #endif
