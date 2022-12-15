@@ -10,9 +10,12 @@
 #define MAX_VOLT            4.2
 #define MAX_DELTA_V         0.02
 #define BAL_MIN_V           4.00
+#define MAX_CELL_TEMP       55
 
-#define THERM_WAIT_TIME     800 //ms
-#define VOLTAGE_WAIT_TIME   500 //ms
+#define THERM_WAIT_TIME     500 //ms
+#define VOLTAGE_WAIT_TIME   250 //ms
+
+#define THERM_AVG           5 // Number of values to average
 
 /**
  * @brief This class serves as the interface for all of the segment boards
@@ -27,15 +30,19 @@ class SegmentInterface
         FaultStatus_t voltageError = NOT_FAULTED;
         FaultStatus_t thermError = NOT_FAULTED;
 
+        uint16_t thermSettleTime = 0;
+
         const uint32_t VOLT_TEMP_CONV[57] = 
         {
-            45140, 44890, 44640, 44370, 44060, 43800, 43510, 43210, 42900, 42560,
-            42240, 41900, 41550, 41170, 40820, 40450, 40040, 39650, 39220, 38810, 
-            38370, 37950, 37500, 37090, 36650, 36180, 35670, 35220, 34740, 34230,
-            33770, 33270, 32770, 32280, 31770, 31260, 30750, 30240, 29720, 29220, 
-            28710, 28200, 27680, 27160, 26660, 26140, 25650, 25130, 24650, 24150, 
-            23660, 23170, 22670, 22190, 21720, 21240, 0
+            40890, 40460, 40040, 39580, 39130, 38660, 38210, 37710, 37210, 36190,
+            35670, 35160, 34620, 34080, 33550, 32990, 32390, 31880, 31270, 30690, 
+            30160, 29590, 28990, 28450, 27880, 27270, 26740, 26080, 25610, 25000,
+            24440, 23880, 23330, 22780, 22240, 21700, 21180, 20660, 20150, 19640, 
+            19140, 18650, 18170, 17700, 17230, 16780, 16330, 15890, 15470, 15030, 
+            14640, 14230, 13850, 13450, 13070, 12710, 0
         };
+
+        const int32_t VOLT_TEMP_CALIB_OFFSET = 0;
 
         ChipData_t *segmentData = nullptr;
 

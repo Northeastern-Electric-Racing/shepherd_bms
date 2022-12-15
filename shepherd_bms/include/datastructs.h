@@ -3,6 +3,7 @@
 
 #include <nerduino.h>
 #include "bmsConfig.h"
+#include <vector>
 
 /**
  * @brief Individual chip data
@@ -12,13 +13,14 @@ struct ChipData_t
 {
     //These are retrieved from the initial LTC comms
     uint16_t voltageReading[NUM_CELLS_PER_CHIP];          //store voltage readings from each chip
-    uint16_t thermistorReading[NUM_THERMS_PER_CHIP];       //store all therm readings from each chip
-    bool discharge[NUM_CELLS_PER_CHIP];
+    int8_t thermistorReading[NUM_THERMS_PER_CHIP];       //store all therm readings from each chip
+    int8_t thermistorValue[NUM_THERMS_PER_CHIP];
     FaultStatus_t errorReading;
 
     //These are calculated during the analysis of data
-    uint16_t cellResistance[NUM_CELLS_PER_CHIP];
-    uint16_t openCellVoltage[NUM_CELLS_PER_CHIP];
+    uint8_t cellTemp[NUM_CELLS_PER_CHIP];
+    float cellResistance[NUM_CELLS_PER_CHIP];
+    uint8_t openCellVoltage[NUM_CELLS_PER_CHIP];
 };
 
 /**
@@ -28,6 +30,8 @@ struct ChipData_t
  */
 enum BMSFault_t
 {
+    FAULTS_CLEAR                        = 0x0,
+
     //Orion BMS faults
     CELLS_NOT_BALANCING                 = 0x1,
     CELL_VOLTAGE_TOO_HIGH               = 0x2,
@@ -46,6 +50,7 @@ enum BMSFault_t
     CHARGER_SAFETY_RELAY                = 0x4000,
     BATTERY_THERMISTOR                  = 0x8000,
     CHARGER_CAN_FAULT                   = 0x10000,
+    CHARGE_LIMIT_ENFORCEMENT_FAULT      = 0x20000,
 
     MAX_FAULTS                          = 0x80000000 //Maximum allowable fault code
 };
@@ -56,7 +61,7 @@ enum BMSFault_t
  */
 struct CriticalCellValue_t
 {
-    int16_t val;
+    int32_t val;
     uint8_t chipIndex;
     uint8_t cellNum;
 };
@@ -70,7 +75,7 @@ struct CriticalCellValue_t
 struct AccumulatorData_t
 {
     /*Array of data from all chips in the system*/
-    ChipData_t ChipData[8];
+    ChipData_t chipData[NUM_CHIPS];
 
     FaultStatus_t faultStatus = NOT_FAULTED;
 
@@ -78,14 +83,19 @@ struct AccumulatorData_t
     uint16_t packVoltage;
     uint16_t packRes;
 
+    uint16_t dischargeLimit;
+    uint16_t chargeLimit;
+    uint16_t contDCL;
+
     /**
      * @brief Note that this is a 32 bit integer, so there are 32 max possible fault codes
      */
     uint32_t faultCode;
 
-    /*Max and min thermistor readings*/
+    /*Max, min, and avg thermistor readings*/
     CriticalCellValue_t maxTemp;
     CriticalCellValue_t minTemp;
+    uint8_t avgTemp;
 
     /*Max and min cell resistances*/
     CriticalCellValue_t maxRes;
@@ -94,6 +104,8 @@ struct AccumulatorData_t
     /*Max, min, and avg voltage of the cells*/
     CriticalCellValue_t maxVoltage;
     CriticalCellValue_t minVoltage;
+    uint16_t avgVoltage;
+    uint16_t deltVoltage;
 };
 
 #endif
