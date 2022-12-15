@@ -59,16 +59,18 @@ const uint8_t TEMP_TO_CCL[14] =
  */
 const std::vector<int> RelevantThermMap[NUM_CELLS_PER_CHIP] = 
 {
-    {1,2},
-    {1,2},
-    {1,2,3,4},
-    {3,4},
-    {3,4,5,6,7},
-    {5,6,7,8,9},
-    {8,9},
-    {8,9,10,11},
-    {10,11}
+    {17,18},
+    {17,18},
+    {17,18,19,20},
+    {19,20},
+    {19,20,21,22,23},
+    {21,22,23,24,25},
+    {24,25},
+    {24,25,26,27},
+    {26,27}
 };
+
+void calcPackVoltageStats(AccumulatorData_t *bmsdata);
 
 void calcCellResistances(AccumulatorData_t *bmsdata);
 
@@ -78,6 +80,8 @@ void calcPackTemps(AccumulatorData_t *bmsdata);
 
 void calcDCL(AccumulatorData_t *bmsdata);
 
-void calcCCL(AccumulatorData_t *bmsdata);
+void calcContDCL(AccumulatorData_t *bmsdata);
+
+void calcContCCL(AccumulatorData_t *bmsdata);
 
 #endif
