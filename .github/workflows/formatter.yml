@@ -1,11 +1,11 @@
 
--name: Format Check
+name: Format Check
 
--on:
-  pull-request:
+on:
+  pull_request:
     types: [opened, edited]
 
--jobs:
+jobs:
   cpp_style_check:
     runs-on: ubuntu-latest
     name: Check C++ Style
