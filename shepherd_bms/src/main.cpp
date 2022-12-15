@@ -17,7 +17,7 @@ ChipData_t *testData;
 Timer mainTimer;
 ComputeInterface compute;
 
-BMSFault_t bmsFault = FAULTS_CLEAR;
+uint32_t bmsFault = FAULTS_CLEAR;
 
 void testSegments()
 {
@@ -185,27 +185,27 @@ void shepherdMain()
 
 		// Check for fuckies
 		if (current > accData->contDCL) {
-			bmsFault = DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
+			bmsFault |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
 		}
 		if (current < 0 && abs(current) > accData->chargeLimit) {
-			bmsFault = CHARGE_LIMIT_ENFORCEMENT_FAULT;
+			bmsFault |= CHARGE_LIMIT_ENFORCEMENT_FAULT;
 		}
 		if (accData->minVoltage.val < MIN_VOLT) {
-			bmsFault = CELL_VOLTAGE_TOO_LOW;
+			bmsFault |= CELL_VOLTAGE_TOO_LOW;
 		}
 		if (accData->maxVoltage.val > MAX_VOLT) { // Needs to be reimplemented with a flag for every cell in case multiple go over
 			overVoltCount++;
 			if (overVoltCount > 1000) { // 10 seconds @ 100Hz rate
-				bmsFault = CELL_VOLTAGE_TOO_HIGH;
+				bmsFault |= CELL_VOLTAGE_TOO_HIGH;
 			}
 		} else {
 			overVoltCount = 0;
 		}
 		if (accData->maxTemp.val > MAX_CELL_TEMP) {
-			bmsFault = PACK_TOO_HOT;
+			bmsFault |= PACK_TOO_HOT;
 		}
 		if (accData->minVoltage.val < 900) { // 90mV
-			bmsFault = LOW_CELL_VOLTAGE;
+			bmsFault |= LOW_CELL_VOLTAGE;
 		}
 	}
 
