@@ -1,4 +1,8 @@
-on: [ pull_request ]
+name: Format Check
+
+on:
+  pull-request:
+    types: [opened, edited]
 
 jobs:
   cpp_style_check:
