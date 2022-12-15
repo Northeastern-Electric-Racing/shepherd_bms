@@ -19,6 +19,8 @@ ComputeInterface compute;
 
 uint32_t bmsFault = FAULTS_CLEAR;
 
+bool isCharging = false;
+
 void testSegments()
 {
 	currTime = millis();
@@ -228,16 +230,28 @@ void shepherdMain()
 
 	uint16_t packChargeVolt = 300;
 
+	Serial.println("Hit Spacebar to enable charging");
 	// CHARGE STATE
-	if (digitalRead(CHARGE_DETECT) == LOW && bmsFault == FAULTS_CLEAR) {
+	if (Serial.available())
+	{ // Check for key presses
+		char keyPress = Serial.read(); // Read key
+		if (keyPress == ' ')
+		{
+			isCharging = !isCharging;
+		}
+	} 
+
+	if (digitalRead(CHARGE_DETECT) == LOW && bmsFault == FAULTS_CLEAR) 
+	{
 		digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
 		compute.enableCharging(true);
 		compute.sendChargingMessage(packChargeVolt, accData->chargeLimit);
-	} else if (bmsFault == FAULTS_CLEAR) {
+	}
+	else if (bmsFault == FAULTS_CLEAR) 
+	{
 		digitalWrite(CHARGE_SAFETY_RELAY, LOW);
 	}
 
-	//compute.sendChargerMsg();
 	//sendCanMsg(all the data we wanna send out)
 	//etc
 
@@ -249,6 +263,8 @@ void setup()
   NERduino.begin();
   delay(3000); // Allow time to connect and see boot up info
   Serial.println("Hello World!");
+
+  initializeCAN(CANLINE_1, MC_BAUD, incomingCANCallback);
   
   segment.init();
 

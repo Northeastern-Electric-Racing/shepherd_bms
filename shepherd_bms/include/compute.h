@@ -53,12 +53,6 @@ class ComputeInterface
         const float highChannelGain = 1 / 0.0040;
         const float lowChannelGain = 1 / 0.0267;
 
-        /**
-         * @todo These might need to be changed depending on the charging ticket
-         */
-        const uint8_t startChargingMsg[];
-        const uint8_t endChargingMsg[];
-
         union 
         {
            uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0xFF, 0xFF};
