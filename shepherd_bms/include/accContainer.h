@@ -10,16 +10,34 @@ struct frame
     frame* next;
 };
 
-class Accumulator{
-    public:
 
+/**
+ * @brief Resizable linked list queue for performing historical analysis
+ * 
+ */
+class Accumulator
+{
+    private:
+        frame* read = nullptr;
+        frame* write = nullptr;
+        
+        frame* head = nullptr;
+        uint16_t size = 0;
+        uint16_t numNodes = 0;
+    
+    public:
         Accumulator();
+
+        Accumulator(uint16_t newSize);
 
         ~Accumulator();
 
-        void insert(AccumulatorData_t data);
+        void push(AccumulatorData_t data);
 
-        frame* head;
+        void resize(uint16_t newSize);
+
+        //Pointer to the data in the head node
+        AccumulatorData_t *currentData = &(read->data);
 };
 
 #endif

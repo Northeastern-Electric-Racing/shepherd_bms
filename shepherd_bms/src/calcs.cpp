@@ -12,7 +12,7 @@ void calcCellTemps(AccumulatorData_t *bmsdata)
                 uint8_t thermNum = RelevantThermMap[cell][therm];
                 tempSum += bmsdata->chipData[c].thermistorValue[thermNum];
             }
-        
+
             //Takes the average temperature of all the relevant thermistors
             bmsdata->chipData[c].cellTemp[cell] = tempSum / RelevantThermMap[cell].size();
 

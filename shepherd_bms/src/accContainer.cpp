@@ -1,15 +1,26 @@
 #include "accContainer.h"
 
-Accumulator::Accumulator()
+Accumulator::Accumulator(){}
+
+Accumulator::Accumulator(uint16_t newSize)
 {
-    head = NULL;
+    resize(newSize);
 }
 
-void Accumulator::insert(AccumulatorData_t data){
+Accumulator::~Accumulator(){}
+
+void Accumulator::push(AccumulatorData_t data)
+{
+    //if it isn't full, we need to push and not pop
+
+    //if it is full, we need to push AND pop
+    
     frame *newNode = new frame;
     newNode->data = data;
 
-    if (head == NULL){
+    //if list is empty
+    if (head == nullptr)
+    {
         head = newNode;
         newNode->next = head;
     }
@@ -22,4 +33,13 @@ void Accumulator::insert(AccumulatorData_t data){
         temp->next = newNode;
         head = newNode;
     }
+
+    currentData = &(head->data);
+}
+
+void Accumulator::resize(uint16_t newSize)
+{
+    size = newSize;
+
+    //if the queue is larger than the newSize, then delete the end nodes
 }
