@@ -24,25 +24,24 @@ Analyzer::~Analyzer()
 void Analyzer::push(AccumulatorData_t data)
 {
     //make sure we have waited long enough
-    if(!analysisTimer.isTimerExpired())
-    {
-        //add in a new data point
-        enQueue(data);
+    if(!analysisTimer.isTimerExpired()) return;
+    
+    //add in a new data point
+    enQueue(data);
 
-        //perform calculations on the dataset
-        calcCellTemps();
-        calcPackTemps();
-        calcPackVoltageStats();
-        calcCellResistances();
-        calcDCL();
-        calcContDCL();
-        calcContCCL();
+    //perform calculations on the dataset
+    calcCellTemps();
+    calcPackTemps();
+    calcPackVoltageStats();
+    calcCellResistances();
+    calcDCL();
+    calcContDCL();
+    calcContCCL();
 
-        printData();
+    //printData();
 
-        //start the timer to make sure we aren't doing repeat analysis on exactly the same data
-        analysisTimer.startTimer(ANALYSIS_INTERVAL);
-    }
+    //start the timer to make sure we aren't doing repeat analysis on exactly the same data
+    analysisTimer.startTimer(ANALYSIS_INTERVAL);
 }
 
 void Analyzer::printData()
