@@ -2,8 +2,8 @@
 #include <LTC68041.h>
 #include "segment.h"
 #include "compute.h"
-#include "calcs.h"
 #include "datastructs.h"
+#include "analyzer.h"
 
 int currTime = 0;
 int lastPackCurr = 0;
@@ -15,7 +15,6 @@ bool dischargeConfig[NUM_CHIPS][NUM_CELLS_PER_CHIP] = {};
 
 ChipData_t *testData;
 Timer mainTimer;
-ComputeInterface compute;
 
 uint32_t bmsFault = FAULTS_CLEAR;
 
@@ -114,12 +113,11 @@ void shepherdMain()
 
 	//Create a dynamically allocated structure
 	//@note this will move to a specialized container with a list of these structs
-	AccumulatorData_t *accData = new AccumulatorData_t;
-	
+	AccumulatorData_t accData;
 
 	//Collect all the segment data needed to perform analysis
 	//Not state specific
-	segment.retrieveSegmentData(accData->chipData);
+	segment.retrieveSegmentData(accData.chipData);
 
 	int16_t current = compute.getPackCurrent();
 	Serial.print("Current: ");
@@ -128,74 +126,25 @@ void shepherdMain()
 	//etc
 
 	//Perform calculations on the data in the frame
-	//Some calculations might be state dependent
-	calcCellTemps(accData);
-	calcPackTemps(accData);
-	calcPackVoltageStats(accData);
-	Serial.print("Min, Max, Avg Temps: ");
-	Serial.print(accData->minTemp.val);
-	Serial.print(",  ");
-	Serial.print(accData->maxTemp.val);
-	Serial.print(",  ");
-	Serial.println(accData->avgTemp);
-	Serial.print("Min, Max, Avg, Delta Voltages: ");
-	Serial.print(accData->minVoltage.val);
-	Serial.print(",  ");
-	Serial.print(accData->maxVoltage.val);
-	Serial.print(",  ");
-	Serial.print(accData->avgVoltage);
-	Serial.print(",  ");
-	Serial.println(accData->deltVoltage);
-	calcCellResistances(accData);
-	calcDCL(accData);
-	calcContDCL(accData);
-	calcContCCL(accData);
-	Serial.print("DCL: ");
-	Serial.println(accData->dischargeLimit);
-
-	Serial.print("CCL: ");
-	Serial.println(accData->chargeLimit);
-
-	/*
-	Serial.println("Cell Temps:");
-	for(uint8_t c = 0; c < NUM_CHIPS; c++)
-    {
-        for(uint8_t cell = 17; cell < 28; cell++)
-        {
-			Serial.print(accData->chipData[c].thermistorReading[cell]);
-			Serial.print("\t");
-		}
-		Serial.println();
-	}
-
-	Serial.println("Cell Temps Avg:");
-	for(uint8_t c = 0; c < NUM_CHIPS; c++)
-    {
-        for(uint8_t cell = 17; cell < 28; cell++)
-        {
-			Serial.print(accData->chipData[c].thermistorValue[cell]);
-			Serial.print("\t");
-		}
-		Serial.println();
-	}*/
+	analyzer.push(accData);
 
 	uint16_t overVoltCount = 0;
 
 	// ACTIVE/NORMAL STATE
 	if (bmsFault == FAULTS_CLEAR) {
-		compute.sendMCMsg(0, accData->dischargeLimit);
+		compute.sendMCMsg(0, analyzer.bmsdata->dischargeLimit);
 
 		// Check for fuckies
-		if (current > accData->contDCL) {
+		if (current > analyzer.bmsdata->contDCL) {
 			bmsFault |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
 		}
-		if (current < 0 && abs(current) > accData->chargeLimit) {
+		if (current < 0 && abs(current) > analyzer.bmsdata->chargeLimit) {
 			bmsFault |= CHARGE_LIMIT_ENFORCEMENT_FAULT;
 		}
-		if (accData->minVoltage.val < MIN_VOLT) {
+		if (analyzer.bmsdata->minVoltage.val < MIN_VOLT) {
 			bmsFault |= CELL_VOLTAGE_TOO_LOW;
 		}
-		if (accData->maxVoltage.val > MAX_VOLT) { // Needs to be reimplemented with a flag for every cell in case multiple go over
+		if (analyzer.bmsdata->maxVoltage.val > MAX_VOLT) { // Needs to be reimplemented with a flag for every cell in case multiple go over
 			overVoltCount++;
 			if (overVoltCount > 1000) { // 10 seconds @ 100Hz rate
 				bmsFault |= CELL_VOLTAGE_TOO_HIGH;
@@ -203,10 +152,10 @@ void shepherdMain()
 		} else {
 			overVoltCount = 0;
 		}
-		if (accData->maxTemp.val > MAX_CELL_TEMP) {
+		if (analyzer.bmsdata->maxTemp.val > MAX_CELL_TEMP) {
 			bmsFault |= PACK_TOO_HOT;
 		}
-		if (accData->minVoltage.val < 900) { // 90mV
+		if (analyzer.bmsdata->minVoltage.val < 900) { // 90mV
 			bmsFault |= LOW_CELL_VOLTAGE;
 		}
 	}
@@ -245,7 +194,7 @@ void shepherdMain()
 	{
 		digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
 		compute.enableCharging(true);
-		compute.sendChargingMessage(packChargeVolt, accData->chargeLimit);
+		compute.sendChargingMessage(packChargeVolt, analyzer.bmsdata->chargeLimit);
 	}
 	else if (bmsFault == FAULTS_CLEAR) 
 	{
@@ -254,8 +203,6 @@ void shepherdMain()
 
 	//sendCanMsg(all the data we wanna send out)
 	//etc
-
-	delete accData;
 }
 
 void setup()
@@ -269,6 +216,8 @@ void setup()
   segment.init();
 
   compute.setFault(NOT_FAULTED);
+
+  analyzer.resize(MAX_SIZE_OF_HIST_QUEUE / ACCUMULATOR_FRAME_SIZE);
 }
 
 void loop()

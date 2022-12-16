@@ -139,4 +139,6 @@ class ComputeInterface
 
 };
 
+extern ComputeInterface compute;
+
 #endif
