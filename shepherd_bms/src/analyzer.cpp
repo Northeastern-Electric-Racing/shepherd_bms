@@ -104,6 +104,7 @@ void Analyzer::resize(uint16_t newSize)
         tail = tail->next;
         delete tmp;
         tmp = nullptr;
+        numNodes--;
     }
 }
 
