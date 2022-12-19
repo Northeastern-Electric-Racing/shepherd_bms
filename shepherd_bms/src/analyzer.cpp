@@ -27,7 +27,8 @@ void Analyzer::push(AccumulatorData_t data)
     if(!analysisTimer.isTimerExpired()) return;
     
     //add in a new data point
-    enQueue(data);
+    //enQueue(data);
+    head->data = data;
 
     //perform calculations on the dataset
     calcCellTemps();
