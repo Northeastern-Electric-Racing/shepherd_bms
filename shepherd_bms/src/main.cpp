@@ -4,6 +4,7 @@
 #include "compute.h"
 #include "datastructs.h"
 #include "analyzer.h"
+#include "stateMachine.h"
 
 int currTime = 0;
 int lastPackCurr = 0;
@@ -17,6 +18,8 @@ ChipData_t *testData;
 Timer mainTimer;
 
 uint32_t bmsFault = FAULTS_CLEAR;
+
+StateMachine bmsDirector;
 
 bool isCharging = false;
 
