@@ -23,7 +23,7 @@
 class SegmentInterface
 {
     private:
-
+    
         Timer thermTimer;
         Timer voltageReadingTimer;
 

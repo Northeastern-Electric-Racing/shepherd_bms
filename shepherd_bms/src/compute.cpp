@@ -1,5 +1,7 @@
 #include "compute.h"
 
+ComputeInterface compute;
+
 ComputeInterface::ComputeInterface()
 {
     pinMode(CURRENT_SENSOR_PIN_H, INPUT);

@@ -1,6 +1,114 @@
-#include "calcs.h"
+#include "analyzer.h"
 
-void calcCellTemps(AccumulatorData_t *bmsdata)
+Analyzer analyzer;
+
+Analyzer::Analyzer(){}
+
+Analyzer::Analyzer(uint16_t newSize)
+{
+    resize(newSize);
+}
+
+Analyzer::~Analyzer()
+{
+    while(tail != nullptr)
+    {
+        //remove the last item
+        node *tmp = tail;
+        tail = tail->next;
+        delete tmp;
+        tmp = nullptr;
+    }
+}
+
+void Analyzer::push(AccumulatorData_t data)
+{
+    //make sure we have waited long enough
+    if(!analysisTimer.isTimerExpired()) return;
+    
+    //add in a new data point
+    //enQueue(data);
+    head->data = data;
+
+    //perform calculations on the dataset
+    calcCellTemps();
+    calcPackTemps();
+    calcPackVoltageStats();
+    calcCellResistances();
+    calcDCL();
+    calcContDCL();
+    calcContCCL();
+
+    //printData();
+
+    //start the timer to make sure we aren't doing repeat analysis on exactly the same data
+    analysisTimer.startTimer(ANALYSIS_INTERVAL);
+}
+
+void Analyzer::printData()
+{
+    Serial.print("Min, Max, Avg Temps: ");
+	Serial.print(bmsdata->minTemp.val);
+	Serial.print(",  ");
+	Serial.print(bmsdata->maxTemp.val);
+	Serial.print(",  ");
+	Serial.println(bmsdata->avgTemp);
+	Serial.print("Min, Max, Avg, Delta Voltages: ");
+	Serial.print(bmsdata->minVoltage.val);
+	Serial.print(",  ");
+	Serial.print(bmsdata->maxVoltage.val);
+	Serial.print(",  ");
+	Serial.print(bmsdata->avgVoltage);
+	Serial.print(",  ");
+	Serial.println(bmsdata->deltVoltage);
+	Serial.print("DCL: ");
+	Serial.println(bmsdata->dischargeLimit);
+	Serial.print("CCL: ");
+	Serial.println(bmsdata->chargeLimit);
+
+    /*
+	Serial.println("Cell Temps:");
+	for(uint8_t c = 0; c < NUM_CHIPS; c++)
+    {
+        for(uint8_t cell = 17; cell < 28; cell++)
+        {
+			Serial.print(accData->chipData[c].thermistorReading[cell]);
+			Serial.print("\t");
+		}
+		Serial.println();
+	}
+
+	Serial.println("Cell Temps Avg:");
+	for(uint8_t c = 0; c < NUM_CHIPS; c++)
+    {
+        for(uint8_t cell = 17; cell < 28; cell++)
+        {
+			Serial.print(accData->chipData[c].thermistorValue[cell]);
+			Serial.print("\t");
+		}
+		Serial.println();
+	}*/
+}
+
+void Analyzer::resize(uint16_t newSize)
+{
+    size = newSize;
+
+    if(head == nullptr || numNodes < size) return;
+
+    //if the queue is longer than the new size, we need to delete nodes
+    while(numNodes > size)
+    {
+        //remove the last item
+        node *tmp = tail;
+        tail = tail->next;
+        delete tmp;
+        tmp = nullptr;
+        numNodes--;
+    }
+}
+
+void Analyzer::calcCellTemps()
 {
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
@@ -12,7 +120,7 @@ void calcCellTemps(AccumulatorData_t *bmsdata)
                 uint8_t thermNum = RelevantThermMap[cell][therm];
                 tempSum += bmsdata->chipData[c].thermistorValue[thermNum];
             }
-        
+
             //Takes the average temperature of all the relevant thermistors
             bmsdata->chipData[c].cellTemp[cell] = tempSum / RelevantThermMap[cell].size();
 
@@ -23,7 +131,7 @@ void calcCellTemps(AccumulatorData_t *bmsdata)
     }
 }
 
-void calcPackTemps(AccumulatorData_t *bmsdata)
+void Analyzer::calcPackTemps()
 {
     bmsdata->maxTemp = {MIN_TEMP, 0, 0};
     bmsdata->minTemp = {MAX_TEMP, 0, 0};
@@ -43,7 +151,7 @@ void calcPackTemps(AccumulatorData_t *bmsdata)
     bmsdata->avgTemp = totalTemp / 44;
 }
 
-void calcPackVoltageStats(AccumulatorData_t *bmsdata) {
+void Analyzer::calcPackVoltageStats() {
     bmsdata->maxVoltage = {MIN_VOLT_MEAS, 0, 0};
     bmsdata->minVoltage = {MAX_VOLT_MEAS, 0, 0};
     int totalVolt = 0;
@@ -63,7 +171,7 @@ void calcPackVoltageStats(AccumulatorData_t *bmsdata) {
     bmsdata->deltVoltage = bmsdata->maxVoltage.val - bmsdata->minVoltage.val;
 }
 
-void calcCellResistances(AccumulatorData_t *bmsdata)
+void Analyzer::calcCellResistances()
 {
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
@@ -84,7 +192,7 @@ void calcCellResistances(AccumulatorData_t *bmsdata)
     }
 }
 
-void calcDCL(AccumulatorData_t *bmsdata)
+void Analyzer::calcDCL()
 {
     int16_t currentLimit = 0x7FFF;
 
@@ -112,7 +220,7 @@ void calcDCL(AccumulatorData_t *bmsdata)
     bmsdata->dischargeLimit = currentLimit;
 }
 
-void calcContDCL(AccumulatorData_t *bmsdata)
+void Analyzer::calcContDCL()
 {
     uint8_t minResIndex = (bmsdata->minTemp.val - MIN_TEMP) / 5;  //resistance LUT increments by 5C for each index
     uint8_t maxResIndex = (bmsdata->maxTemp.val - MIN_TEMP) / 5;
@@ -124,7 +232,7 @@ void calcContDCL(AccumulatorData_t *bmsdata)
     }
 }
 
-void calcContCCL(AccumulatorData_t *bmsdata)
+void Analyzer::calcContCCL()
 {
     uint8_t minResIndex = (bmsdata->minTemp.val - MIN_TEMP) / 5;  //resistance LUT increments by 5C for each index
     uint8_t maxResIndex = (bmsdata->maxTemp.val - MIN_TEMP) / 5;
@@ -133,5 +241,43 @@ void calcContCCL(AccumulatorData_t *bmsdata)
         bmsdata->chargeLimit = TEMP_TO_CCL[minResIndex];
     } else {
         bmsdata->chargeLimit = TEMP_TO_CCL[maxResIndex];
+    }
+}
+
+void Analyzer::enQueue(AccumulatorData_t data)
+{
+    node *newNode = new node;
+    newNode->data = data;
+
+    //if list is empty
+    if (head == nullptr)
+    {
+        newNode->next = nullptr;
+        head = newNode;
+        tail = newNode;
+        numNodes++;
+        return;
+    }
+
+    //if the list is not full yet
+    if(numNodes < size)
+    {
+        //add in item
+        head->next = newNode;
+        head = newNode;
+        numNodes++;
+    }
+    //else if the list is full
+    else
+    {
+        //add in item
+        head->next = newNode;
+        head = newNode;
+
+        //remove the last item
+        node *tmp = tail;
+        tail = tail->next;
+        delete tmp;
+        tmp = nullptr;
     }
 }
