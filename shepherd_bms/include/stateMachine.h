@@ -25,18 +25,18 @@ class StateMachine
             {true,      false,      false,      true}  // FAULTED
         };
 
-        typedef void (StateMachine::*HandlerFunction_t)(AccumulatorData_t bmsdata);
+        typedef void (StateMachine::*HandlerFunction_t)(AccumulatorData_t *bmsdata);
         typedef void (StateMachine::*InitFunction_t)();
 
         void requestTransition(BMSState_t nextState);
 
-        void handleBoot(AccumulatorData_t bmsdata);
+        void handleBoot(AccumulatorData_t *bmsdata);
 
-        void handleReady(AccumulatorData_t bmsdata);
+        void handleReady(AccumulatorData_t *bmsdata);
 
-        void handleCharging(AccumulatorData_t bmsdata);
+        void handleCharging(AccumulatorData_t *bmsdata);
 
-        void handleFaulted(AccumulatorData_t bmsdata);
+        void handleFaulted(AccumulatorData_t *bmsdata);
 
         void initBoot();
 
@@ -67,7 +67,7 @@ class StateMachine
 
         virtual ~StateMachine();
 
-        HandlerFunction_t handleState;
+        void handleState(AccumulatorData_t *bmsdata);
 
         BMSState_t currentState;
 };
