@@ -84,9 +84,9 @@ void ComputeInterface::sendMCMsg(uint16_t userMaxCharge, uint16_t userMaxDischar
 
 void ComputeInterface::sendAccStatusMessage(uint16_t voltage, int16_t current, uint16_t AH, uint8_t SoC, uint8_t health)
 {
-    accStatusMsg.cfg.packVolt = voltage;
-    accStatusMsg.cfg.packCurrent = static_cast<uint16_t>(current); // convert with 2s complement
-    accStatusMsg.cfg.packAH = AH;
+    accStatusMsg.cfg.packVolt = __builtin_bswap16(voltage);
+    accStatusMsg.cfg.packCurrent = __builtin_bswap16(static_cast<uint16_t>(current)); // convert with 2s complement
+    accStatusMsg.cfg.packAH = __builtin_bswap16(AH);
     accStatusMsg.cfg.packSoC = SoC;
     accStatusMsg.cfg.packHealth = health;
 
