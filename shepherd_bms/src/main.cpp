@@ -238,7 +238,7 @@ void shepherdMain()
 	}
 
 	//compute.sendChargerMsg();
-	//sendCanMsg(all the data we wanna send out)
+	compute.sendAccStatusMessage(accData->packVoltage, accData->packCurrent, 0, 0, 0);
 	//etc
 
 	delete accData;

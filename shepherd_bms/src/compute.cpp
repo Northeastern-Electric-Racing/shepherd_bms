@@ -38,6 +38,20 @@ FaultStatus_t ComputeInterface::sendChargingMessage(uint8_t voltageToSet, uint8_
     return NOT_FAULTED;
 }
 
+FaultStatus_t ComputeInterface::sendAccStatusMessage(u_int16_t voltage, u_int16_t current, u_int16_t AH, u_int8_t SoC, u_int8_t health)
+{
+    accStatusMsg.cfg.packVolt = voltage;
+    accStatusMsg.cfg.packCurrent = current;
+    accStatusMsg.cfg.packAH = AH;
+    accStatusMsg.cfg.packSoC = SoC;
+    accStatusMsg.cfg.packHealth = health;
+
+    //todo put charger ID somewhere else
+    sendMessageCAN1(0x01, 8, accStatusMsg.msg);
+
+    return NOT_FAULTED;
+}
+
 bool ComputeInterface::isCharging() // This is useless kinda, especially if we move to DCDC
 {
     return digitalRead(CHARGE_VOLTAGE_PIN);

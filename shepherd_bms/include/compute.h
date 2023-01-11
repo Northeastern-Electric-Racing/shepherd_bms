@@ -75,6 +75,21 @@ class ComputeInterface
            
         } chargerMsg;
 
+        union 
+        {
+           uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+           struct
+           {
+                u_int16_t packVolt          :16;
+                u_int16_t packCurrent       :16;
+                u_int16_t packAH            :16;
+                u_int16_t packSoC            :8;
+                u_int16_t packHealth         :8;
+           } cfg;
+           
+        } accStatusMsg;
+
     public:
         ComputeInterface();
 
@@ -142,6 +157,19 @@ class ComputeInterface
          * @param faultState
          */
         void setFault(FaultStatus_t faultState);
+
+        /**
+         * @brief sends acc status message
+         * 
+         * @param voltage
+         * @param current
+         * @param AH
+         * @param SoC
+         * @param health
+         *
+         * @return Returns a fault if we are not able to send
+         */
+        FaultStatus_t sendAccStatusMessage(u_int16_t voltage, u_int16_t current, u_int16_t AH, u_int8_t SoC, u_int8_t health);
 
 };
 
