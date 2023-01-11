@@ -239,6 +239,7 @@ void shepherdMain()
 
 	//compute.sendChargerMsg();
 	compute.sendAccStatusMessage(accData->packVoltage, accData->packCurrent, 0, 0, 0);
+	Serial.println("SENT CAN STATUS");
 	//etc
 
 	delete accData;
