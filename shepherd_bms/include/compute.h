@@ -75,11 +75,11 @@ class ComputeInterface
 
            struct
            {
-                u_int16_t packVolt          :16;
-                u_int16_t packCurrent       :16;
-                u_int16_t packAH            :16;
-                u_int16_t packSoC            :8;
-                u_int16_t packHealth         :8;
+                uint16_t packVolt;
+                uint16_t packCurrent;
+                uint16_t packAH;
+                uint8_t packSoC;
+                uint8_t packHealth;
            } cfg;
            
         } accStatusMsg;
@@ -163,7 +163,7 @@ class ComputeInterface
          *
          * @return Returns a fault if we are not able to send
          */
-        FaultStatus_t sendAccStatusMessage(u_int16_t voltage, u_int16_t current, u_int16_t AH, u_int8_t SoC, u_int8_t health);
+        void sendAccStatusMessage(uint16_t voltage, int16_t current, uint16_t AH, uint8_t SoC, uint8_t health);
 
 };
 

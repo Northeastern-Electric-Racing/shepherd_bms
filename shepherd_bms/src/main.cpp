@@ -181,8 +181,6 @@ void shepherdMain()
 
 	// ACTIVE/NORMAL STATE
 	if (bmsFault == FAULTS_CLEAR) {
-		compute.sendMCMsg(0, accData->dischargeLimit);
-
 		// Check for fuckies
 		if (current > accData->contDCL) {
 			bmsFault |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
@@ -238,6 +236,7 @@ void shepherdMain()
 	}
 
 	//compute.sendChargerMsg();
+	compute.sendMCMsg(0, accData->dischargeLimit);
 	compute.sendAccStatusMessage(accData->packVoltage, accData->packCurrent, 0, 0, 0);
 	Serial.println("SENT CAN STATUS");
 	//etc

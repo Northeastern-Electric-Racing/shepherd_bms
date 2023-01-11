@@ -38,20 +38,6 @@ FaultStatus_t ComputeInterface::sendChargingMessage(uint8_t voltageToSet, uint8_
     return NOT_FAULTED;
 }
 
-FaultStatus_t ComputeInterface::sendAccStatusMessage(u_int16_t voltage, u_int16_t current, u_int16_t AH, u_int8_t SoC, u_int8_t health)
-{
-    accStatusMsg.cfg.packVolt = voltage;
-    accStatusMsg.cfg.packCurrent = current;
-    accStatusMsg.cfg.packAH = AH;
-    accStatusMsg.cfg.packSoC = SoC;
-    accStatusMsg.cfg.packHealth = health;
-
-    //todo put charger ID somewhere else
-    sendMessageCAN1(0x01, 8, accStatusMsg.msg);
-
-    return NOT_FAULTED;
-}
-
 bool ComputeInterface::isCharging() // This is useless kinda, especially if we move to DCDC
 {
     return digitalRead(CHARGE_VOLTAGE_PIN);
@@ -94,6 +80,18 @@ void ComputeInterface::sendMCMsg(uint16_t userMaxCharge, uint16_t userMaxDischar
     mcMsg.config.maxCharge = userMaxCharge;
     mcMsg.config.maxDischarge = userMaxDischarge;
     sendMessageCAN1(0x202, 4, mcMsg.msg);
+}
+
+void ComputeInterface::sendAccStatusMessage(uint16_t voltage, int16_t current, uint16_t AH, uint8_t SoC, uint8_t health)
+{
+    accStatusMsg.cfg.packVolt = voltage;
+    accStatusMsg.cfg.packCurrent = static_cast<uint16_t>(current); // convert with 2s complement
+    accStatusMsg.cfg.packAH = AH;
+    accStatusMsg.cfg.packSoC = SoC;
+    accStatusMsg.cfg.packHealth = health;
+
+    //todo put ID somewhere else
+    sendMessageCAN1(0x01, 8, accStatusMsg.msg);
 }
 
 void ComputeInterface::MCCallback(const CAN_message_t &msg)
