@@ -9,6 +9,7 @@ int currTime = 0;
 int lastPackCurr = 0;
 int lastVoltTemp = 0;
 int lastChargeMsg = 0;
+int lastStatMsg = 0;
 
 bool dischargeEnabled = false;
 uint16_t cellTestIter = 0;
@@ -122,8 +123,6 @@ void shepherdMain()
 	segment.retrieveSegmentData(accData->chipData);
 
 	int16_t current = compute.getPackCurrent();
-	Serial.print("Current: ");
-	Serial.println(current);
 	//compute.getTSGLV();
 	//etc
 
@@ -132,29 +131,37 @@ void shepherdMain()
 	calcCellTemps(accData);
 	calcPackTemps(accData);
 	calcPackVoltageStats(accData);
-	Serial.print("Min, Max, Avg Temps: ");
-	Serial.print(accData->minTemp.val);
-	Serial.print(",  ");
-	Serial.print(accData->maxTemp.val);
-	Serial.print(",  ");
-	Serial.println(accData->avgTemp);
-	Serial.print("Min, Max, Avg, Delta Voltages: ");
-	Serial.print(accData->minVoltage.val);
-	Serial.print(",  ");
-	Serial.print(accData->maxVoltage.val);
-	Serial.print(",  ");
-	Serial.print(accData->avgVoltage);
-	Serial.print(",  ");
-	Serial.println(accData->deltVoltage);
+	
 	calcCellResistances(accData);
 	calcDCL(accData);
 	calcContDCL(accData);
 	calcContCCL(accData);
-	Serial.print("DCL: ");
-	Serial.println(accData->dischargeLimit);
 
-	Serial.print("CCL: ");
-	Serial.println(accData->chargeLimit);
+	if (currTime > lastStatMsg + 500) {
+		lastStatMsg = currTime;
+		Serial.print("Current: ");
+		Serial.println(current);
+		Serial.print("Min, Max, Avg Temps: ");
+		Serial.print(accData->minTemp.val);
+		Serial.print(",  ");
+		Serial.print(accData->maxTemp.val);
+		Serial.print(",  ");
+		Serial.println(accData->avgTemp);
+		Serial.print("Min, Max, Avg, Delta Voltages: ");
+		Serial.print(accData->minVoltage.val);
+		Serial.print(",  ");
+		Serial.print(accData->maxVoltage.val);
+		Serial.print(",  ");
+		Serial.print(accData->avgVoltage);
+		Serial.print(",  ");
+		Serial.println(accData->deltVoltage);
+		
+		Serial.print("DCL: ");
+		Serial.println(accData->dischargeLimit);
+
+		Serial.print("CCL: ");
+		Serial.println(accData->chargeLimit);
+	}
 
 	/*
 	Serial.println("Cell Temps:");
@@ -232,7 +239,7 @@ void shepherdMain()
 	if (digitalRead(CHARGE_DETECT) == LOW && bmsFault == FAULTS_CLEAR) {
 		digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
 		compute.enableCharging(true);
-		if (currTime > lastChargeMsg + 250) {
+		if (currTime > lastChargeMsg + 495) {
 			lastChargeMsg = currTime;
 			compute.sendChargingMessage(packChargeVolt, accData->chargeLimit);
 		}
