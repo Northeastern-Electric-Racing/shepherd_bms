@@ -239,7 +239,7 @@ void shepherdMain()
 	if (digitalRead(CHARGE_DETECT) == LOW && bmsFault == FAULTS_CLEAR) {
 		digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
 		compute.enableCharging(true);
-		if (currTime > lastChargeMsg + 495) {
+		if (currTime > lastChargeMsg + 150) {
 			lastChargeMsg = currTime;
 			compute.sendChargingMessage(packChargeVolt, accData->chargeLimit);
 		}

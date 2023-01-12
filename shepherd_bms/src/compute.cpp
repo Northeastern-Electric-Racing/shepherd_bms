@@ -39,7 +39,7 @@ FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, uint1
     uint8_t msg[8] = {chargerMsg.cfg.chargerControl, static_cast<uint8_t>(chargerMsg.cfg.chargerVoltage), chargerMsg.cfg.chargerVoltage >> 8, static_cast<uint8_t>(chargerMsg.cfg.chargerCurrent), chargerMsg.cfg.chargerCurrent >> 8, chargerMsg.cfg.chargerLEDs, 0xFF, 0xFF};
 
     //todo put charger ID somewhere else
-    sendMessageCAN2(CANMSG_CHARGER, 8, msg);
+    sendMessageCAN2(0x18E54024, 8, msg);
 
     //return isCharging() ? NOT_FAULTED : FAULTED; //return a fault if we DON'T detect a voltage after we begin charging
     return NOT_FAULTED;
@@ -54,11 +54,11 @@ void ComputeInterface::chargerCallback(const CAN_message_t &msg)
 {
     Serial.println("Callback called!");
     Serial.print("ID:\t");
-    Serial.println(msg.id);
+    Serial.println(msg.id, HEX);
     Serial.print("DATA:");
     for (int i = 0; i < msg.len; i++) {
         Serial.print("\t");
-        Serial.print(msg.buf[i]);
+        Serial.print(msg.buf[i], HEX);
     }
     Serial.println();
     return;
