@@ -211,7 +211,7 @@ void shepherdMain()
 	if (bmsFault != FAULTS_CLEAR) {
 		compute.setFault(FAULTED);
 		Serial.print("BMS FAULT: ");
-		Serial.println(bmsFault);
+		Serial.println(bmsFault, BIN);
 		Serial.println("Hit Spacebar to clear");
 		delay(1000);
 		if (Serial.available()) 
