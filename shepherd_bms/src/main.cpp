@@ -8,6 +8,7 @@
 int currTime = 0;
 int lastPackCurr = 0;
 int lastVoltTemp = 0;
+int lastChargeMsg = 0;
 
 bool dischargeEnabled = false;
 uint16_t cellTestIter = 0;
@@ -108,6 +109,7 @@ void testSegments()
 
 void shepherdMain()
 {
+	currTime = millis();
 	//Implement some simple controls and calcs behind shepherd
 
 	//Create a dynamically allocated structure
@@ -230,12 +232,14 @@ void shepherdMain()
 	if (digitalRead(CHARGE_DETECT) == LOW && bmsFault == FAULTS_CLEAR) {
 		digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
 		compute.enableCharging(true);
-		compute.sendChargingMessage(packChargeVolt, accData->chargeLimit);
+		if (currTime > lastChargeMsg + 250) {
+			lastChargeMsg = currTime;
+			compute.sendChargingMessage(packChargeVolt, accData->chargeLimit);
+		}
 	} else if (bmsFault == FAULTS_CLEAR) {
 		digitalWrite(CHARGE_SAFETY_RELAY, LOW);
 	}
 
-	//compute.sendChargerMsg();
 	compute.sendMCMsg(0, accData->dischargeLimit);
 	compute.sendAccStatusMessage(accData->packVoltage, accData->packCurrent, 0, 0, 0);
 

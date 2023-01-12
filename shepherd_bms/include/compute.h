@@ -59,14 +59,12 @@ class ComputeInterface
 
            struct
            {
-                bool chargerControl         :8;
-                uint16_t chargerVoltage     :16;    //Note the charger voltage sent over should be 10*desired voltage
-                uint16_t chargerCurrent     :16;    //Note the charge current sent over should be 10*desired current + 3200
-                uint8_t chargerLEDs         :8;
-                uint8_t reserved1           :8;
-                uint8_t reserved2           :8;
+                uint8_t chargerControl;
+                uint16_t chargerVoltage;    //Note the charger voltage sent over should be 10*desired voltage
+                uint16_t chargerCurrent;    //Note the charge current sent over should be 10*desired current + 3200
+                uint8_t chargerLEDs;
+                uint16_t reserved2_3;
            } cfg;
-           
         } chargerMsg;
 
         union 
@@ -80,8 +78,7 @@ class ComputeInterface
                 uint16_t packAH;
                 uint8_t packSoC;
                 uint8_t packHealth;
-           } cfg;
-           
+           } cfg;   
         } accStatusMsg;
 
     public:
@@ -104,7 +101,7 @@ class ComputeInterface
          *
          * @return Returns a fault if we are not able to communicate with charger
          */
-        FaultStatus_t sendChargingMessage(uint8_t voltageToSet, uint8_t currentToSet);
+        FaultStatus_t sendChargingMessage(uint16_t voltageToSet, uint16_t currentToSet);
 
         /**
          * @brief Returns if we are detecting a charging voltage

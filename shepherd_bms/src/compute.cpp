@@ -12,27 +12,34 @@ ComputeInterface::ComputeInterface()
 ComputeInterface::~ComputeInterface(){}
 
 void ComputeInterface::enableCharging(bool enableCharging){
-
-    isChargingEnabled = enableCharging ? true : false;
+    isChargingEnabled = enableCharging;
 }
 
-FaultStatus_t ComputeInterface::sendChargingMessage(uint8_t voltageToSet, uint8_t currentToSet)
+FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, uint16_t currentToSet)
 {
     if (!isChargingEnabled)
     {
-        chargerMsg.cfg.chargerControl = CHARGE_DISABLED;
+        chargerMsg.cfg.chargerControl = 0b101;
         sendMessageCAN2(CANMSG_CHARGER, 8, chargerMsg.msg);
+        Serial.println("DISABLED!");
         //return isCharging() ? FAULTED : NOT_FAULTED; //return a fault if we DO detect a voltage after we stop charging
         return NOT_FAULTED;
     }
 
     // equations taken from TSM2500 CAN protocol datasheet
+    chargerMsg.cfg.chargerControl = 0xFC;
     chargerMsg.cfg.chargerVoltage = voltageToSet * 10;
+    if (currentToSet > 10) {
+        currentToSet = 10;
+    }
     chargerMsg.cfg.chargerCurrent = currentToSet * 10 + 3200;
-    chargerMsg.cfg.chargerControl = CHARGE_ENABLED;
+    chargerMsg.cfg.chargerLEDs = 0x01;
+    chargerMsg.cfg.reserved2_3 = 0xFFFF;
+
+    uint8_t msg[8] = {chargerMsg.cfg.chargerControl, static_cast<uint8_t>(chargerMsg.cfg.chargerVoltage), chargerMsg.cfg.chargerVoltage >> 8, static_cast<uint8_t>(chargerMsg.cfg.chargerCurrent), chargerMsg.cfg.chargerCurrent >> 8, chargerMsg.cfg.chargerLEDs, 0xFF, 0xFF};
 
     //todo put charger ID somewhere else
-    sendMessageCAN2(CANMSG_CHARGER, 8, chargerMsg.msg);
+    sendMessageCAN2(CANMSG_CHARGER, 8, msg);
 
     //return isCharging() ? NOT_FAULTED : FAULTED; //return a fault if we DON'T detect a voltage after we begin charging
     return NOT_FAULTED;
@@ -46,6 +53,14 @@ bool ComputeInterface::isCharging() // This is useless kinda, especially if we m
 void ComputeInterface::chargerCallback(const CAN_message_t &msg)
 {
     Serial.println("Callback called!");
+    Serial.print("ID:\t");
+    Serial.println(msg.id);
+    Serial.print("DATA:");
+    for (int i = 0; i < msg.len; i++) {
+        Serial.print("\t");
+        Serial.print(msg.buf[i]);
+    }
+    Serial.println();
     return;
 }
 
