@@ -109,6 +109,48 @@ void ComputeInterface::sendAccStatusMessage(uint16_t voltage, int16_t current, u
     sendMessageCAN1(0x01, 8, accStatusMsg.msg);
 }
 
+void ComputeInterface::sendBMSStatusMessage(uint8_t failsafe, uint8_t dtc1, uint16_t dtc2, uint16_t currentLimit, int8_t tempAvg, int8_t tempInternal)
+{
+    BMSStatusMsg.cfg.fsStatus = failsafe;
+    BMSStatusMsg.cfg.dtcStatus1 = dtc1;
+    BMSStatusMsg.cfg.dtcStatus2 = __builtin_bswap16(dtc2);
+    BMSStatusMsg.cfg.currentLimit = __builtin_bswap16(currentLimit);
+    BMSStatusMsg.cfg.tempAvg = static_cast<uint8_t>(tempAvg);
+    BMSStatusMsg.cfg.tempInternal = static_cast<uint8_t>(tempInternal);
+
+    
+    sendMessageCAN1(0x02, 8, BMSStatusMsg.msg);
+}
+
+void ComputeInterface::sendShutdownControlMessage(uint8_t mpeState)
+{
+    shutdownControlMsg.cfg.mpeState = mpeState;
+    
+    sendMessageCAN1(0x03, 1, shutdownControlMsg.msg);
+}
+
+void ComputeInterface::sendCellDataMessage(uint16_t hv, uint8_t hvID, uint16_t lv, uint8_t lvID, uint16_t voltAvg)
+{
+    cellDataMsg.cfg.highCellVoltage = __builtin_bswap16(hv);
+    cellDataMsg.cfg.highCellID = hvID;
+    cellDataMsg.cfg.lowCellVoltage = __builtin_bswap16(lv);
+    cellDataMsg.cfg.lowCellID = lvID;
+    cellDataMsg.cfg.voltAvg = __builtin_bswap16(voltAvg);
+
+    sendMessageCAN1(0x04, 8, cellDataMsg.msg);
+}
+
+void ComputeInterface::sendCellVoltages(uint8_t cellID, uint16_t instantVoltage, uint16_t internalResistance, uint8_t shunted, uint16_t openVoltage)
+{
+    cellVoltageMsg.cfg.cellID = cellID;
+    cellVoltageMsg.cfg.instantVoltage = __builtin_bswap16(instantVoltage);
+    cellVoltageMsg.cfg.internalResistance = __builtin_bswap16(internalResistance);
+    cellVoltageMsg.cfg.shunted = shunted;
+    cellVoltageMsg.cfg.openVoltage = __builtin_bswap16(openVoltage);
+
+    sendMessageCAN1(0x07, 8, cellVoltageMsg.msg);
+}
+
 void ComputeInterface::MCCallback(const CAN_message_t &msg)
 {
     return;

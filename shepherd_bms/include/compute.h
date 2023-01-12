@@ -81,6 +81,64 @@ class ComputeInterface
            } cfg;   
         } accStatusMsg;
 
+
+        union 
+        {
+           uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+           struct
+           {
+                uint8_t fsStatus;
+                uint8_t dtcStatus1;
+                uint16_t dtcStatus2;
+                uint16_t currentLimit;
+                uint8_t tempAvg;
+                uint8_t tempInternal;
+           } cfg;   
+        } BMSStatusMsg;
+
+
+        union 
+        {
+           uint8_t msg[1] = {0};
+
+           struct
+           {
+                uint8_t mpeState;
+                
+           } cfg;   
+        } shutdownControlMsg;
+
+
+        union 
+        {
+           uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+           struct
+           {
+                uint16_t highCellVoltage;
+                uint8_t highCellID;
+                uint16_t lowCellVoltage;
+                uint8_t lowCellID;
+                uint16_t voltAvg;
+           } cfg;   
+        } cellDataMsg;
+
+
+        union 
+        {
+           uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+           struct
+           {
+                uint8_t cellID;
+                uint16_t instantVoltage;
+                uint16_t internalResistance;
+                uint8_t shunted;
+                uint16_t openVoltage;
+           } cfg;   
+        } cellVoltageMsg;
+
     public:
         ComputeInterface();
 
@@ -162,6 +220,54 @@ class ComputeInterface
          */
         void sendAccStatusMessage(uint16_t voltage, int16_t current, uint16_t AH, uint8_t SoC, uint8_t health);
 
+        /**
+         * @brief sends BMS status message 
+         * 
+         * @param failsafe
+         * @param dtc1
+         * @param dtc2
+         * @param currentLimit
+         * @param tempAvg
+         * @param tempInternal
+         * 
+         * @return Returns a fault if we are not able to send
+         */
+        void sendBMSStatusMessage(uint8_t failsafe, uint8_t dtc1, uint16_t dtc2, uint16_t currentLimit, int8_t tempAvg, int8_t tempInternal);
+
+         /**
+         * @brief sends shutdown control message
+         * 
+         * @param mpeState
+         *
+         * @return Returns a fault if we are not able to send
+         */
+        void sendShutdownControlMessage(uint8_t mpeState);
+
+        /**
+         * @brief sends cell data message
+         * 
+         * @param hv
+         * @param hvID
+         * @param lv
+         * @param lvID
+         * @param voltAvg
+         *
+         * @return Returns a fault if we are not able to send
+         */
+        void sendCellDataMessage(uint16_t hv, uint8_t hvID, uint16_t lv, uint8_t lvID, uint16_t voltAvg);
+
+        /**
+         * @brief sends cell voltage message
+         * 
+         * @param cellID
+         * @param instantVoltage
+         * @param internalResistance
+         * @param shunted
+         * @param openVoltage
+         *
+         * @return Returns a fault if we are not able to send
+         */
+        void sendCellVoltages(uint8_t cellID, uint16_t instantVoltage, uint16_t internalResistance, uint8_t shunted, uint16_t openVoltage);
 };
 
 #endif
