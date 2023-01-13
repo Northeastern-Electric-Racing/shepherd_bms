@@ -20,7 +20,7 @@ struct ChipData_t
     //These are calculated during the analysis of data
     uint8_t cellTemp[NUM_CELLS_PER_CHIP];
     float cellResistance[NUM_CELLS_PER_CHIP];
-    uint8_t openCellVoltage[NUM_CELLS_PER_CHIP];
+    uint16_t openCellVoltage[NUM_CELLS_PER_CHIP];
 };
 
 /**
