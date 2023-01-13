@@ -155,6 +155,7 @@ uint8_t calcFanPWM(AccumulatorData_t *bmsdata)
 {
     uint8_t minResIndex = (bmsdata->maxTemp.val - MIN_TEMP) / 5;  //resistance LUT increments by 5C for each index
     uint8_t maxResIndex = (bmsdata->maxTemp.val - MIN_TEMP) / 5 + 1;
+    uint8_t partOfIndex = (bmsdata->maxTemp.val - MIN_TEMP) % 5;
 
-    return FAN_CURVE[maxResIndex] + FAN_CURVE[minResIndex] / 2;
+    return ((FAN_CURVE[maxResIndex] * partOfIndex) + (FAN_CURVE[minResIndex] * (5 - partOfIndex))) / (2 * 5);
 }
