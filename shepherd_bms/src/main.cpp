@@ -28,6 +28,7 @@ AccumulatorData_t *prevAccData = nullptr;
 uint32_t bmsFault = FAULTS_CLEAR;
 
 uint16_t overVoltCount = 0;
+uint16_t underVoltCount = 0;
 
 void testSegments()
 {
@@ -245,34 +246,40 @@ void shepherdMain()
 		}*/
 	}
 
+	// FAULT CHECK
+	// Check for fuckies
+	if (accData->packCurrent > accData->contDCL) {
+		bmsFault |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
+	}
+	if (accData->packCurrent < 0 && abs(accData->packCurrent) > accData->chargeLimit) {
+		bmsFault |= CHARGE_LIMIT_ENFORCEMENT_FAULT;
+	}
+	if (accData->minVoltage.val < MIN_VOLT * 10000) {
+		underVoltCount++;
+		if (underVoltCount > 900) { // 9 seconds @ 100Hz rate
+			bmsFault |= CELL_VOLTAGE_TOO_LOW;
+		}
+	} else {
+		underVoltCount = 0;
+	}
+	if (accData->maxVoltage.val > MAX_VOLT * 10000) { // Needs to be reimplemented with a flag for every cell in case multiple go over
+		overVoltCount++;
+		if (overVoltCount > 900) { // 9 seconds @ 100Hz rate
+			bmsFault |= CELL_VOLTAGE_TOO_HIGH;
+		}
+	} else {
+		overVoltCount = 0;
+	}
+	if (accData->maxTemp.val > MAX_CELL_TEMP) {
+		bmsFault |= PACK_TOO_HOT;
+	}
+	if (accData->minVoltage.val < 900) { // 90mV
+		bmsFault |= LOW_CELL_VOLTAGE;
+	}
 
 	// ACTIVE/NORMAL STATE
 	if (bmsFault == FAULTS_CLEAR) {
 		compute.setFault(NOT_FAULTED);
-		// Check for fuckies
-		if (accData->packCurrent > accData->contDCL) {
-			bmsFault |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
-		}
-		if (accData->packCurrent < 0 && abs(accData->packCurrent) > accData->chargeLimit) {
-			bmsFault |= CHARGE_LIMIT_ENFORCEMENT_FAULT;
-		}
-		if (accData->minVoltage.val < MIN_VOLT * 10000) {
-			bmsFault |= CELL_VOLTAGE_TOO_LOW;
-		}
-		if (accData->maxVoltage.val > MAX_VOLT * 10000) { // Needs to be reimplemented with a flag for every cell in case multiple go over
-			overVoltCount++;
-			if (overVoltCount > 1000) { // 10 seconds @ 100Hz rate
-				bmsFault |= CELL_VOLTAGE_TOO_HIGH;
-			}
-		} else {
-			overVoltCount = 0;
-		}
-		if (accData->maxTemp.val > MAX_CELL_TEMP) {
-			bmsFault |= PACK_TOO_HOT;
-		}
-		if (accData->minVoltage.val < 900) { // 90mV
-			bmsFault |= LOW_CELL_VOLTAGE;
-		}
 	}
 
 	// FAULT STATE
