@@ -9,7 +9,7 @@
 #define THERM_WAIT_TIME     500 //ms
 #define VOLTAGE_WAIT_TIME   250 //ms
 
-#define THERM_AVG           50 // Number of values to average
+#define THERM_AVG           15 // Number of values to average
 
 /**
  * @brief This class serves as the interface for all of the segment boards
