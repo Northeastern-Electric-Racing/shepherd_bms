@@ -30,6 +30,7 @@ uint32_t bmsFault = FAULTS_CLEAR;
 uint16_t overVoltCount = 0;
 uint16_t underVoltCount = 0;
 uint16_t overCurrCount = 0;
+uint16_t chargeOverVolt = 0;
 
 void testSegments()
 {
@@ -161,10 +162,15 @@ bool chargingCheck(AccumulatorData_t *bmsdata)
 {
 	if(!chargeTimeout.isTimerExpired()) return false;
 	if(!compute.isCharging()) return false;
-	if(bmsdata->maxVoltage.val >= (MAX_VOLT * 10000))
+	if(bmsdata->maxVoltage.val >= (MAX_CHARGE_VOLT * 10000))
 	{
-		chargeTimeout.startTimer(CHARGE_TIMEOUT);
-		return false;
+		chargeOverVolt++;
+		if (chargeOverVolt > 100) {
+			chargeTimeout.startTimer(CHARGE_TIMEOUT);
+			return false;
+		}
+	} else {
+		chargeOverVolt = 0;
 	}
 
 	return true;
@@ -268,7 +274,7 @@ void shepherdMain()
 	} else {
 		underVoltCount = 0;
 	}
-	if (accData->maxVoltage.val > MAX_VOLT * 10000) { // Needs to be reimplemented with a flag for every cell in case multiple go over
+	if (((accData->maxVoltage.val > MAX_VOLT * 10000) && digitalRead(CHARGE_DETECT) == HIGH) || (accData->maxVoltage.val > MAX_CHARGE_VOLT * 10000)) { // Needs to be reimplemented with a flag for every cell in case multiple go over
 		overVoltCount++;
 		if (overVoltCount > 900) { // 9 seconds @ 100Hz rate
 			bmsFault |= CELL_VOLTAGE_TOO_HIGH;
