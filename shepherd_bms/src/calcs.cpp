@@ -150,3 +150,11 @@ void calcOpenCellVoltage(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsd
     }
     return;
 }
+
+uint8_t calcFanPWM(AccumulatorData_t *bmsdata)
+{
+    uint8_t minResIndex = (bmsdata->maxTemp.val - MIN_TEMP) / 5;  //resistance LUT increments by 5C for each index
+    uint8_t maxResIndex = (bmsdata->maxTemp.val - MIN_TEMP) / 5 + 1;
+
+    return FAN_CURVE[maxResIndex] + FAN_CURVE[minResIndex] / 2;
+}

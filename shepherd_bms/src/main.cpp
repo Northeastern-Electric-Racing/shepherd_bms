@@ -351,6 +351,8 @@ void shepherdMain()
 	compute.sendAccStatusMessage(accData->packVoltage, accData->packCurrent, 0, 0, 0);
 	compute.sendCurrentsStatus(accData->dischargeLimit, accData->chargeLimit, accData->packCurrent);
 
+	compute.setFanSpeed(calcFanPWM(accData));
+
 	prevAccData = accData;
 	delete accData;
 }
