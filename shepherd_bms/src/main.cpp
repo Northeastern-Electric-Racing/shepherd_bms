@@ -108,6 +108,25 @@ void testSegments()
 	delay(1000);
 }
 
+void chargeBalancing(AccumulatorData_t *bms_data)
+{
+	bool balanceConfig[NUM_CHIPS][NUM_CELLS_PER_CHIP];
+
+    for(uint8_t chip = 0; chip < NUM_CHIPS; chip++)
+    {
+		for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+		{
+			float delta = float(bms_data->chipData[chip].voltageReading[cell]) - float(bms_data-> minVoltage.val);
+			if(delta > MAX_DELTA_V)
+				balanceConfig[chip][cell] = true;
+			else
+				balanceConfig[chip][cell] = false;
+        }
+    }
+
+	segment.configureBalancing(balanceConfig);
+}
+
 void shepherdMain()
 {
 	currTime = millis();
