@@ -140,7 +140,7 @@ void ComputeInterface::sendCellDataMessage(uint16_t hv, uint8_t hvID, uint16_t l
     sendMessageCAN1(0x04, 8, cellDataMsg.msg);
 }
 
-void ComputeInterface::sendCellVoltages(uint8_t cellID, uint16_t instantVoltage, uint16_t internalResistance, uint8_t shunted, uint16_t openVoltage)
+void ComputeInterface::sendCellVoltageMessage(uint8_t cellID, uint16_t instantVoltage, uint16_t internalResistance, uint8_t shunted, uint16_t openVoltage)
 {
     cellVoltageMsg.cfg.cellID = cellID;
     cellVoltageMsg.cfg.instantVoltage = __builtin_bswap16(instantVoltage);
@@ -150,6 +150,15 @@ void ComputeInterface::sendCellVoltages(uint8_t cellID, uint16_t instantVoltage,
 
     sendMessageCAN1(0x07, 8, cellVoltageMsg.msg);
 }
+
+void ComputeInterface::sendChargingStatus(bool chargingStatus)
+{
+    uint8_t chargingArray[1] = {chargingStatus};
+
+    sendMessageCAN1(0x05, 1, chargingArray);
+}
+
+
 
 void ComputeInterface::MCCallback(const CAN_message_t &msg)
 {

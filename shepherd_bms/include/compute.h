@@ -267,7 +267,16 @@ class ComputeInterface
          *
          * @return Returns a fault if we are not able to send
          */
-        void sendCellVoltages(uint8_t cellID, uint16_t instantVoltage, uint16_t internalResistance, uint8_t shunted, uint16_t openVoltage);
+        void sendCellVoltageMessage(uint8_t cellID, uint16_t instantVoltage, uint16_t internalResistance, uint8_t shunted, uint16_t openVoltage);
+
+        /**
+         * @brief sends "is charging" message
+         * 
+         * @param chargingStatus
+         *
+         * @return Returns a fault if we are not able to send
+         */
+        void sendChargingStatus(bool chargingStatus);
 };
 
 #endif
