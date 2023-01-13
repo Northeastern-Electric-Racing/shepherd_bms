@@ -21,4 +21,8 @@
 #define MAX_VOLT_MEAS       65535
 #define MIN_VOLT_MEAS       0
 
+#define VOLT_SAG_MARGIN     0.25 // Volts above the minimum cell voltage we would like to aim for
+
+#define MAX_CELL_CURR       700 // Amps per BMS cell
+
 #endif
