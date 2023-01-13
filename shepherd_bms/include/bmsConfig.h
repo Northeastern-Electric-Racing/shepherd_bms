@@ -8,7 +8,7 @@
 
 // Hardware limits
 #define MAX_TEMP            65 //degrees C
-#define MIN_TEMP            -5 // deg C
+#define MIN_TEMP            -15 // deg C
 
 //cell limits
 #define MIN_VOLT            2.9
