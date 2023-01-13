@@ -19,7 +19,11 @@ ChipData_t *testData;
 Timer mainTimer;
 ComputeInterface compute;
 
+AccumulatorData_t *prevAccData = nullptr;
+
 uint32_t bmsFault = FAULTS_CLEAR;
+
+uint16_t overVoltCount = 0;
 
 void testSegments()
 {
@@ -116,13 +120,11 @@ void shepherdMain()
 	//Create a dynamically allocated structure
 	//@note this will move to a specialized container with a list of these structs
 	AccumulatorData_t *accData = new AccumulatorData_t;
-	
 
 	//Collect all the segment data needed to perform analysis
 	//Not state specific
 	segment.retrieveSegmentData(accData->chipData);
-
-	int16_t current = compute.getPackCurrent();
+	accData->packCurrent = compute.getPackCurrent();
 	//compute.getTSGLV();
 	//etc
 
@@ -131,6 +133,7 @@ void shepherdMain()
 	calcCellTemps(accData);
 	calcPackTemps(accData);
 	calcPackVoltageStats(accData);
+	calcOpenCellVoltage(accData, prevAccData);
 	
 	calcCellResistances(accData);
 	calcDCL(accData);
@@ -140,7 +143,7 @@ void shepherdMain()
 	if (currTime > lastStatMsg + 500) {
 		lastStatMsg = currTime;
 		Serial.print("Current: ");
-		Serial.println(current);
+		Serial.println(accData->packCurrent);
 		Serial.print("Min, Max, Avg Temps: ");
 		Serial.print(accData->minTemp.val);
 		Serial.print(",  ");
@@ -161,46 +164,45 @@ void shepherdMain()
 
 		Serial.print("CCL: ");
 		Serial.println(accData->chargeLimit);
-	}
 
-	/*
-	Serial.println("Cell Temps:");
-	for(uint8_t c = 0; c < NUM_CHIPS; c++)
-    {
-        for(uint8_t cell = 17; cell < 28; cell++)
-        {
-			Serial.print(accData->chipData[c].thermistorReading[cell]);
-			Serial.print("\t");
+		/*
+		Serial.println("Open Cell Voltage:");
+		for(uint8_t c = 0; c < NUM_CHIPS; c++)
+		{
+			for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+			{
+				Serial.print(accData->chipData[c].openCellVoltage[cell]);
+				Serial.print("\t");
+			}
+			Serial.println();
 		}
-		Serial.println();
+
+		Serial.println("Cell Temps Avg:");
+		for(uint8_t c = 0; c < NUM_CHIPS; c++)
+		{
+			for(uint8_t cell = 17; cell < 28; cell++)
+			{
+				Serial.print(accData->chipData[c].thermistorValue[cell]);
+				Serial.print("\t");
+			}
+			Serial.println();
+		}*/
 	}
-
-	Serial.println("Cell Temps Avg:");
-	for(uint8_t c = 0; c < NUM_CHIPS; c++)
-    {
-        for(uint8_t cell = 17; cell < 28; cell++)
-        {
-			Serial.print(accData->chipData[c].thermistorValue[cell]);
-			Serial.print("\t");
-		}
-		Serial.println();
-	}*/
-
-	uint16_t overVoltCount = 0;
 
 	// ACTIVE/NORMAL STATE
 	if (bmsFault == FAULTS_CLEAR) {
+		compute.setFault(NOT_FAULTED);
 		// Check for fuckies
-		if (current > accData->contDCL) {
+		if (accData->packCurrent > accData->contDCL) {
 			bmsFault |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
 		}
-		if (current < 0 && abs(current) > accData->chargeLimit) {
+		if (accData->packCurrent < 0 && abs(accData->packCurrent) > accData->chargeLimit) {
 			bmsFault |= CHARGE_LIMIT_ENFORCEMENT_FAULT;
 		}
-		if (accData->minVoltage.val < MIN_VOLT) {
+		if (accData->minVoltage.val < MIN_VOLT * 10000) {
 			bmsFault |= CELL_VOLTAGE_TOO_LOW;
 		}
-		if (accData->maxVoltage.val > MAX_VOLT) { // Needs to be reimplemented with a flag for every cell in case multiple go over
+		if (accData->maxVoltage.val > MAX_VOLT * 10000) { // Needs to be reimplemented with a flag for every cell in case multiple go over
 			overVoltCount++;
 			if (overVoltCount > 1000) { // 10 seconds @ 100Hz rate
 				bmsFault |= CELL_VOLTAGE_TOO_HIGH;
@@ -220,7 +222,7 @@ void shepherdMain()
 	if (bmsFault != FAULTS_CLEAR) {
 		compute.setFault(FAULTED);
 		Serial.print("BMS FAULT: ");
-		Serial.println(bmsFault, BIN);
+		Serial.println(bmsFault, HEX);
 		Serial.println("Hit Spacebar to clear");
 		delay(1000);
 		if (Serial.available()) 
@@ -251,6 +253,7 @@ void shepherdMain()
 	compute.sendMCMsg(0, accData->dischargeLimit);
 	compute.sendAccStatusMessage(accData->packVoltage, accData->packCurrent, 0, 0, 0);
 
+	prevAccData = accData;
 	delete accData;
 }
 
