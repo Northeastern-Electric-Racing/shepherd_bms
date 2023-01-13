@@ -8,6 +8,8 @@
 int currTime = 0;
 int lastPackCurr = 0;
 int lastVoltTemp = 0;
+int lastChargeMsg = 0;
+int lastStatMsg = 0;
 
 bool dischargeEnabled = false;
 uint16_t cellTestIter = 0;
@@ -108,6 +110,7 @@ void testSegments()
 
 void shepherdMain()
 {
+	currTime = millis();
 	//Implement some simple controls and calcs behind shepherd
 
 	//Create a dynamically allocated structure
@@ -120,8 +123,6 @@ void shepherdMain()
 	segment.retrieveSegmentData(accData->chipData);
 
 	int16_t current = compute.getPackCurrent();
-	Serial.print("Current: ");
-	Serial.println(current);
 	//compute.getTSGLV();
 	//etc
 
@@ -130,29 +131,37 @@ void shepherdMain()
 	calcCellTemps(accData);
 	calcPackTemps(accData);
 	calcPackVoltageStats(accData);
-	Serial.print("Min, Max, Avg Temps: ");
-	Serial.print(accData->minTemp.val);
-	Serial.print(",  ");
-	Serial.print(accData->maxTemp.val);
-	Serial.print(",  ");
-	Serial.println(accData->avgTemp);
-	Serial.print("Min, Max, Avg, Delta Voltages: ");
-	Serial.print(accData->minVoltage.val);
-	Serial.print(",  ");
-	Serial.print(accData->maxVoltage.val);
-	Serial.print(",  ");
-	Serial.print(accData->avgVoltage);
-	Serial.print(",  ");
-	Serial.println(accData->deltVoltage);
+	
 	calcCellResistances(accData);
 	calcDCL(accData);
 	calcContDCL(accData);
 	calcContCCL(accData);
-	Serial.print("DCL: ");
-	Serial.println(accData->dischargeLimit);
 
-	Serial.print("CCL: ");
-	Serial.println(accData->chargeLimit);
+	if (currTime > lastStatMsg + 500) {
+		lastStatMsg = currTime;
+		Serial.print("Current: ");
+		Serial.println(current);
+		Serial.print("Min, Max, Avg Temps: ");
+		Serial.print(accData->minTemp.val);
+		Serial.print(",  ");
+		Serial.print(accData->maxTemp.val);
+		Serial.print(",  ");
+		Serial.println(accData->avgTemp);
+		Serial.print("Min, Max, Avg, Delta Voltages: ");
+		Serial.print(accData->minVoltage.val);
+		Serial.print(",  ");
+		Serial.print(accData->maxVoltage.val);
+		Serial.print(",  ");
+		Serial.print(accData->avgVoltage);
+		Serial.print(",  ");
+		Serial.println(accData->deltVoltage);
+		
+		Serial.print("DCL: ");
+		Serial.println(accData->dischargeLimit);
+
+		Serial.print("CCL: ");
+		Serial.println(accData->chargeLimit);
+	}
 
 	/*
 	Serial.println("Cell Temps:");
@@ -181,8 +190,6 @@ void shepherdMain()
 
 	// ACTIVE/NORMAL STATE
 	if (bmsFault == FAULTS_CLEAR) {
-		compute.sendMCMsg(0, accData->dischargeLimit);
-
 		// Check for fuckies
 		if (current > accData->contDCL) {
 			bmsFault |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
@@ -213,7 +220,7 @@ void shepherdMain()
 	if (bmsFault != FAULTS_CLEAR) {
 		compute.setFault(FAULTED);
 		Serial.print("BMS FAULT: ");
-		Serial.println(bmsFault);
+		Serial.println(bmsFault, BIN);
 		Serial.println("Hit Spacebar to clear");
 		delay(1000);
 		if (Serial.available()) 
@@ -232,14 +239,17 @@ void shepherdMain()
 	if (digitalRead(CHARGE_DETECT) == LOW && bmsFault == FAULTS_CLEAR) {
 		digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
 		compute.enableCharging(true);
-		compute.sendChargingMessage(packChargeVolt, accData->chargeLimit);
+		if (currTime > lastChargeMsg + 150) {
+			lastChargeMsg = currTime;
+			compute.sendChargingMessage(packChargeVolt, accData->chargeLimit);
+		}
+		compute.sendChargingStatus(true);
 	} else if (bmsFault == FAULTS_CLEAR) {
 		digitalWrite(CHARGE_SAFETY_RELAY, LOW);
 	}
 
-	//compute.sendChargerMsg();
-	//sendCanMsg(all the data we wanna send out)
-	//etc
+	compute.sendMCMsg(0, accData->dischargeLimit);
+	compute.sendAccStatusMessage(accData->packVoltage, accData->packCurrent, 0, 0, 0);
 
 	delete accData;
 }

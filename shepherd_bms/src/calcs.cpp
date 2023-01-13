@@ -46,7 +46,7 @@ void calcPackTemps(AccumulatorData_t *bmsdata)
 void calcPackVoltageStats(AccumulatorData_t *bmsdata) {
     bmsdata->maxVoltage = {MIN_VOLT_MEAS, 0, 0};
     bmsdata->minVoltage = {MAX_VOLT_MEAS, 0, 0};
-    int totalVolt = 0;
+    uint32_t totalVolt = 0;
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
         for(uint8_t cell = 0; cell < 9; cell++) {
@@ -60,6 +60,7 @@ void calcPackVoltageStats(AccumulatorData_t *bmsdata) {
         }
     }
     bmsdata->avgVoltage = totalVolt / (NUM_CELLS_PER_CHIP * NUM_CHIPS);
+    bmsdata->packVoltage = totalVolt / 1000; // convert to voltage * 10
     bmsdata->deltVoltage = bmsdata->maxVoltage.val - bmsdata->minVoltage.val;
 }
 

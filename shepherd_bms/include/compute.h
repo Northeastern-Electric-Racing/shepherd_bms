@@ -53,27 +53,91 @@ class ComputeInterface
         const float highChannelGain = 1 / 0.0040;
         const float lowChannelGain = 1 / 0.0267;
 
-        /**
-         * @todo These might need to be changed depending on the charging ticket
-         */
-        const uint8_t startChargingMsg[];
-        const uint8_t endChargingMsg[];
-
         union 
         {
            uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0xFF, 0xFF};
 
            struct
            {
-                bool chargerControl         :8;
-                uint16_t chargerVoltage     :16;    //Note the charger voltage sent over should be 10*desired voltage
-                uint16_t chargerCurrent     :16;    //Note the charge current sent over should be 10*desired current + 3200
-                uint8_t chargerLEDs         :8;
-                uint8_t reserved1           :8;
-                uint8_t reserved2           :8;
+                uint8_t chargerControl;
+                uint16_t chargerVoltage;    //Note the charger voltage sent over should be 10*desired voltage
+                uint16_t chargerCurrent;    //Note the charge current sent over should be 10*desired current + 3200
+                uint8_t chargerLEDs;
+                uint16_t reserved2_3;
            } cfg;
-           
         } chargerMsg;
+
+        union 
+        {
+           uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+           struct
+           {
+                uint16_t packVolt;
+                uint16_t packCurrent;
+                uint16_t packAH;
+                uint8_t packSoC;
+                uint8_t packHealth;
+           } cfg;   
+        } accStatusMsg;
+
+
+        union 
+        {
+           uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+           struct
+           {
+                uint8_t fsStatus;
+                uint8_t dtcStatus1;
+                uint16_t dtcStatus2;
+                uint16_t currentLimit;
+                uint8_t tempAvg;
+                uint8_t tempInternal;
+           } cfg;   
+        } BMSStatusMsg;
+
+
+        union 
+        {
+           uint8_t msg[1] = {0};
+
+           struct
+           {
+                uint8_t mpeState;
+                
+           } cfg;   
+        } shutdownControlMsg;
+
+
+        union 
+        {
+           uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+           struct
+           {
+                uint16_t highCellVoltage;
+                uint8_t highCellID;
+                uint16_t lowCellVoltage;
+                uint8_t lowCellID;
+                uint16_t voltAvg;
+           } cfg;   
+        } cellDataMsg;
+
+
+        union 
+        {
+           uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+           struct
+           {
+                uint8_t cellID;
+                uint16_t instantVoltage;
+                uint16_t internalResistance;
+                uint8_t shunted;
+                uint16_t openVoltage;
+           } cfg;   
+        } cellVoltageMsg;
 
     public:
         ComputeInterface();
@@ -95,7 +159,7 @@ class ComputeInterface
          *
          * @return Returns a fault if we are not able to communicate with charger
          */
-        FaultStatus_t sendChargingMessage(uint8_t voltageToSet, uint8_t currentToSet);
+        FaultStatus_t sendChargingMessage(uint16_t voltageToSet, uint16_t currentToSet);
 
         /**
          * @brief Returns if we are detecting a charging voltage
@@ -143,6 +207,76 @@ class ComputeInterface
          */
         void setFault(FaultStatus_t faultState);
 
+        /**
+         * @brief sends acc status message
+         * 
+         * @param voltage
+         * @param current
+         * @param AH
+         * @param SoC
+         * @param health
+         *
+         * @return Returns a fault if we are not able to send
+         */
+        void sendAccStatusMessage(uint16_t voltage, int16_t current, uint16_t AH, uint8_t SoC, uint8_t health);
+
+        /**
+         * @brief sends BMS status message 
+         * 
+         * @param failsafe
+         * @param dtc1
+         * @param dtc2
+         * @param currentLimit
+         * @param tempAvg
+         * @param tempInternal
+         * 
+         * @return Returns a fault if we are not able to send
+         */
+        void sendBMSStatusMessage(uint8_t failsafe, uint8_t dtc1, uint16_t dtc2, uint16_t currentLimit, int8_t tempAvg, int8_t tempInternal);
+
+         /**
+         * @brief sends shutdown control message
+         * 
+         * @param mpeState
+         *
+         * @return Returns a fault if we are not able to send
+         */
+        void sendShutdownControlMessage(uint8_t mpeState);
+
+        /**
+         * @brief sends cell data message
+         * 
+         * @param hv
+         * @param hvID
+         * @param lv
+         * @param lvID
+         * @param voltAvg
+         *
+         * @return Returns a fault if we are not able to send
+         */
+        void sendCellDataMessage(uint16_t hv, uint8_t hvID, uint16_t lv, uint8_t lvID, uint16_t voltAvg);
+
+        /**
+         * @brief sends cell voltage message
+         * 
+         * @param cellID
+         * @param instantVoltage
+         * @param internalResistance
+         * @param shunted
+         * @param openVoltage
+         *
+         * @return Returns a fault if we are not able to send
+         */
+        void sendCellVoltageMessage(uint8_t cellID, uint16_t instantVoltage, uint16_t internalResistance, uint8_t shunted, uint16_t openVoltage);
+
+        /**
+         * @brief sends "is charging" message
+         * 
+         * @param chargingStatus
+         *
+         * @return Returns a fault if we are not able to send
+         */
+        void sendChargingStatus(bool chargingStatus);
 };
 
 #endif
