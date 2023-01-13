@@ -84,4 +84,6 @@ void calcContDCL(AccumulatorData_t *bmsdata);
 
 void calcContCCL(AccumulatorData_t *bmsdata);
 
+void calcOpenCellVoltage(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata);
+
 #endif

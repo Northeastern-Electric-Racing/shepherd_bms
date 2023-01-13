@@ -92,18 +92,9 @@ void calcDCL(AccumulatorData_t *bmsdata)
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
         for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
-        {
-            uint8_t cellTemp = bmsdata->chipData[c].cellTemp[cell];
-            uint8_t resIndex = (cellTemp - MIN_TEMP) / 5;  //resistance LUT increments by 5C for each index
-            
-            uint8_t tmpDCL = TEMP_TO_DCL[resIndex];
-
-            //Linear interpolation to more accurately represent current in between increments of 5C
-            if(cellTemp != MAX_TEMP)
-            {
-                float interpolation = (TEMP_TO_DCL[resIndex+1] - TEMP_TO_DCL[resIndex]) / 5;
-                bmsdata->chipData[c].cellResistance[cell] += (interpolation * (cellTemp % 5));
-            }
+        {   
+            // Apply equation
+            uint16_t tmpDCL = (bmsdata->chipData[c].openCellVoltage[cell] - ((MIN_VOLT + VOLT_SAG_MARGIN) * 10000)) / bmsdata->chipData[c].cellResistance[cell];
 
             //Taking the minimum DCL of all the cells
             if(tmpDCL < currentLimit) currentLimit = tmpDCL;
@@ -135,4 +126,22 @@ void calcContCCL(AccumulatorData_t *bmsdata)
     } else {
         bmsdata->chargeLimit = TEMP_TO_CCL[maxResIndex];
     }
+}
+
+void calcOpenCellVoltage(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata) {
+    if ((bmsdata->packCurrent < 3 && bmsdata->packCurrent > -3) || prevbmsdata == NULL) {
+        for (int i = 0; i < NUM_CHIPS; i++) {
+            for (int ii = 0; ii < NUM_CELLS_PER_CHIP; ii++) {
+                bmsdata->chipData[i].openCellVoltage[ii] = bmsdata->chipData[i].voltageReading[ii];
+            }
+        }
+        return;
+    } else {
+        for (int i = 0; i < NUM_CHIPS; i++) {
+            for (int ii = 0; ii < NUM_CELLS_PER_CHIP; ii++) {
+                bmsdata->chipData[i].openCellVoltage[ii] = prevbmsdata->chipData[i].openCellVoltage[ii];
+            }
+        }
+    }
+    return;
 }
