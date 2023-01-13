@@ -52,15 +52,6 @@ bool ComputeInterface::isCharging() // This is useless kinda, especially if we m
 
 void ComputeInterface::chargerCallback(const CAN_message_t &msg)
 {
-    Serial.println("Callback called!");
-    Serial.print("ID:\t");
-    Serial.println(msg.id, HEX);
-    Serial.print("DATA:");
-    for (int i = 0; i < msg.len; i++) {
-        Serial.print("\t");
-        Serial.print(msg.buf[i], HEX);
-    }
-    Serial.println();
     return;
 }
 
