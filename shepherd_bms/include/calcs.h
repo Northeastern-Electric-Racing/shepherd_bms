@@ -54,6 +54,20 @@ const uint8_t TEMP_TO_CCL[16] =
 };
 
 /**
+ * @brief Mapping desired fan speed PWM to the cell temperature
+ * 
+ * @note Units are in PWM out of 255 and indicies are in (degrees C)/5, stops at 65C
+ * @note Limit should be *interpolated* from these values (i.e. if we are
+ *      at 27C, we should take the limit that is halfway between 25C and 30C)
+ * 
+ */
+const uint8_t FAN_CURVE[16] =
+{
+    0, 0, 0, 0, 0, 0, 0, 0, 32, 64,
+    128, 255, 255, 255, 255, 255
+};
+
+/**
  * @brief Mapping the Relevant Thermistors for each cell based on cell #
  * 
  */
@@ -85,5 +99,7 @@ void calcContDCL(AccumulatorData_t *bmsdata);
 void calcContCCL(AccumulatorData_t *bmsdata);
 
 void calcOpenCellVoltage(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata);
+
+uint8_t calcFanPWM(AccumulatorData_t *bmsdata);
 
 #endif

@@ -242,8 +242,19 @@ void shepherdMain()
 			Serial.println();
 		}
 
-		Serial.println("Cell Temps Avg:");
-		for(uint8_t c = 0; c < NUM_CHIPS; c++)
+		Serial.println("Cell Temps:");
+		for(uint8_t c = 1; c < NUM_CHIPS; c+= 2)
+		{
+			for(uint8_t cell = 17; cell < 28; cell++)
+			{
+				Serial.print(accData->chipData[c].thermistorReading[cell]);
+				Serial.print("\t");
+			}
+			Serial.println();
+		}
+
+		Serial.println("Avg Cell Temps:");
+		for(uint8_t c = 1; c < NUM_CHIPS; c+= 2)
 		{
 			for(uint8_t cell = 17; cell < 28; cell++)
 			{
@@ -251,7 +262,7 @@ void shepherdMain()
 				Serial.print("\t");
 			}
 			Serial.println();
-		}*/
+		} */
 	}
 
 	// FAULT CHECK
@@ -350,6 +361,8 @@ void shepherdMain()
 	compute.sendMCMsg(0, accData->dischargeLimit);
 	compute.sendAccStatusMessage(accData->packVoltage, accData->packCurrent, 0, 0, 0);
 	compute.sendCurrentsStatus(accData->dischargeLimit, accData->chargeLimit, accData->packCurrent);
+
+	compute.setFanSpeed(calcFanPWM(accData));
 
 	prevAccData = accData;
 	delete accData;

@@ -33,7 +33,8 @@ void calcPackTemps(AccumulatorData_t *bmsdata)
         for(uint8_t therm = 17; therm < 28; therm++) {
             if (bmsdata->chipData[c].thermistorValue[therm] > bmsdata->maxTemp.val) {
                 bmsdata->maxTemp = {bmsdata->chipData[c].thermistorValue[therm], c, therm};
-            } else if (bmsdata->chipData[c].thermistorValue[therm] < bmsdata->minTemp.val) {
+            }
+            if (bmsdata->chipData[c].thermistorValue[therm] < bmsdata->minTemp.val) {
                 bmsdata->minTemp = {bmsdata->chipData[c].thermistorValue[therm], c, therm};
             }
             
@@ -71,7 +72,7 @@ void calcCellResistances(AccumulatorData_t *bmsdata)
         for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
         {
             uint8_t cellTemp = bmsdata->chipData[c].cellTemp[cell];
-            uint8_t resIndex = cellTemp / 5;  //resistance LUT increments by 5C for each index
+            uint8_t resIndex = (cellTemp - MIN_TEMP) / 5;  //resistance LUT increments by 5C for each index
             
             bmsdata->chipData[c].cellResistance[cell] = TEMP_TO_CELL_RES[resIndex];
 
@@ -149,4 +150,13 @@ void calcOpenCellVoltage(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsd
         }
     }
     return;
+}
+
+uint8_t calcFanPWM(AccumulatorData_t *bmsdata)
+{
+    uint8_t minResIndex = (bmsdata->maxTemp.val - MIN_TEMP) / 5;  //resistance LUT increments by 5C for each index
+    uint8_t maxResIndex = (bmsdata->maxTemp.val - MIN_TEMP) / 5 + 1;
+    uint8_t partOfIndex = (bmsdata->maxTemp.val - MIN_TEMP) % 5;
+
+    return ((FAN_CURVE[maxResIndex] * partOfIndex) + (FAN_CURVE[minResIndex] * (5 - partOfIndex))) / (2 * 5);
 }

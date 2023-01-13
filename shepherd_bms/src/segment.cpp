@@ -254,23 +254,25 @@ FaultStatus_t SegmentInterface::pullThermistors()
             segmentData[c].thermistorReading[therm - 1] = steinhartEst(rawTempVoltages[c][0] * (float(rawTempVoltages[c][2]) / 50000) + VOLT_TEMP_CALIB_OFFSET);
             segmentData[c].thermistorReading[therm + 15] = steinhartEst(rawTempVoltages[c][1] * (float(rawTempVoltages[c][2]) / 50000) + VOLT_TEMP_CALIB_OFFSET);
 
-            if (segmentData[c].thermistorReading[therm - 1] > -5 && segmentData[c].thermistorReading[therm - 1] < 60) {
-                segmentData[c].thermistorValue[therm - 1] = segmentData[c].thermistorReading[therm - 1];
-            }
-
-            if (segmentData[c].thermistorReading[therm + 15] > -5 && segmentData[c].thermistorReading[therm + 15] < 60) {
-                segmentData[c].thermistorValue[therm + 15] = segmentData[c].thermistorReading[therm + 15];
-            }
-
-            /* WIP
             if (thermSettleTime < THERM_AVG * 10) {
                 segmentData[c].thermistorValue[therm - 1] = segmentData[c].thermistorReading[therm - 1];
                 segmentData[c].thermistorValue[therm + 15] = segmentData[c].thermistorReading[therm + 15];
                 thermSettleTime++;
             } else {
-                segmentData[c].thermistorValue[therm - 1] = (int64_t(segmentData[c].thermistorValue[therm - 1] * (THERM_AVG - 1)) + int64_t(segmentData[c].thermistorReading[therm - 1])) / THERM_AVG;
-                segmentData[c].thermistorValue[therm + 15] = (int64_t(segmentData[c].thermistorValue[therm + 15] * (THERM_AVG - 1)) + int64_t(segmentData[c].thermistorReading[therm + 15])) / THERM_AVG;
-            }*/
+                if (segmentData[c].thermistorReading[therm - 1] > segmentData[c].thermistorValue[therm - 1]) {
+                    segmentData[c].thermistorValue[therm - 1]++;
+                    //segmentData[c].thermistorValue[therm - 1] = (int64_t(segmentData[c].thermistorValue[therm - 1] * (THERM_AVG - 1)) + int64_t(segmentData[c].thermistorReading[therm - 1])) / THERM_AVG;
+                } else if (segmentData[c].thermistorReading[therm - 1] < segmentData[c].thermistorValue[therm - 1]) {
+                    segmentData[c].thermistorValue[therm - 1]--;
+                }
+
+                if (segmentData[c].thermistorReading[therm + 15] > segmentData[c].thermistorValue[therm + 15]) {
+                    segmentData[c].thermistorValue[therm + 15]++;
+                    //segmentData[c].thermistorValue[therm + 15] = (int64_t(segmentData[c].thermistorValue[therm + 15] * (THERM_AVG - 1)) + int64_t(segmentData[c].thermistorReading[therm + 15])) / THERM_AVG;
+                } else if (segmentData[c].thermistorReading[therm + 15] < segmentData[c].thermistorValue[therm + 15]) {
+                    segmentData[c].thermistorValue[therm + 15]--;
+                }
+            }
         }
     }
 	thermTimer.startTimer(THERM_WAIT_TIME);

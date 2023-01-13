@@ -157,8 +157,6 @@ void ComputeInterface::sendChargingStatus(bool chargingStatus)
     sendMessageCAN1(0x05, 1, chargingArray);
 }
 
-
-
 void ComputeInterface::MCCallback(const CAN_message_t &msg)
 {
     return;
