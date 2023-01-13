@@ -21,6 +21,8 @@ Timer mainTimer;
 ComputeInterface compute;
 WDT_T4<WDT1> wdt;
 
+Timer chargeTimeout;
+
 uint32_t bmsFault = FAULTS_CLEAR;
 
 void testSegments()
@@ -256,6 +258,28 @@ void shepherdMain()
 	delete accData;
 }
 
+bool balancingCheck(AccumulatorData_t *bmsdata)
+{
+
+	if (!compute.isCharging()) return false;
+	if (bmsdata->maxVoltage.val <= (BAL_MIN_V * 10000)) return false;
+	if(bmsdata->deltVoltage <= (MAX_DELTA_V * 10000)) return false;
+
+	return true;
+}
+
+bool ChargingCheck(AccumulatorData_t *bmsdata)
+{
+	if(!chargeTimeout.isTimerExpired()) return false;
+	if(!compute.isCharging()) return false;
+	if(bmsdata->maxVoltage.val >= (MAX_VOLT * 10000))
+	{
+		chargeTimeout.startTimer(CHARGE_TIMEOUT);
+		return false;
+	}
+
+	return true;
+}
 void setup()
 {
   NERduino.begin();
