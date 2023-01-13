@@ -29,6 +29,7 @@ uint32_t bmsFault = FAULTS_CLEAR;
 
 uint16_t overVoltCount = 0;
 uint16_t underVoltCount = 0;
+uint16_t overCurrCount = 0;
 
 void testSegments()
 {
@@ -248,8 +249,13 @@ void shepherdMain()
 
 	// FAULT CHECK
 	// Check for fuckies
-	if (accData->packCurrent > accData->contDCL) {
-		bmsFault |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
+	if (accData->packCurrent > accData->dischargeLimit) {
+		overCurrCount++;
+		if (overCurrCount > 10) { // 0.10 seconds @ 100Hz rate
+			bmsFault |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
+		}
+	} else {
+		overCurrCount = 0;
 	}
 	if (accData->packCurrent < 0 && abs(accData->packCurrent) > accData->chargeLimit) {
 		bmsFault |= CHARGE_LIMIT_ENFORCEMENT_FAULT;
@@ -333,6 +339,7 @@ void shepherdMain()
 
 	compute.sendMCMsg(0, accData->dischargeLimit);
 	compute.sendAccStatusMessage(accData->packVoltage, accData->packCurrent, 0, 0, 0);
+	compute.sendCurrentsStatus(accData->dischargeLimit, accData->chargeLimit, accData->packCurrent);
 
 	prevAccData = accData;
 	delete accData;

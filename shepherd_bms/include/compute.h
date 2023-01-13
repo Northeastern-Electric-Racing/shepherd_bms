@@ -139,6 +139,18 @@ class ComputeInterface
            } cfg;   
         } cellVoltageMsg;
 
+        union 
+        {
+           uint8_t msg[6] = {0, 0, 0, 0, 0, 0};
+
+           struct
+           {
+               uint16_t DCL;
+               uint16_t CCL;
+               uint16_t packCurr;
+           } cfg;   
+        } currentsStatusMsg;
+
     public:
         ComputeInterface();
 
@@ -277,6 +289,8 @@ class ComputeInterface
          * @return Returns a fault if we are not able to send
          */
         void sendChargingStatus(bool chargingStatus);
+
+        void sendCurrentsStatus(uint16_t discharge, uint16_t charge, uint16_t current);
 };
 
 #endif

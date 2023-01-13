@@ -141,6 +141,15 @@ void ComputeInterface::sendCellVoltageMessage(uint8_t cellID, uint16_t instantVo
     sendMessageCAN1(0x07, 8, cellVoltageMsg.msg);
 }
 
+void ComputeInterface::sendCurrentsStatus(uint16_t discharge, uint16_t charge, uint16_t current)
+{
+    currentsStatusMsg.cfg.DCL = discharge;
+    currentsStatusMsg.cfg.CCL = charge;
+    currentsStatusMsg.cfg.packCurr = current;
+
+    sendMessageCAN1(0x06, 8, currentsStatusMsg.msg);
+}
+
 void ComputeInterface::sendChargingStatus(bool chargingStatus)
 {
     uint8_t chargingArray[1] = {chargingStatus};
