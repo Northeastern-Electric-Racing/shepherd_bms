@@ -131,6 +131,29 @@ void chargeBalancing(AccumulatorData_t *bms_data)
 	segment.configureBalancing(balanceConfig);
 }
 
+bool balancingCheck(AccumulatorData_t *bmsdata)
+{
+
+	if (!compute.isCharging()) return false;
+	if (bmsdata->maxVoltage.val <= (BAL_MIN_V * 10000)) return false;
+	if(bmsdata->deltVoltage <= (MAX_DELTA_V * 10000)) return false;
+
+	return true;
+}
+
+bool chargingCheck(AccumulatorData_t *bmsdata)
+{
+	if(!chargeTimeout.isTimerExpired()) return false;
+	if(!compute.isCharging()) return false;
+	if(bmsdata->maxVoltage.val >= (MAX_VOLT * 10000))
+	{
+		chargeTimeout.startTimer(CHARGE_TIMEOUT);
+		return false;
+	}
+
+	return true;
+}
+
 void shepherdMain()
 {
 	currTime = millis();
@@ -260,13 +283,21 @@ void shepherdMain()
 
 	// CHARGE STATE
 	if (digitalRead(CHARGE_DETECT) == LOW && bmsFault == FAULTS_CLEAR) {
-		digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
-		compute.enableCharging(true);
-		if (currTime > lastChargeMsg + 150) {
+		if (chargingCheck(accData)) {
+			digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
+			compute.enableCharging(true);
+			compute.sendChargingStatus(true);
+		} else {
+			digitalWrite(CHARGE_SAFETY_RELAY, LOW);
+			compute.enableCharging(false);
+			compute.sendChargingStatus(false);
+		}
+		
+		if (currTime > lastChargeMsg + 250) {
 			lastChargeMsg = currTime;
 			compute.sendChargingMessage(packChargeVolt, accData->chargeLimit);
 		}
-		compute.sendChargingStatus(true);
+		
 	} else if (bmsFault == FAULTS_CLEAR) {
 		digitalWrite(CHARGE_SAFETY_RELAY, LOW);
 	}
@@ -277,28 +308,6 @@ void shepherdMain()
 	delete accData;
 }
 
-bool balancingCheck(AccumulatorData_t *bmsdata)
-{
-
-	if (!compute.isCharging()) return false;
-	if (bmsdata->maxVoltage.val <= (BAL_MIN_V * 10000)) return false;
-	if(bmsdata->deltVoltage <= (MAX_DELTA_V * 10000)) return false;
-
-	return true;
-}
-
-bool ChargingCheck(AccumulatorData_t *bmsdata)
-{
-	if(!chargeTimeout.isTimerExpired()) return false;
-	if(!compute.isCharging()) return false;
-	if(bmsdata->maxVoltage.val >= (MAX_VOLT * 10000))
-	{
-		chargeTimeout.startTimer(CHARGE_TIMEOUT);
-		return false;
-	}
-
-	return true;
-}
 void setup()
 {
   NERduino.begin();

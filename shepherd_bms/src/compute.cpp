@@ -21,7 +21,6 @@ FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, uint1
     {
         chargerMsg.cfg.chargerControl = 0b101;
         sendMessageCAN2(CANMSG_CHARGER, 8, chargerMsg.msg);
-        Serial.println("DISABLED!");
         //return isCharging() ? FAULTED : NOT_FAULTED; //return a fault if we DO detect a voltage after we stop charging
         return NOT_FAULTED;
     }
