@@ -94,14 +94,19 @@ void calcDCL(AccumulatorData_t *bmsdata)
         for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
         {   
             // Apply equation
-            uint16_t tmpDCL = (bmsdata->chipData[c].openCellVoltage[cell] - ((MIN_VOLT + VOLT_SAG_MARGIN) * 10000)) / bmsdata->chipData[c].cellResistance[cell];
+            uint16_t tmpDCL = (bmsdata->chipData[c].openCellVoltage[cell] - ((MIN_VOLT + VOLT_SAG_MARGIN) * 10000)) / (bmsdata->chipData[c].cellResistance[cell] * 10);
+            // Multiplying resistance by 10 to convert from mOhm to Ohm and then to Ohm * 10000 to account for the voltage units
 
             //Taking the minimum DCL of all the cells
             if(tmpDCL < currentLimit) currentLimit = tmpDCL;
         }
     }
 
-    bmsdata->dischargeLimit = currentLimit;
+    if (currentLimit > MAX_CELL_CURR) {
+        bmsdata->dischargeLimit = MAX_CELL_CURR;
+    } else {
+        bmsdata->dischargeLimit = currentLimit;
+    }
 }
 
 void calcContDCL(AccumulatorData_t *bmsdata)
