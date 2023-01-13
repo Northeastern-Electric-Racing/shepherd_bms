@@ -31,6 +31,7 @@ uint16_t overVoltCount = 0;
 uint16_t underVoltCount = 0;
 uint16_t overCurrCount = 0;
 uint16_t chargeOverVolt = 0;
+uint16_t overChgCurrCount = 0;
 
 void testSegments()
 {
@@ -264,7 +265,12 @@ void shepherdMain()
 		overCurrCount = 0;
 	}
 	if (accData->packCurrent < 0 && abs(accData->packCurrent) > accData->chargeLimit) {
-		bmsFault |= CHARGE_LIMIT_ENFORCEMENT_FAULT;
+		overChgCurrCount++;
+		if (overChgCurrCount > 100) { // 1 seconds @ 100Hz rate
+			bmsFault |= CHARGE_LIMIT_ENFORCEMENT_FAULT;
+		}
+	} else {
+		overChgCurrCount = 0;
 	}
 	if (accData->minVoltage.val < MIN_VOLT * 10000) {
 		underVoltCount++;
@@ -311,8 +317,6 @@ void shepherdMain()
 		}
 	}
 
-	uint16_t packChargeVolt = 300;
-
 	// CHARGE STATE
 	if (digitalRead(CHARGE_DETECT) == LOW && bmsFault == FAULTS_CLEAR) {
 		// Check if we should charge
@@ -337,7 +341,7 @@ void shepherdMain()
 		// Send CAN message, but not too often
 		if (currTime > lastChargeMsg + 250) {
 			lastChargeMsg = currTime;
-			compute.sendChargingMessage(packChargeVolt, accData->chargeLimit);
+			compute.sendChargingMessage(MAX_CHARGE_VOLT * NUM_CELLS_PER_CHIP * NUM_CHIPS, accData->chargeLimit);
 		}
 	} else if (bmsFault == FAULTS_CLEAR) {
 		digitalWrite(CHARGE_SAFETY_RELAY, LOW);
