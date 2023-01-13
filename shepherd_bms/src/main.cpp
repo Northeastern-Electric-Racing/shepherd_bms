@@ -127,7 +127,17 @@ void chargeBalancing(AccumulatorData_t *bms_data)
 				balanceConfig[chip][cell] = false;
         }
     }
-
+	
+	/*Serial.println("Cell Balancing:");
+	for(uint8_t c = 0; c < NUM_CHIPS; c++)
+    {
+        for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+        {
+			Serial.print(balanceConfig[c][cell]);
+			Serial.print("\t");
+		}
+		Serial.println();
+	}*/
 	segment.configureBalancing(balanceConfig);
 }
 
@@ -230,6 +240,17 @@ void shepherdMain()
 			Serial.print("\t");
 		}
 		Serial.println();
+	}
+
+	Serial.println("Cell Voltages:");
+	for(uint8_t c = 0; c < NUM_CHIPS; c++)
+    {
+        for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+        {
+			Serial.print(accData->chipData[c].voltageReading[cell]);
+			Serial.print("\t");
+		}
+		Serial.println();
 	}*/
 
 	uint16_t overVoltCount = 0;
@@ -283,6 +304,7 @@ void shepherdMain()
 
 	// CHARGE STATE
 	if (digitalRead(CHARGE_DETECT) == LOW && bmsFault == FAULTS_CLEAR) {
+		// Check if we should charge
 		if (chargingCheck(accData)) {
 			digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
 			compute.enableCharging(true);
@@ -292,12 +314,20 @@ void shepherdMain()
 			compute.enableCharging(false);
 			compute.sendChargingStatus(false);
 		}
+
+		// Check if we should balance
+		if (balancingCheck(accData)) {
+			chargeBalancing(accData);
+			segment.enableBalancing(true);
+		} else {
+			segment.enableBalancing(false);
+		}
 		
+		// Send CAN message, but not too often
 		if (currTime > lastChargeMsg + 250) {
 			lastChargeMsg = currTime;
 			compute.sendChargingMessage(packChargeVolt, accData->chargeLimit);
 		}
-		
 	} else if (bmsFault == FAULTS_CLEAR) {
 		digitalWrite(CHARGE_SAFETY_RELAY, LOW);
 	}
