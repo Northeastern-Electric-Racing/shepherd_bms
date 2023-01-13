@@ -242,8 +242,8 @@ void shepherdMain()
 		if (currTime > lastChargeMsg + 150) {
 			lastChargeMsg = currTime;
 			compute.sendChargingMessage(packChargeVolt, accData->chargeLimit);
-			compute.sendChargingStatus(true);
 		}
+		compute.sendChargingStatus(true);
 	} else if (bmsFault == FAULTS_CLEAR) {
 		digitalWrite(CHARGE_SAFETY_RELAY, LOW);
 	}
