@@ -190,6 +190,7 @@ void shepherdMain()
 	//Not state specific
 	segment.retrieveSegmentData(accData->chipData);
 	accData->packCurrent = compute.getPackCurrent();
+	disableTherms(accData, prevAccData);
 	//compute.getTSGLV();
 	//etc
 

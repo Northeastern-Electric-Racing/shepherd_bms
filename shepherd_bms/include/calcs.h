@@ -68,6 +68,20 @@ const uint8_t FAN_CURVE[16] =
 };
 
 /**
+ * @brief Selecting thermistors to ignore
+ * 
+ * @note True / 1 will disable the thermistor
+ * 
+ */
+const uint8_t THERM_DISABLE[4][11] =
+{
+    {0,0,0,0,0,0,0,0,0,0,0},
+    {1,0,0,0,0,0,0,0,0,0,0},
+    {1,1,0,0,0,0,0,0,0,0,0},
+    {1,1,0,0,0,0,0,0,0,0,0},
+};
+
+/**
  * @brief Mapping the Relevant Thermistors for each cell based on cell #
  * 
  */
@@ -101,5 +115,7 @@ void calcContCCL(AccumulatorData_t *bmsdata);
 void calcOpenCellVoltage(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata);
 
 uint8_t calcFanPWM(AccumulatorData_t *bmsdata);
+
+void disableTherms(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata);
 
 #endif
