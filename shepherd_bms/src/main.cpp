@@ -231,6 +231,9 @@ void shepherdMain()
 		Serial.print("CCL: ");
 		Serial.println(accData->chargeLimit);
 
+		Serial.print("Is Balancing?: ");
+		Serial.println(segment.isBalancing());
+
 		/*
 		Serial.println("Open Cell Voltage:");
 		for(uint8_t c = 0; c < NUM_CHIPS; c++)
@@ -315,6 +318,11 @@ void shepherdMain()
 	// FAULT STATE
 	if (bmsFault != FAULTS_CLEAR) {
 		compute.setFault(FAULTED);
+
+		segment.enableBalancing(false);
+		digitalWrite(CHARGE_SAFETY_RELAY, LOW);
+		compute.enableCharging(false);
+
 		Serial.print("BMS FAULT: ");
 		Serial.println(bmsFault, HEX);
 		Serial.println("Hit Spacebar to clear");
