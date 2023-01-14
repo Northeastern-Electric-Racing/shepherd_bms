@@ -66,6 +66,7 @@ bool balancingCheck(AccumulatorData_t *bmsdata)
 {
 
 	if (!compute.isCharging()) return false;
+	if (bmsdata->maxTemp.val > MAX_CELL_TEMP_BAL) return false;
 	if (bmsdata->maxVoltage.val <= (BAL_MIN_V * 10000)) return false;
 	if(bmsdata->deltVoltage <= (MAX_DELTA_V * 10000)) return false;
 
@@ -145,7 +146,7 @@ void shepherdMain()
 		Serial.println(accData->chargeLimit);
 
 		Serial.print("Is Balancing?: ");
-		Serial.println(segment.isBalancing());
+		Serial.println(segment.isBalancing()); 
 
 		/*
 		Serial.println("Open Cell Voltage:");

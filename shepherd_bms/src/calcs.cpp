@@ -135,7 +135,7 @@ void calcContCCL(AccumulatorData_t *bmsdata)
 }
 
 void calcOpenCellVoltage(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata) {
-    if ((bmsdata->packCurrent < 3 && bmsdata->packCurrent > -3) || prevbmsdata == NULL) {
+    if ((bmsdata->packCurrent < 1 && bmsdata->packCurrent > -1) || prevbmsdata == NULL) {
         for (int i = 0; i < NUM_CHIPS; i++) {
             for (int ii = 0; ii < NUM_CELLS_PER_CHIP; ii++) {
                 bmsdata->chipData[i].openCellVoltage[ii] = bmsdata->chipData[i].voltageReading[ii];

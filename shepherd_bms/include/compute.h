@@ -47,7 +47,7 @@ class ComputeInterface
         const float current_supplyVoltage = 5.038;
         const float current_ADCResolution = 5.0 / MAX_ADC_RESOLUTION;
 
-        const float current_lowChannelOffset = 2.57; // Calibrated with current = 0A
+        const float current_lowChannelOffset = 2.52; // Calibrated with current = 0A
         const float current_highChannelOffset = 2.57; // Calibrated with current = 0A
 
         const float highChannelGain = 1 / 0.0040;

@@ -114,8 +114,6 @@ void SegmentInterface::configureBalancing(bool dischargeConfig[NUM_CHIPS][NUM_CE
 
 bool SegmentInterface::isBalancing(uint8_t chipNum, uint8_t cellNum)
 {
-    pullChipConfigurations();
-    
     //If the cell is one of the first 8, check the 4th register
     if(cellNum < 8)
     {
@@ -132,8 +130,6 @@ bool SegmentInterface::isBalancing(uint8_t chipNum, uint8_t cellNum)
 
 bool SegmentInterface::isBalancing()
 {
-    pullChipConfigurations();
-
     for(int c = 0; c < NUM_CHIPS; c++)
     {
         //Reading from the 4th config register
