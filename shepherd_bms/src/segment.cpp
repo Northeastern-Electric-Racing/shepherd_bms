@@ -238,9 +238,9 @@ FaultStatus_t SegmentInterface::pullThermistors()
     for (int therm = 1; therm <= 16; therm++)
 	{
         SelectTherm(therm);
-        delay(5);
+        // delay(5);
         SelectTherm(therm + 16);
-        delay(5);
+        // delay(5);
 		
 		pushChipConfigurations();
         LTC6804_adax(); // Run ADC for AUX (GPIOs and refs)
@@ -259,18 +259,22 @@ FaultStatus_t SegmentInterface::pullThermistors()
                 segmentData[c].thermistorValue[therm + 15] = segmentData[c].thermistorReading[therm + 15];
                 thermSettleTime++;
             } else {
-                if (segmentData[c].thermistorReading[therm - 1] > segmentData[c].thermistorValue[therm - 1]) {
+                if (segmentData[c].thermistorReading[therm - 1] != 33) {
+                    if (segmentData[c].thermistorReading[therm - 1] > segmentData[c].thermistorValue[therm - 1]) {
                     segmentData[c].thermistorValue[therm - 1]++;
                     //segmentData[c].thermistorValue[therm - 1] = (int64_t(segmentData[c].thermistorValue[therm - 1] * (THERM_AVG - 1)) + int64_t(segmentData[c].thermistorReading[therm - 1])) / THERM_AVG;
-                } else if (segmentData[c].thermistorReading[therm - 1] < segmentData[c].thermistorValue[therm - 1]) {
-                    segmentData[c].thermistorValue[therm - 1]--;
+                    } else if (segmentData[c].thermistorReading[therm - 1] < segmentData[c].thermistorValue[therm - 1]) {
+                        segmentData[c].thermistorValue[therm - 1]--;
+                    }
                 }
-
-                if (segmentData[c].thermistorReading[therm + 15] > segmentData[c].thermistorValue[therm + 15]) {
+                
+                if (segmentData[c].thermistorReading[therm + 15] != 33) {
+                    if (segmentData[c].thermistorReading[therm + 15] > segmentData[c].thermistorValue[therm + 15]) {
                     segmentData[c].thermistorValue[therm + 15]++;
                     //segmentData[c].thermistorValue[therm + 15] = (int64_t(segmentData[c].thermistorValue[therm + 15] * (THERM_AVG - 1)) + int64_t(segmentData[c].thermistorReading[therm + 15])) / THERM_AVG;
-                } else if (segmentData[c].thermistorReading[therm + 15] < segmentData[c].thermistorValue[therm + 15]) {
-                    segmentData[c].thermistorValue[therm + 15]--;
+                    } else if (segmentData[c].thermistorReading[therm + 15] < segmentData[c].thermistorValue[therm + 15]) {
+                        segmentData[c].thermistorValue[therm + 15]--;
+                    }
                 }
             }
         }

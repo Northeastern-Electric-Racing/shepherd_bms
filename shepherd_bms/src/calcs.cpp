@@ -160,3 +160,21 @@ uint8_t calcFanPWM(AccumulatorData_t *bmsdata)
 
     return ((FAN_CURVE[maxResIndex] * partOfIndex) + (FAN_CURVE[minResIndex] * (5 - partOfIndex))) / (2 * 5);
 }
+
+void disableTherms(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata)
+{
+    int8_t tempRepl = 25;
+    if (prevbmsdata->avgTemp != 0) {
+        tempRepl = prevbmsdata->avgTemp;
+    }
+
+    for(uint8_t c = 1; c < NUM_CHIPS; c+= 2)
+    {
+        for(uint8_t therm = 17; therm < 28; therm++)
+        {
+            if (THERM_DISABLE[(c - 1) / 2][therm - 17]) {
+                bmsdata->chipData[c].thermistorValue[therm] = tempRepl;
+            }
+        }
+    }
+}
