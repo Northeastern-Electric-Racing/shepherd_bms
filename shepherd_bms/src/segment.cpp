@@ -259,18 +259,22 @@ FaultStatus_t SegmentInterface::pullThermistors()
                 segmentData[c].thermistorValue[therm + 15] = segmentData[c].thermistorReading[therm + 15];
                 thermSettleTime++;
             } else {
-                if (segmentData[c].thermistorReading[therm - 1] > segmentData[c].thermistorValue[therm - 1]) {
+                if (segmentData[c].thermistorReading[therm - 1] != 33) {
+                    if (segmentData[c].thermistorReading[therm - 1] > segmentData[c].thermistorValue[therm - 1]) {
                     segmentData[c].thermistorValue[therm - 1]++;
                     //segmentData[c].thermistorValue[therm - 1] = (int64_t(segmentData[c].thermistorValue[therm - 1] * (THERM_AVG - 1)) + int64_t(segmentData[c].thermistorReading[therm - 1])) / THERM_AVG;
-                } else if (segmentData[c].thermistorReading[therm - 1] < segmentData[c].thermistorValue[therm - 1]) {
-                    segmentData[c].thermistorValue[therm - 1]--;
+                    } else if (segmentData[c].thermistorReading[therm - 1] < segmentData[c].thermistorValue[therm - 1]) {
+                        segmentData[c].thermistorValue[therm - 1]--;
+                    }
                 }
-
-                if (segmentData[c].thermistorReading[therm + 15] > segmentData[c].thermistorValue[therm + 15]) {
+                
+                if (segmentData[c].thermistorReading[therm + 15] != 33) {
+                    if (segmentData[c].thermistorReading[therm + 15] > segmentData[c].thermistorValue[therm + 15]) {
                     segmentData[c].thermistorValue[therm + 15]++;
                     //segmentData[c].thermistorValue[therm + 15] = (int64_t(segmentData[c].thermistorValue[therm + 15] * (THERM_AVG - 1)) + int64_t(segmentData[c].thermistorReading[therm + 15])) / THERM_AVG;
-                } else if (segmentData[c].thermistorReading[therm + 15] < segmentData[c].thermistorValue[therm + 15]) {
-                    segmentData[c].thermistorValue[therm + 15]--;
+                    } else if (segmentData[c].thermistorReading[therm + 15] < segmentData[c].thermistorValue[therm + 15]) {
+                        segmentData[c].thermistorValue[therm + 15]--;
+                    }
                 }
             }
         }
