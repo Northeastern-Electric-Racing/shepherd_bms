@@ -35,6 +35,13 @@ uint16_t overCurrCount = 0;
 uint16_t chargeOverVolt = 0;
 uint16_t overChgCurrCount = 0;
 
+enum
+{
+	BOOST_STANDBY,
+	BOOSTING,
+	BOOST_RECHARGE
+}BoostState;
+
 
 void chargeBalancing(AccumulatorData_t *bms_data)
 {
@@ -285,21 +292,26 @@ void shepherdMain()
 	}
 
 	//Transitioning out of boost
-	if(boostTimer.isTimerExpired())
+	//TODO: Make these states enumerated
+	if(boostTimer.isTimerExpired() && BoostState == BOOSTING)
 	{
+		BoostState = BOOST_RECHARGE;
 		boostRechargeTimer.startTimer(BOOST_RECHARGE_TIME);
 	}
-	
-	//Transition to boosting
-	if(accData->packCurrent > (int16_t)accData->contDCL && 
-		boostTimer.isTimerExpired() && 
-		boostRechargeTimer.isTimerExpired())
+	//Transition out of boost recharge
+	if(boostRechargeTimer.isTimerExpired() && BoostState == BOOST_RECHARGE)
 	{
+		BoostState = BOOST_STANDBY;
+	}
+	//Transition to boosting
+	if(accData->packCurrent > (int16_t)accData->contDCL && BoostState == BOOST_STANDBY)
+	{
+		BoostState = BOOSTING;
 		boostTimer.startTimer(BOOST_TIME);
 	}
 
 	//Currently boosting
-	if(!boostTimer.isTimerExpired())
+	if(BoostState == BOOSTING || BoostState == BOOST_STANDBY)
 	{
 		compute.sendMCMsg(accData->chargeLimit, min(accData->dischargeLimit, accData->contDCL * CONTDCL_MULTIPLIER));
 	}
