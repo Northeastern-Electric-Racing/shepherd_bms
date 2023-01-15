@@ -22,6 +22,8 @@ ComputeInterface compute;
 WDT_T4<WDT1> wdt;
 
 Timer chargeTimeout;
+Timer boostTimer;
+Timer boostRechargeTimer;
 
 AccumulatorData_t *prevAccData = nullptr;
 
@@ -32,6 +34,14 @@ uint16_t underVoltCount = 0;
 uint16_t overCurrCount = 0;
 uint16_t chargeOverVolt = 0;
 uint16_t overChgCurrCount = 0;
+
+enum
+{
+	BOOST_STANDBY,
+	BOOSTING,
+	BOOST_RECHARGE
+}BoostState;
+
 
 void chargeBalancing(AccumulatorData_t *bms_data)
 {
@@ -280,7 +290,35 @@ void shepherdMain()
 		digitalWrite(CHARGE_SAFETY_RELAY, LOW);
 	}
 
-	compute.sendMCMsg(accData->chargeLimit, accData->dischargeLimit);
+	//Transitioning out of boost
+	if(boostTimer.isTimerExpired() && BoostState == BOOSTING)
+	{
+		BoostState = BOOST_RECHARGE;
+		boostRechargeTimer.startTimer(BOOST_RECHARGE_TIME);
+	}
+	//Transition out of boost recharge
+	if(boostRechargeTimer.isTimerExpired() && BoostState == BOOST_RECHARGE)
+	{
+		BoostState = BOOST_STANDBY;
+	}
+	//Transition to boosting
+	if(accData->packCurrent > (int16_t)accData->contDCL && BoostState == BOOST_STANDBY)
+	{
+		BoostState = BOOSTING;
+		boostTimer.startTimer(BOOST_TIME);
+	}
+
+	//Currently boosting
+	if(BoostState == BOOSTING || BoostState == BOOST_STANDBY)
+	{
+		compute.sendMCMsg(accData->chargeLimit, min(accData->dischargeLimit, accData->contDCL * CONTDCL_MULTIPLIER));
+	}
+	//Currently recharging boost
+	else
+	{
+		compute.sendMCMsg(accData->chargeLimit, min(accData->contDCL, accData->dischargeLimit));
+	}
+
 	compute.sendAccStatusMessage(accData->packVoltage, accData->packCurrent, 0, 0, 0);
 	compute.sendCurrentsStatus(accData->dischargeLimit, accData->chargeLimit, accData->packCurrent);
 
@@ -292,16 +330,15 @@ void shepherdMain()
 
 void setup()
 {
+  WDT_timings_t config;
+  config.trigger = 5;         /* in seconds, 0->128 */
+  config.timeout = 15;        /* in seconds, 0->128 */
+  wdt.begin(config);
   NERduino.begin();
   
   segment.init();
 
   compute.setFault(NOT_FAULTED);
-
-  WDT_timings_t config;
-  config.trigger = 5;         /* in seconds, 0->128 */
-  config.timeout = 15;        /* in seconds, 0->128 */
-  wdt.begin(config);
 }
 
 void loop()
