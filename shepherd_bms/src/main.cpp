@@ -296,15 +296,14 @@ void shepherdMain()
 		boostRechargeTimer.isTimerExpired())
 	{
 		boostTimer.startTimer(BOOST_TIME);
-		compute.sendMCMsg(accData->chargeLimit, accData->dischargeLimit);
 	}
 
 	//Currently boosting
-	else if(!boostTimer.isTimerExpired())
+	if(!boostTimer.isTimerExpired())
 	{
+		
 		compute.sendMCMsg(accData->chargeLimit, accData->dischargeLimit);
 	}
-
 	//Currently recharging boost
 	else
 	{
