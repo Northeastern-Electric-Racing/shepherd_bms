@@ -267,7 +267,6 @@ void shepherdMain()
 		// Check if we should balance
 		if (balancingCheck(accData)) {
 			chargeBalancing(accData);
-			segment.enableBalancing(true);
 		} else {
 			segment.enableBalancing(false);
 		}
