@@ -301,8 +301,7 @@ void shepherdMain()
 	//Currently boosting
 	if(!boostTimer.isTimerExpired())
 	{
-		
-		compute.sendMCMsg(accData->chargeLimit, accData->dischargeLimit);
+		compute.sendMCMsg(accData->chargeLimit, min(accData->dischargeLimit, accData->contDCL * CONTDCL_MULTIPLIER));
 	}
 	//Currently recharging boost
 	else
