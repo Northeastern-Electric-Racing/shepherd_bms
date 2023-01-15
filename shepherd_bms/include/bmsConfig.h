@@ -23,8 +23,10 @@
 #define MAX_CELL_CURR       700 // Amps per BMS cell
 #define MAX_CELL_TEMP_BAL   45
 
-// Code settings
+// Algorithm settings
 #define CHARGE_TIMEOUT      300000 // 5 minutes, may need adjustment
 #define VOLT_SAG_MARGIN     0.25 // Volts above the minimum cell voltage we would like to aim for
+
+#define OCV_AVG             3
 
 #endif
