@@ -292,7 +292,6 @@ void shepherdMain()
 	}
 
 	//Transitioning out of boost
-	//TODO: Make these states enumerated
 	if(boostTimer.isTimerExpired() && BoostState == BOOSTING)
 	{
 		BoostState = BOOST_RECHARGE;
@@ -318,7 +317,7 @@ void shepherdMain()
 	//Currently recharging boost
 	else
 	{
-		compute.sendMCMsg(accData->chargeLimit, accData->contDCL);
+		compute.sendMCMsg(accData->chargeLimit, min(accData->contDCL, accData->dischargeLimit));
 	}
 
 	compute.sendAccStatusMessage(accData->packVoltage, accData->packCurrent, 0, 0, 0);
