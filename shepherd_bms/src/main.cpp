@@ -34,6 +34,7 @@ uint16_t underVoltCount = 0;
 uint16_t overCurrCount = 0;
 uint16_t chargeOverVolt = 0;
 uint16_t overChgCurrCount = 0;
+uint16_t lowCellCount = 0;
 
 enum
 {
@@ -210,7 +211,7 @@ void shepherdMain()
 		}
 	} else {
 		overChgCurrCount = 0;
-	}
+	}  
 	if (accData->minVoltage.val < MIN_VOLT * 10000) {
 		underVoltCount++;
 		if (underVoltCount > 900) { // 9 seconds @ 100Hz rate
@@ -231,7 +232,12 @@ void shepherdMain()
 		bmsFault |= PACK_TOO_HOT;
 	}
 	if (accData->minVoltage.val < 900) { // 90mV
-		bmsFault |= LOW_CELL_VOLTAGE;
+		lowCellCount++;
+		if (lowCellCount > 100) { // 1 seconds @ 100Hz rate
+			bmsFault |= LOW_CELL_VOLTAGE;
+		}
+	} else {
+		lowCellCount = 0;
 	}
 
 	// ACTIVE/NORMAL STATE
