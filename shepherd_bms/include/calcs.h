@@ -54,6 +54,21 @@ const uint8_t TEMP_TO_CCL[16] =
 };
 
 /**
+ * @brief Lookup table for State of Charge
+ * 
+ * @note Each index corresponds to 10% charge
+ * 
+ * @note The curve we based this off of was garbage gonna need to fix this
+ *       We just wanted something crude to work off of
+ */
+const float STATE_OF_CHARGE_LUT[11] =
+{
+    2.950, 3.025, 3.100, 3.167, 3.233, 
+    3.300, 3.366, 3.433, 3.500, 3.566, 
+    3.600
+};
+
+/**
  * @brief Mapping desired fan speed PWM to the cell temperature
  * 
  * @note Units are in PWM out of 255 and indicies are in (degrees C)/5, stops at 65C
