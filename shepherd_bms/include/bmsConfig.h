@@ -16,7 +16,7 @@
 // Boosting Parameters
 #define BOOST_TIME          5   // seconds
 #define BOOST_RECHARGE_TIME 30  // seconds
-#define CONTDCL_MULTIPLIER  1.01
+#define CONTDCL_MULTIPLIER  2
 
 //cell limits
 #define MIN_VOLT            2.9
