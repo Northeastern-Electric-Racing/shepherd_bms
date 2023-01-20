@@ -28,11 +28,14 @@ FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, uint1
     // equations taken from TSM2500 CAN protocol datasheet
     chargerMsg.cfg.chargerControl = 0xFC;
     chargerMsg.cfg.chargerVoltage = voltageToSet * 10;
-    if (currentToSet > 10) {
+    if (currentToSet > 10) 
+    {
         currentToSet = 10;
     }
     chargerMsg.cfg.chargerCurrent = currentToSet * 10 + 3200;
-    chargerMsg.cfg.chargerLEDs = 0x01;
+    bool is_charging = isCharging();
+    // Still need to figure out state of charge but I didn't wanna leave it blank
+    chargerMsg.cfg.chargerLEDs = computeChargerLEDState(state_of_charge, is_charging);
     chargerMsg.cfg.reserved2_3 = 0xFFFF;
 
     uint8_t msg[8] = {chargerMsg.cfg.chargerControl, static_cast<uint8_t>(chargerMsg.cfg.chargerVoltage), chargerMsg.cfg.chargerVoltage >> 8, static_cast<uint8_t>(chargerMsg.cfg.chargerCurrent), chargerMsg.cfg.chargerCurrent >> 8, chargerMsg.cfg.chargerLEDs, 0xFF, 0xFF};
@@ -160,4 +163,38 @@ void ComputeInterface::sendChargingStatus(bool chargingStatus)
 void ComputeInterface::MCCallback(const CAN_message_t &msg)
 {
     return;
+}
+
+uint8_t ComputeInterface::computeChargerLEDState(uint8_t state_of_charge, bool current)
+{
+  uint8_t LED_state;
+  if((state_of_charge < 80) && (current))
+  {
+    LED_state = 0x00;
+  }
+  else if((state_of_charge < 80) && (!current))
+  {
+    LED_state = 0x01;
+  }
+  else if((state_of_charge >= 80 && state_of_charge < 95) && (current))
+  {
+    LED_state = 0x02;
+  }
+  else if((state_of_charge >= 80 && state_of_charge < 95) && (!current))
+  {
+    LED_state = 0x03;
+  }
+  else if((state_of_charge >= 95) && (current))
+  {
+    LED_state = 0x04;
+  }
+  else if((state_of_charge >= 95) && (!current))
+  {
+    LED_state = 0x05;
+  }
+  else
+  {
+    LED_state = 0x06;
+  }
+  return(LED_state);
 }

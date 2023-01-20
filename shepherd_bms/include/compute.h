@@ -291,6 +291,17 @@ class ComputeInterface
         void sendChargingStatus(bool chargingStatus);
 
         void sendCurrentsStatus(uint16_t discharge, uint16_t charge, uint16_t current);
+
+        /**
+         * @brief Determines state of the charger LEDs based on the battery charge percentage
+         * 
+         * @param state_of_charge 8 bit integer representing battery charge
+         * @param current boolean value representing whether there is no current or delivering current
+         * 
+         * @return uint8_t Value to be used for setting LED bits for charger message
+         * 
+         */
+        uint8_t computeChargerLEDState(uint8_t state_of_charge, bool current);
 };
 
 #endif
