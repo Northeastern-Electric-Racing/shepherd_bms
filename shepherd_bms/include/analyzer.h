@@ -81,6 +81,18 @@ class Analyzer
         };
 
         /**
+         * @brief Lookup table for State of Charge
+         * 
+         * @note Each index corresponds to 10% charge
+         * 
+         * @note Assuming linear curve
+         */
+        const uint8_t STATE_OF_CHARGE_CURVE[13] =
+        {
+            0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 100
+        };
+
+        /**
          * @brief Mapping the Relevant Thermistors for each cell based on cell #
          * 
          */
@@ -146,6 +158,8 @@ class Analyzer
         void calcOpenCellVoltage();
 
         void disableTherms();
+
+        void calcStateOfCharge();
     
     public:
         Analyzer();
@@ -169,7 +183,7 @@ class Analyzer
         void resize(uint16_t newSize);
 
         /**
-         * @brief 
+         * @brief Calculates the PWM required to drive the fans at the current moment in time
          * 
          * @param bmsdata 
          * @return uint8_t 

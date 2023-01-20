@@ -40,6 +40,7 @@ void Analyzer::push(AccumulatorData_t data)
     calcDCL();
     calcContDCL();
     calcContCCL();
+    calcStateOfCharge();
 
     //printData();
 
@@ -383,5 +384,19 @@ void Analyzer::disableTherms()
                 bmsdata->chipData[c].thermistorValue[therm] = tempRepl;
             }
         }
+    }
+}
+
+void Analyzer::calcStateOfCharge()
+{
+    int index = (((bmsdata->minVoltage.val) - MIN_VOLT) / .1);
+
+    // .1 = 1.3V range / 13 datapoints on curve
+    if (index >= 13) 
+        bmsdata->soc = 100;
+    else
+    {
+        float distance_from_higher = (bmsdata->minVoltage.val) - ((index / 10) + 2.9);
+        bmsdata->soc = ((distance_from_higher*STATE_OF_CHARGE_CURVE[index+1]) + ((1-distance_from_higher)*STATE_OF_CHARGE_CURVE[index]));
     }
 }
