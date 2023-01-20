@@ -235,7 +235,6 @@ FaultStatus_t SegmentInterface::pullThermistors()
 	{
         SelectTherm(therm);
         SelectTherm(therm + 16);
-        // delay(5);
 		
 		pushChipConfigurations();
         LTC6804_adax(); // Run ADC for AUX (GPIOs and refs)
