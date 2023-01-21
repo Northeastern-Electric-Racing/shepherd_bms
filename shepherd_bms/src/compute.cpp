@@ -88,8 +88,6 @@ int16_t ComputeInterface::getPackCurrent()
 {
     static const float current_lowChannelMax = 75.0; //Amps
     static const float current_lowChannelMin = -75.0; //Amps
-    static const int16_t current_highChannelMax = 500; //Amps
-    static const int16_t current_highChannelMin = -500; //Amps
     static const float current_supplyVoltage = 5.038;
     static const float current_ADCResolution = 5.0 / MAX_ADC_RESOLUTION;
 
