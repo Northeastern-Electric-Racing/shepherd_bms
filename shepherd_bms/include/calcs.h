@@ -58,14 +58,11 @@ const uint8_t TEMP_TO_CCL[16] =
  * 
  * @note Each index corresponds to 10% charge
  * 
- * @note The curve we based this off of was garbage gonna need to fix this
- *       We just wanted something crude to work off of
+ * @note Assuming linear curve
  */
-const float STATE_OF_CHARGE_LUT[11] =
+const uint8_t STATE_OF_CHARGE_LUT[13] =
 {
-    2.950, 3.025, 3.100, 3.167, 3.233, 
-    3.300, 3.366, 3.433, 3.500, 3.566, 
-    3.600
+    0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 100
 };
 
 /**
@@ -132,5 +129,7 @@ void calcOpenCellVoltage(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsd
 uint8_t calcFanPWM(AccumulatorData_t *bmsdata);
 
 void disableTherms(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata);
+
+uint8_t calcStateOfCharge(AccumulatorData_t *bmsdata);
 
 #endif

@@ -184,3 +184,15 @@ void disableTherms(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata)
         }
     }
 }
+
+uint8_t calcStateOfCharge(AccumulatorData_t *bms_data)
+{
+  int index = (((bms_data->minVoltage.val) - MIN_VOLT) / .1);
+  // 13 is because we have 13 values and 1.3 volts
+  if(index >= 13) return(100);
+  else
+  {
+    float distance_from_higher = (bms_data->minVoltage.val) - ((index / 10) + 2.9);
+    return((distance_from_higher*STATE_OF_CHARGE_LUT[index+1]) + ((1-distance_from_higher)*STATE_OF_CHARGE_LUT[index]));
+  }
+}
