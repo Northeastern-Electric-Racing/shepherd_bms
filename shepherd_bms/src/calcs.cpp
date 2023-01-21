@@ -163,10 +163,11 @@ void calcContCCL(AccumulatorData_t *bmsdata)
     }
 }
 
-void calcOpenCellVoltage(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata) {
-    
-    // if there is no previous data point, set an inital open cell voltage
-    if (prevbmsdata == NULL) {
+void calcOpenCellVoltage(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata) 
+{
+    // if there is no previous data point, set inital open cell voltage to current reading
+    if (prevbmsdata == NULL) 
+    {
         for (uint8_t chip = 0; chip < NUM_CHIPS; chip++) 
         {
             for (uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++) 
@@ -174,24 +175,26 @@ void calcOpenCellVoltage(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsd
                 bmsdata->chipData[chip].openCellVoltage[cell] = bmsdata->chipData[chip].voltageReading[cell];
             }
         }
-    } 
-    else if (bmsdata->packCurrent < 1 && bmsdata->packCurrent > -1) 
+    }
+    // If we are within the current threshold for open voltage measurments
+    else if (bmsdata->packCurrent < OCV_CURR_THRESH && bmsdata->packCurrent > -OCV_CURR_THRESH) 
     {
         for (uint8_t chip = 0; chip < NUM_CHIPS; chip++) 
         {
             for (uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++) 
             {
+                // Sets open cell voltage to a moving average of OCV_AVG values
                 bmsdata->chipData[chip].openCellVoltage[cell] = (uint32_t(bmsdata->chipData[chip].voltageReading[cell]) + (uint32_t(prevbmsdata->chipData[chip].openCellVoltage[cell])  * (OCV_AVG - 1))) / OCV_AVG;
             }
         }
-        return;
     } 
-    else 
+    else
     {
         for (uint8_t chip = 0; chip < NUM_CHIPS; chip++) 
         {
             for (uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++) 
             {
+                // Set OCV to the previous/existing OCV
                 bmsdata->chipData[chip].openCellVoltage[cell] = prevbmsdata->chipData[chip].openCellVoltage[cell];
             }
         }
