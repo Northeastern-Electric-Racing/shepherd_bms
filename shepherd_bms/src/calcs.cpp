@@ -203,10 +203,14 @@ void calcOpenCellVoltage(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsd
 
 uint8_t calcFanPWM(AccumulatorData_t *bmsdata)
 {
-    uint8_t minResIndex = (bmsdata->maxTemp.val - MIN_TEMP) / 5;  //resistance LUT increments by 5C for each index
+    // Resistance LUT increments by 5C for each index, plus we account for negative minimum
+    uint8_t minResIndex = (bmsdata->maxTemp.val - MIN_TEMP) / 5;
+    // Ints are roounded down, so this would be the value if rounded up
     uint8_t maxResIndex = (bmsdata->maxTemp.val - MIN_TEMP) / 5 + 1;
+    // Determine how far into the 5C interval the temp is
     uint8_t partOfIndex = (bmsdata->maxTemp.val - MIN_TEMP) % 5;
 
+    // Uses fan LUT and finds low and upper end. Then takes average, weighted to how far into the interval the exact temp is
     return ((FAN_CURVE[maxResIndex] * partOfIndex) + (FAN_CURVE[minResIndex] * (5 - partOfIndex))) / (2 * 5);
 }
 
