@@ -17,8 +17,10 @@ void calcCellTemps(AccumulatorData_t *bmsdata)
             bmsdata->chipData[c].cellTemp[cell] = tempSum / RelevantThermMap[cell].size();
 
             //Cleansing value
-            if(bmsdata->chipData[c].cellTemp[cell] > MAX_TEMP) 
+            if(bmsdata->chipData[c].cellTemp[cell] > MAX_TEMP)
+            {
                 bmsdata->chipData[c].cellTemp[cell] = MAX_TEMP;
+            }
         }
     }
 }
@@ -34,11 +36,15 @@ void calcPackTemps(AccumulatorData_t *bmsdata)
         {
             // finds out the maximum cell temp and location
             if (bmsdata->chipData[c].thermistorValue[therm] > bmsdata->maxTemp.val) 
+            {
                 bmsdata->maxTemp = {bmsdata->chipData[c].thermistorValue[therm], c, therm};
+            }
 
             // finds out the minimum cell temp and location
             if (bmsdata->chipData[c].thermistorValue[therm] < bmsdata->minTemp.val) 
+            {
                 bmsdata->minTemp = {bmsdata->chipData[c].thermistorValue[therm], c, therm};
+            }
             
             totalTemp += bmsdata->chipData[c].thermistorValue[therm];
         }
@@ -57,12 +63,16 @@ void calcPackVoltageStats(AccumulatorData_t *bmsdata) {
         for(uint8_t cell = 0; cell < 9; cell++) 
         {
             // fings out the maximum cell voltage and location
-            if (bmsdata->chipData[c].voltageReading[cell] > bmsdata->maxVoltage.val) 
+            if (bmsdata->chipData[c].voltageReading[cell] > bmsdata->maxVoltage.val)
+            {
                 bmsdata->maxVoltage = {bmsdata->chipData[c].voltageReading[cell], c, cell};
+            }
 
             //finds out the minimum cell voltage and location
             else if (bmsdata->chipData[c].voltageReading[cell] < bmsdata->minVoltage.val) 
+            {
                 bmsdata->minVoltage = {bmsdata->chipData[c].voltageReading[cell], c, cell};
+            }
             
             totalVolt += bmsdata->chipData[c].voltageReading[cell];
         }
@@ -113,9 +123,12 @@ void calcDCL(AccumulatorData_t *bmsdata)
     }
 
     // ceiling for current limit
-    if (currentLimit > MAX_CELL_CURR) {
+    if (currentLimit > MAX_CELL_CURR) 
+    {
         bmsdata->dischargeLimit = MAX_CELL_CURR;
-    } else {
+    }
+    else 
+    {
         bmsdata->dischargeLimit = currentLimit;
     }
 }
@@ -126,9 +139,13 @@ void calcContDCL(AccumulatorData_t *bmsdata)
     uint8_t maxResIndex = (bmsdata->maxTemp.val - MIN_TEMP) / 5;
 
     if (TEMP_TO_DCL[minResIndex] < TEMP_TO_DCL[maxResIndex])
+    {
         bmsdata->contDCL = TEMP_TO_DCL[minResIndex];
+    }
     else
+    {
         bmsdata->contDCL = TEMP_TO_DCL[maxResIndex];
+    }
 }
 
 void calcContCCL(AccumulatorData_t *bmsdata)
@@ -137,9 +154,13 @@ void calcContCCL(AccumulatorData_t *bmsdata)
     uint8_t maxResIndex = (bmsdata->maxTemp.val - MIN_TEMP) / 5;
 
     if (TEMP_TO_CCL[minResIndex] < TEMP_TO_CCL[maxResIndex])
+    {
         bmsdata->chargeLimit = TEMP_TO_CCL[minResIndex];
+    }
     else
+    {
         bmsdata->chargeLimit = TEMP_TO_CCL[maxResIndex];
+    }
 }
 
 void calcOpenCellVoltage(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata) {
@@ -189,9 +210,7 @@ uint8_t calcFanPWM(AccumulatorData_t *bmsdata)
 void disableTherms(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata)
 {
     int8_t tempRepl = 25;
-    if (prevbmsdata->avgTemp != 0) {
-        tempRepl = prevbmsdata->avgTemp;
-    }
+    if (prevbmsdata->avgTemp != 0) tempRepl = prevbmsdata->avgTemp;
 
     for(uint8_t c = 1; c < NUM_CHIPS; c+= 2)
     {
