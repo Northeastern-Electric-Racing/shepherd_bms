@@ -175,7 +175,7 @@ void calcOpenCellVoltage(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsd
             }
         }
     } 
-    else if ((bmsdata->packCurrent < 1 && bmsdata->packCurrent > -1) || prevbmsdata == NULL) 
+    else if (bmsdata->packCurrent < 1 && bmsdata->packCurrent > -1) 
     {
         for (uint8_t chip = 0; chip < NUM_CHIPS; chip++) 
         {
