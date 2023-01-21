@@ -216,15 +216,17 @@ uint8_t calcFanPWM(AccumulatorData_t *bmsdata)
 
 void disableTherms(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata)
 {
-    int8_t tempRepl = 25;
-    if (prevbmsdata->avgTemp != 0) tempRepl = prevbmsdata->avgTemp;
+    int8_t tempRepl = 25; // Iniitalize to room temp (necessary to stabilize when the BMS first boots up/has null values)
+    if (prevbmsdata->avgTemp != 0) tempRepl = prevbmsdata->avgTemp; // Set to actual average temp of the pack
 
     for(uint8_t c = 1; c < NUM_CHIPS; c+= 2)
     {
         for(uint8_t therm = 17; therm < 28; therm++)
         {
+            // If 2D LUT shows therm should be disable
             if (THERM_DISABLE[(c - 1) / 2][therm - 17])
             {
+                // Nullify thermistor by setting to pack average
                 bmsdata->chipData[c].thermistorValue[therm] = tempRepl;
             }
         }
