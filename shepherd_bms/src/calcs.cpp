@@ -178,9 +178,18 @@ void disableTherms(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata)
     {
         for(uint8_t therm = 17; therm < 28; therm++)
         {
-            if (THERM_DISABLE[(c - 1) / 2][therm - 17]) {
+            if (THERM_DISABLE[(c - 1) / 2][therm - 17]) 
+            {
                 bmsdata->chipData[c].thermistorValue[therm] = tempRepl;
             }
+            if(abs(bmsdata->chipData[c].thermistorValue[therm] - avgTemp) >= avgTemp*.5)
+            {
+                bmsdata->chipData[c].thermistorValue[therm] = avgTemp;
+            }
+
         }
     }
 }
+
+// take the avgTemp * .5 
+if(abs(bmsdata->chipData[c].thermistorValue[therm] - avgTemp) >= avgTemp*.5)
