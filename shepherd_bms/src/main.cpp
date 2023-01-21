@@ -6,10 +6,6 @@
 #include "calcs.h"
 #include "datastructs.h"
 
-int currTime = 0;
-int lastChargeMsg = 0;
-int lastStatMsg = 0;
-
 WDT_T4<WDT1> wdt;
 
 AccumulatorData_t *prevAccData = nullptr;
@@ -238,9 +234,10 @@ uint32_t faultCheck(AccumulatorData_t *accData)
 	return faultStatus;
 }
 
+
+
 void shepherdMain()
 {
-	currTime = millis();
 	//Implement some simple controls and calcs behind shepherd
 
 	//Create a dynamically allocated structure
@@ -266,69 +263,78 @@ void shepherdMain()
 	calcContDCL(accData);
 	calcContCCL(accData);
 
-	if (currTime > lastStatMsg + 500) 
+#ifdef DEBUG_STATS
+
 	{
-		lastStatMsg = currTime;
-		Serial.print("Current: ");
-		Serial.println(accData->packCurrent);
-		Serial.print("Min, Max, Avg Temps: ");
-		Serial.print(accData->minTemp.val);
-		Serial.print(",  ");
-		Serial.print(accData->maxTemp.val);
-		Serial.print(",  ");
-		Serial.println(accData->avgTemp);
-		Serial.print("Min, Max, Avg, Delta Voltages: ");
-		Serial.print(accData->minVoltage.val);
-		Serial.print(",  ");
-		Serial.print(accData->maxVoltage.val);
-		Serial.print(",  ");
-		Serial.print(accData->avgVoltage);
-		Serial.print(",  ");
-		Serial.println(accData->deltVoltage);
+		static Timer debug_statTimer;
+		static const uint16_t PRINT_STAT_WAIT = 500; //ms
 		
-		Serial.print("DCL: ");
-		Serial.println(accData->dischargeLimit);
-
-		Serial.print("CCL: ");
-		Serial.println(accData->chargeLimit);
-
-		Serial.print("Is Balancing?: ");
-		Serial.println(segment.isBalancing()); 
-
-		/*
-		Serial.println("Open Cell Voltage:");
-		for(uint8_t c = 0; c < NUM_CHIPS; c++)
+		if(debug_statTimer.isTimerExpired())
 		{
-			for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+			Serial.print("Current: ");
+			Serial.println(accData->packCurrent);
+			Serial.print("Min, Max, Avg Temps: ");
+			Serial.print(accData->minTemp.val);
+			Serial.print(",  ");
+			Serial.print(accData->maxTemp.val);
+			Serial.print(",  ");
+			Serial.println(accData->avgTemp);
+			Serial.print("Min, Max, Avg, Delta Voltages: ");
+			Serial.print(accData->minVoltage.val);
+			Serial.print(",  ");
+			Serial.print(accData->maxVoltage.val);
+			Serial.print(",  ");
+			Serial.print(accData->avgVoltage);
+			Serial.print(",  ");
+			Serial.println(accData->deltVoltage);
+			
+			Serial.print("DCL: ");
+			Serial.println(accData->dischargeLimit);
+
+			Serial.print("CCL: ");
+			Serial.println(accData->chargeLimit);
+
+			Serial.print("Is Balancing?: ");
+			Serial.println(segment.isBalancing()); 
+
+			Serial.println("Open Cell Voltage:");
+			for(uint8_t c = 0; c < NUM_CHIPS; c++)
 			{
-				Serial.print(accData->chipData[c].openCellVoltage[cell]);
-				Serial.print("\t");
+				for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+				{
+					Serial.print(accData->chipData[c].openCellVoltage[cell]);
+					Serial.print("\t");
+				}
+				Serial.println();
 			}
-			Serial.println();
+
+			Serial.println("Cell Temps:");
+			for(uint8_t c = 1; c < NUM_CHIPS; c+= 2)
+			{
+				for(uint8_t cell = 17; cell < 28; cell++)
+				{
+					Serial.print(accData->chipData[c].thermistorReading[cell]);
+					Serial.print("\t");
+				}
+				Serial.println();
+			}
+
+			Serial.println("Avg Cell Temps:");
+			for(uint8_t c = 1; c < NUM_CHIPS; c+= 2)
+			{
+				for(uint8_t cell = 17; cell < 28; cell++)
+				{
+					Serial.print(accData->chipData[c].thermistorValue[cell]);
+					Serial.print("\t");
+				}
+				Serial.println();
+			}
+
+			debug_statTimer.startTimer(PRINT_STAT_WAIT);
 		}
-
-		Serial.println("Cell Temps:");
-		for(uint8_t c = 1; c < NUM_CHIPS; c+= 2)
-		{
-			for(uint8_t cell = 17; cell < 28; cell++)
-			{
-				Serial.print(accData->chipData[c].thermistorReading[cell]);
-				Serial.print("\t");
-			}
-			Serial.println();
-		}
-
-		Serial.println("Avg Cell Temps:");
-		for(uint8_t c = 1; c < NUM_CHIPS; c+= 2)
-		{
-			for(uint8_t cell = 17; cell < 28; cell++)
-			{
-				Serial.print(accData->chipData[c].thermistorValue[cell]);
-				Serial.print("\t");
-			}
-			Serial.println();
-		} */
 	}
+
+#endif
 
 	// Check for faults
 	bmsFault |= faultCheck(accData);
@@ -360,43 +366,48 @@ void shepherdMain()
 		}
 	}
 
-	// CHARGE STATE
-	if (digitalRead(CHARGE_DETECT) == LOW && bmsFault == FAULTS_CLEAR) 
 	{
-		// Check if we should charge
-		if (chargingCheck(accData)) 
+		static Timer chargeMessageTimer;
+		static const uint16_t CHARGE_MESSAGE_WAIT = 250; //ms
+
+		// CHARGE STATE
+		if (digitalRead(CHARGE_DETECT) == LOW && bmsFault == FAULTS_CLEAR) 
 		{
-			digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
-			compute.enableCharging(true);
-			compute.sendChargingStatus(true);
+			// Check if we should charge
+			if (chargingCheck(accData)) 
+			{
+				digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
+				compute.enableCharging(true);
+				compute.sendChargingStatus(true);
+			} 
+			else 
+			{
+				digitalWrite(CHARGE_SAFETY_RELAY, LOW);
+				compute.enableCharging(false);
+				compute.sendChargingStatus(false);
+			}
+
+			// Check if we should balance
+			if (balancingCheck(accData)) 
+			{
+				balanceCells(accData);
+			} 
+			else 
+			{
+				segment.enableBalancing(false);
+			}
+			
+			// Send CAN message, but not too often
+			if (chargeMessageTimer.isTimerExpired()) 
+			{
+				compute.sendChargingMessage(MAX_CHARGE_VOLT * NUM_CELLS_PER_CHIP * NUM_CHIPS, accData->chargeLimit);
+				chargeMessageTimer.startTimer(CHARGE_MESSAGE_WAIT);
+			}
 		} 
-		else 
+		else if (bmsFault == FAULTS_CLEAR) 
 		{
 			digitalWrite(CHARGE_SAFETY_RELAY, LOW);
-			compute.enableCharging(false);
-			compute.sendChargingStatus(false);
 		}
-
-		// Check if we should balance
-		if (balancingCheck(accData)) 
-		{
-			balanceCells(accData);
-		} 
-		else 
-		{
-			segment.enableBalancing(false);
-		}
-		
-		// Send CAN message, but not too often
-		if (currTime > lastChargeMsg + 250) 
-		{
-			lastChargeMsg = currTime;
-			compute.sendChargingMessage(MAX_CHARGE_VOLT * NUM_CELLS_PER_CHIP * NUM_CHIPS, accData->chargeLimit);
-		}
-	} 
-	else if (bmsFault == FAULTS_CLEAR) 
-	{
-		digitalWrite(CHARGE_SAFETY_RELAY, LOW);
 	}
 
 
