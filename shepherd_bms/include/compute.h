@@ -30,31 +30,6 @@ class ComputeInterface
          CHARGE_DISABLED
       };
 
-      union 
-      {
-         uint8_t msg[4] = {0,0,0,0};
-
-         struct
-         {
-               uint16_t maxDischarge;
-               uint16_t maxCharge;
-
-         }config;
-      }mcMsg;
-
-      const float current_lowChannelMax = 75.0; //Amps
-      const float current_lowChannelMin = -75.0; //Amps
-      const int16_t current_highChannelMax = 500; //Amps
-      const int16_t current_highChannelMin = -500; //Amps
-      const float current_supplyVoltage = 5.038;
-      const float current_ADCResolution = 5.0 / MAX_ADC_RESOLUTION;
-
-      const float current_lowChannelOffset = 2.530; // Calibrated with current = 0A
-      const float current_highChannelOffset = 2.57; // Calibrated with current = 0A
-
-      const float highChannelGain = 1 / 0.0040;
-      const float lowChannelGain = 1 / 0.0267;
-
    public:
       ComputeInterface();
 

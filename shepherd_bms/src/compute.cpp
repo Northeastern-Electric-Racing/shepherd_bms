@@ -86,6 +86,20 @@ void ComputeInterface::setFault(FaultStatus_t faultState)
 
 int16_t ComputeInterface::getPackCurrent()
 {
+    static const float current_lowChannelMax = 75.0; //Amps
+    static const float current_lowChannelMin = -75.0; //Amps
+    static const int16_t current_highChannelMax = 500; //Amps
+    static const int16_t current_highChannelMin = -500; //Amps
+    static const float current_supplyVoltage = 5.038;
+    static const float current_ADCResolution = 5.0 / MAX_ADC_RESOLUTION;
+
+    static const float current_lowChannelOffset = 2.530; // Calibrated with current = 0A
+    static const float current_highChannelOffset = 2.57; // Calibrated with current = 0A
+
+    static const float highChannelGain = 1 / 0.0040;
+    static const float lowChannelGain = 1 / 0.0267;
+
+
     uint16_t highCurrent = (5 / current_supplyVoltage) * (analogRead(CURRENT_SENSOR_PIN_H) * current_ADCResolution - current_highChannelOffset) * highChannelGain; // Channel has a large range with low resolution
     float lowCurrent = (5 / current_supplyVoltage) * (analogRead(CURRENT_SENSOR_PIN_L) * current_ADCResolution - current_lowChannelOffset) * lowChannelGain; // Channel has a small range with high resolution
 
@@ -98,7 +112,19 @@ int16_t ComputeInterface::getPackCurrent()
     return highCurrent;
 }
 
-void ComputeInterface::sendMCMsg(uint16_t userMaxCharge, uint16_t userMaxDischarge){
+void ComputeInterface::sendMCMsg(uint16_t userMaxCharge, uint16_t userMaxDischarge)
+{
+    static union 
+    {
+        uint8_t msg[4] = {0,0,0,0};
+
+        struct
+        {
+            uint16_t maxDischarge;
+            uint16_t maxCharge;
+
+        }config;
+    }mcMsg;
 
     mcMsg.config.maxCharge = userMaxCharge;
     mcMsg.config.maxDischarge = userMaxDischarge;
