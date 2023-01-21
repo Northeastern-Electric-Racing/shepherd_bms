@@ -12,10 +12,6 @@ int lastStatMsg = 0;
 
 WDT_T4<WDT1> wdt;
 
-Timer chargeTimeout;
-Timer boostTimer;
-Timer boostRechargeTimer;
-
 AccumulatorData_t *prevAccData = nullptr;
 
 uint32_t bmsFault = FAULTS_CLEAR;
@@ -26,14 +22,6 @@ uint16_t overCurrCount = 0;
 uint16_t chargeOverVolt = 0;
 uint16_t overChgCurrCount = 0;
 uint16_t lowCellCount = 0;
-
-// States for Boosting State Machine
-enum
-{
-	BOOST_STANDBY,
-	BOOSTING,
-	BOOST_RECHARGE
-}BoostState;
 
 /**
  * @brief Algorithm behind determining which cells we want to balance
@@ -97,16 +85,21 @@ bool balancingCheck(AccumulatorData_t *bmsdata)
  */
 bool chargingCheck(AccumulatorData_t *bmsdata)
 {
+	static Timer chargeTimeout;
+
 	if(!chargeTimeout.isTimerExpired()) return false;
 	if(!compute.isCharging()) return false;
 	if(bmsdata->maxVoltage.val >= (MAX_CHARGE_VOLT * 10000))
 	{
 		chargeOverVolt++;
-		if (chargeOverVolt > 100) {
+		if (chargeOverVolt > 100) 
+		{
 			chargeTimeout.startTimer(CHARGE_TIMEOUT);
 			return false;
 		}
-	} else {
+	} 
+	else 
+	{
 		chargeOverVolt = 0;
 	}
 
@@ -115,6 +108,17 @@ bool chargingCheck(AccumulatorData_t *bmsdata)
 
 void broadcastCurrentLimit(AccumulatorData_t *bmsdata)
 {
+	// States for Boosting State Machine
+	static enum
+	{
+		BOOST_STANDBY,
+		BOOSTING,
+		BOOST_RECHARGE
+	}BoostState;
+
+	static Timer boostTimer;
+	static Timer boostRechargeTimer;
+
 	//Transitioning out of boost
 	if(boostTimer.isTimerExpired() && BoostState == BOOSTING)
 	{
@@ -159,42 +163,57 @@ uint32_t faultCheck(AccumulatorData_t *accData)
 	uint32_t faultStatus = 0;
 
 	// Over current fault for discharge
-	if (accData->packCurrent > accData->dischargeLimit) {
+	if (accData->packCurrent > accData->dischargeLimit) 
+	{
 		overCurrCount++;
-		if (overCurrCount > 10) { // 0.10 seconds @ 100Hz rate
+		if (overCurrCount > 10) 
+		{ // 0.10 seconds @ 100Hz rate
 			faultStatus |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
 		}
-	} else {
+	} else 
+	{
 		overCurrCount = 0;
 	}
 
 	// Over current fault for charge
-	if (accData->packCurrent < 0 && abs(accData->packCurrent) > accData->chargeLimit) {
+	if (accData->packCurrent < 0 && abs(accData->packCurrent) > accData->chargeLimit) 
+	{
 		overChgCurrCount++;
-		if (overChgCurrCount > 100) { // 1 seconds @ 100Hz rate
+		if (overChgCurrCount > 100) 
+		{ // 1 seconds @ 100Hz rate
 			faultStatus |= CHARGE_LIMIT_ENFORCEMENT_FAULT;
 		}
-	} else {
+	} 
+	else 
+	{
 		overChgCurrCount = 0;
 	} 
 
 	// Low cell voltage fault
-	if (accData->minVoltage.val < MIN_VOLT * 10000) {
+	if (accData->minVoltage.val < MIN_VOLT * 10000) 
+	{
+
 		underVoltCount++;
-		if (underVoltCount > 900) { // 9 seconds @ 100Hz rate
+		if (underVoltCount > 900)
+		{ // 9 seconds @ 100Hz rate
 			faultStatus |= CELL_VOLTAGE_TOO_LOW;
 		}
-	} else {
+	} 
+	else 
+	{
 		underVoltCount = 0;
 	}
 
 	// High cell voltage fault
-	if (((accData->maxVoltage.val > MAX_VOLT * 10000) && digitalRead(CHARGE_DETECT) == HIGH) || (accData->maxVoltage.val > MAX_CHARGE_VOLT * 10000)) { // Needs to be reimplemented with a flag for every cell in case multiple go over
+	if (((accData->maxVoltage.val > MAX_VOLT * 10000) && digitalRead(CHARGE_DETECT) == HIGH) || (accData->maxVoltage.val > MAX_CHARGE_VOLT * 10000)) 
+	{ // Needs to be reimplemented with a flag for every cell in case multiple go over
 		overVoltCount++;
 		if (overVoltCount > 900) { // 9 seconds @ 100Hz rate
 			faultStatus |= CELL_VOLTAGE_TOO_HIGH;
 		}
-	} else {
+	} 
+	else 
+	{
 		overVoltCount = 0;
 	}
 
@@ -204,12 +223,15 @@ uint32_t faultCheck(AccumulatorData_t *accData)
 	}
 
 	// Extremely low cell voltage fault
-	if (accData->minVoltage.val < 900) { // 90mV
+	if (accData->minVoltage.val < 900) 
+	{ // 90mV
 		lowCellCount++;
 		if (lowCellCount > 100) { // 1 seconds @ 100Hz rate
 			faultStatus |= LOW_CELL_VOLTAGE;
 		}
-	} else {
+	} 
+	else 
+	{
 		lowCellCount = 0;
 	}
 
@@ -342,25 +364,32 @@ void shepherdMain()
 	if (digitalRead(CHARGE_DETECT) == LOW && bmsFault == FAULTS_CLEAR) 
 	{
 		// Check if we should charge
-		if (chargingCheck(accData)) {
+		if (chargingCheck(accData)) 
+		{
 			digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
 			compute.enableCharging(true);
 			compute.sendChargingStatus(true);
-		} else {
+		} 
+		else 
+		{
 			digitalWrite(CHARGE_SAFETY_RELAY, LOW);
 			compute.enableCharging(false);
 			compute.sendChargingStatus(false);
 		}
 
 		// Check if we should balance
-		if (balancingCheck(accData)) {
+		if (balancingCheck(accData)) 
+		{
 			balanceCells(accData);
-		} else {
+		} 
+		else 
+		{
 			segment.enableBalancing(false);
 		}
 		
 		// Send CAN message, but not too often
-		if (currTime > lastChargeMsg + 250) {
+		if (currTime > lastChargeMsg + 250) 
+		{
 			lastChargeMsg = currTime;
 			compute.sendChargingMessage(MAX_CHARGE_VOLT * NUM_CELLS_PER_CHIP * NUM_CHIPS, accData->chargeLimit);
 		}
