@@ -163,10 +163,11 @@ void calcContCCL(AccumulatorData_t *bmsdata)
     }
 }
 
-void calcOpenCellVoltage(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata) {
-    
-    // if there is no previous data point, set an inital open cell voltage
-    if (prevbmsdata == NULL) {
+void calcOpenCellVoltage(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata) 
+{
+    // if there is no previous data point, set inital open cell voltage to current reading
+    if (prevbmsdata == NULL) 
+    {
         for (uint8_t chip = 0; chip < NUM_CHIPS; chip++) 
         {
             for (uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++) 
@@ -174,24 +175,26 @@ void calcOpenCellVoltage(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsd
                 bmsdata->chipData[chip].openCellVoltage[cell] = bmsdata->chipData[chip].voltageReading[cell];
             }
         }
-    } 
-    else if (bmsdata->packCurrent < 1 && bmsdata->packCurrent > -1) 
+    }
+    // If we are within the current threshold for open voltage measurments
+    else if (bmsdata->packCurrent < OCV_CURR_THRESH && bmsdata->packCurrent > -OCV_CURR_THRESH) 
     {
         for (uint8_t chip = 0; chip < NUM_CHIPS; chip++) 
         {
             for (uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++) 
             {
+                // Sets open cell voltage to a moving average of OCV_AVG values
                 bmsdata->chipData[chip].openCellVoltage[cell] = (uint32_t(bmsdata->chipData[chip].voltageReading[cell]) + (uint32_t(prevbmsdata->chipData[chip].openCellVoltage[cell])  * (OCV_AVG - 1))) / OCV_AVG;
             }
         }
-        return;
     } 
-    else 
+    else
     {
         for (uint8_t chip = 0; chip < NUM_CHIPS; chip++) 
         {
             for (uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++) 
             {
+                // Set OCV to the previous/existing OCV
                 bmsdata->chipData[chip].openCellVoltage[cell] = prevbmsdata->chipData[chip].openCellVoltage[cell];
             }
         }
@@ -200,24 +203,30 @@ void calcOpenCellVoltage(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsd
 
 uint8_t calcFanPWM(AccumulatorData_t *bmsdata)
 {
-    uint8_t minResIndex = (bmsdata->maxTemp.val - MIN_TEMP) / 5;  //resistance LUT increments by 5C for each index
+    // Resistance LUT increments by 5C for each index, plus we account for negative minimum
+    uint8_t minResIndex = (bmsdata->maxTemp.val - MIN_TEMP) / 5;
+    // Ints are roounded down, so this would be the value if rounded up
     uint8_t maxResIndex = (bmsdata->maxTemp.val - MIN_TEMP) / 5 + 1;
+    // Determine how far into the 5C interval the temp is
     uint8_t partOfIndex = (bmsdata->maxTemp.val - MIN_TEMP) % 5;
 
+    // Uses fan LUT and finds low and upper end. Then takes average, weighted to how far into the interval the exact temp is
     return ((FAN_CURVE[maxResIndex] * partOfIndex) + (FAN_CURVE[minResIndex] * (5 - partOfIndex))) / (2 * 5);
 }
 
 void disableTherms(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata)
 {
-    int8_t tempRepl = 25;
-    if (prevbmsdata->avgTemp != 0) tempRepl = prevbmsdata->avgTemp;
+    int8_t tempRepl = 25; // Iniitalize to room temp (necessary to stabilize when the BMS first boots up/has null values)
+    if (prevbmsdata->avgTemp != 0) tempRepl = prevbmsdata->avgTemp; // Set to actual average temp of the pack
 
     for(uint8_t c = 1; c < NUM_CHIPS; c+= 2)
     {
         for(uint8_t therm = 17; therm < 28; therm++)
         {
+            // If 2D LUT shows therm should be disable
             if (THERM_DISABLE[(c - 1) / 2][therm - 17])
             {
+                // Nullify thermistor by setting to pack average
                 bmsdata->chipData[c].thermistorValue[therm] = tempRepl;
             }
         }
