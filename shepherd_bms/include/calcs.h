@@ -60,7 +60,7 @@ const uint8_t TEMP_TO_CCL[16] =
  * 
  * @note Assuming linear curve
  */
-const uint8_t STATE_OF_CHARGE_LUT[13] =
+const uint8_t STATE_OF_CHARGE_CURVE[13] =
 {
     0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 100
 };

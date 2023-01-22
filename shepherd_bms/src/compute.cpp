@@ -15,7 +15,7 @@ void ComputeInterface::enableCharging(bool enableCharging){
     isChargingEnabled = enableCharging;
 }
 
-FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, uint16_t currentToSet)
+FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, uint16_t currentToSet, uint8_t state_of_charge)
 {
     if (!isChargingEnabled)
     {
@@ -34,8 +34,8 @@ FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, uint1
     }
     chargerMsg.cfg.chargerCurrent = currentToSet * 10 + 3200;
     bool is_charging = isCharging();
-    // Still need to figure out state of charge but I didn't wanna leave it blank
-    chargerMsg.cfg.chargerLEDs = computeChargerLEDState(state_of_charge, is_charging);
+    
+    chargerMsg.cfg.chargerLEDs = calcChargerLEDState(state_of_charge, is_charging);
     chargerMsg.cfg.reserved2_3 = 0xFFFF;
 
     uint8_t msg[8] = {chargerMsg.cfg.chargerControl, static_cast<uint8_t>(chargerMsg.cfg.chargerVoltage), chargerMsg.cfg.chargerVoltage >> 8, static_cast<uint8_t>(chargerMsg.cfg.chargerCurrent), chargerMsg.cfg.chargerCurrent >> 8, chargerMsg.cfg.chargerLEDs, 0xFF, 0xFF};
@@ -165,36 +165,35 @@ void ComputeInterface::MCCallback(const CAN_message_t &msg)
     return;
 }
 
-uint8_t ComputeInterface::computeChargerLEDState(uint8_t state_of_charge, bool current)
+uint8_t ComputeInterface::calcChargerLEDState(uint8_t state_of_charge, bool current)
 {
-  uint8_t LED_state;
   if((state_of_charge < 80) && (current))
   {
-    LED_state = 0x00;
+    return 0x00;
   }
   else if((state_of_charge < 80) && (!current))
   {
-    LED_state = 0x01;
+    return 0x01;
   }
   else if((state_of_charge >= 80 && state_of_charge < 95) && (current))
   {
-    LED_state = 0x02;
+    return 0x02;
   }
   else if((state_of_charge >= 80 && state_of_charge < 95) && (!current))
   {
-    LED_state = 0x03;
+    return 0x03;
   }
   else if((state_of_charge >= 95) && (current))
   {
-    LED_state = 0x04;
+    return 0x04;
   }
   else if((state_of_charge >= 95) && (!current))
   {
-    LED_state = 0x05;
+    return 0x05;
   }
   else
   {
-    LED_state = 0x06;
+    return 0x06;
   }
-  return(LED_state);
+  
 }

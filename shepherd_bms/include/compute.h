@@ -171,7 +171,7 @@ class ComputeInterface
          *
          * @return Returns a fault if we are not able to communicate with charger
          */
-        FaultStatus_t sendChargingMessage(uint16_t voltageToSet, uint16_t currentToSet);
+        FaultStatus_t sendChargingMessage(uint16_t voltageToSet, uint16_t currentToSet, uint8_t state_of_charge);
 
         /**
          * @brief Returns if we are detecting a charging voltage
@@ -301,7 +301,7 @@ class ComputeInterface
          * @return uint8_t Value to be used for setting LED bits for charger message
          * 
          */
-        uint8_t computeChargerLEDState(uint8_t state_of_charge, bool current);
+        uint8_t calcChargerLEDState(uint8_t state_of_charge, bool current);
 };
 
 #endif
