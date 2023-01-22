@@ -114,8 +114,6 @@ void SegmentInterface::configureBalancing(bool dischargeConfig[NUM_CHIPS][NUM_CE
 
 bool SegmentInterface::isBalancing(uint8_t chipNum, uint8_t cellNum)
 {
-    pullChipConfigurations();
-    
     //If the cell is one of the first 8, check the 4th register
     if(cellNum < 8)
     {
@@ -132,8 +130,6 @@ bool SegmentInterface::isBalancing(uint8_t chipNum, uint8_t cellNum)
 
 bool SegmentInterface::isBalancing()
 {
-    pullChipConfigurations();
-
     for(int c = 0; c < NUM_CHIPS; c++)
     {
         //Reading from the 4th config register
@@ -224,6 +220,7 @@ FaultStatus_t SegmentInterface::pullVoltages()
 
 FaultStatus_t SegmentInterface::pullThermistors()
 {
+    // If polled too soon, just copy existing values from memory
 	if (!thermTimer.isTimerExpired())
 	{
 		for(uint8_t i=0; i<NUM_CHIPS; i++)
@@ -235,12 +232,12 @@ FaultStatus_t SegmentInterface::pullThermistors()
 
     uint16_t rawTempVoltages[NUM_CHIPS][6];
 
+    // Rotate through all thermistor pairs (we can poll two at once)
     for (int therm = 1; therm <= 16; therm++)
 	{
+        // Sets multiplexors to select thermistors
         SelectTherm(therm);
-        delay(5);
         SelectTherm(therm + 16);
-        delay(5);
 		
 		pushChipConfigurations();
         LTC6804_adax(); // Run ADC for AUX (GPIOs and refs)
@@ -248,33 +245,49 @@ FaultStatus_t SegmentInterface::pullThermistors()
 
         for (int c = 0; c < NUM_CHIPS; c++)
 		{
-            // TODO: Add noise rejection here. Basically, if voltage is above or below the min and max values of the array, keep previous value and count a fault.
-            // Or better yet maybe we do a rolling average and then just noise reject without having to keep last
-
+            // Get current temperature LUT. Voltage is adjusted to account for 5V reg fluctuations (index 2 is a reading of the ADC 5V ref)
             segmentData[c].thermistorReading[therm - 1] = steinhartEst(rawTempVoltages[c][0] * (float(rawTempVoltages[c][2]) / 50000) + VOLT_TEMP_CALIB_OFFSET);
             segmentData[c].thermistorReading[therm + 15] = steinhartEst(rawTempVoltages[c][1] * (float(rawTempVoltages[c][2]) / 50000) + VOLT_TEMP_CALIB_OFFSET);
 
-            if (segmentData[c].thermistorReading[therm - 1] > -5 && segmentData[c].thermistorReading[therm - 1] < 60) {
-                segmentData[c].thermistorValue[therm - 1] = segmentData[c].thermistorReading[therm - 1];
-            }
-
-            if (segmentData[c].thermistorReading[therm + 15] > -5 && segmentData[c].thermistorReading[therm + 15] < 60) {
-                segmentData[c].thermistorValue[therm + 15] = segmentData[c].thermistorReading[therm + 15];
-            }
-
-            /* WIP
-            if (thermSettleTime < THERM_AVG * 10) {
+            // Directly update for a set time from start up due to therm voltages needing to settle
+            if (thermSettleTime < THERM_AVG * 10) 
+            {
                 segmentData[c].thermistorValue[therm - 1] = segmentData[c].thermistorReading[therm - 1];
                 segmentData[c].thermistorValue[therm + 15] = segmentData[c].thermistorReading[therm + 15];
                 thermSettleTime++;
-            } else {
-                segmentData[c].thermistorValue[therm - 1] = (int64_t(segmentData[c].thermistorValue[therm - 1] * (THERM_AVG - 1)) + int64_t(segmentData[c].thermistorReading[therm - 1])) / THERM_AVG;
-                segmentData[c].thermistorValue[therm + 15] = (int64_t(segmentData[c].thermistorValue[therm + 15] * (THERM_AVG - 1)) + int64_t(segmentData[c].thermistorReading[therm + 15])) / THERM_AVG;
-            }*/
+            } else 
+            {
+                // We need to investigate this. Very sloppy
+                // Discard if reading is 33C
+                if (segmentData[c].thermistorReading[therm - 1] != 33) 
+                {
+                    // If measured value is larger than current "averaged" value, increment value
+                    if (segmentData[c].thermistorReading[therm - 1] > segmentData[c].thermistorValue[therm - 1]) 
+                    {
+                    segmentData[c].thermistorValue[therm - 1]++;
+                    // If measured value is smaller than current "averaged" value, decrement value
+                    } else if (segmentData[c].thermistorReading[therm - 1] < segmentData[c].thermistorValue[therm - 1]) 
+                    {
+                        segmentData[c].thermistorValue[therm - 1]--;
+                    }
+                }
+                
+                // See comments above. Identical but for the upper 16 therms
+                if (segmentData[c].thermistorReading[therm + 15] != 33)
+                {
+                    if (segmentData[c].thermistorReading[therm + 15] > segmentData[c].thermistorValue[therm + 15])
+                    {
+                    segmentData[c].thermistorValue[therm + 15]++;
+                    } else if (segmentData[c].thermistorReading[therm + 15] < segmentData[c].thermistorValue[therm + 15])
+                    {
+                        segmentData[c].thermistorValue[therm + 15]--;
+                    }
+                }
+            }
         }
     }
-	thermTimer.startTimer(THERM_WAIT_TIME);
-	return NOT_FAULTED;
+	thermTimer.startTimer(THERM_WAIT_TIME); // Set timeout for reading therms
+	return NOT_FAULTED; // Read successfully
 }
 
 void SegmentInterface::SelectTherm(uint8_t therm) 
