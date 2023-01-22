@@ -97,6 +97,34 @@ class Analyzer
             {26,27}
         };
 
+        /**
+         * @brief Mapping desired fan speed PWM to the cell temperature
+         * 
+         * @note Units are in PWM out of 255 and indicies are in (degrees C)/5, stops at 65C
+         * @note Limit should be *interpolated* from these values (i.e. if we are
+         *      at 27C, we should take the limit that is halfway between 25C and 30C)
+         * 
+         */
+        const uint8_t FAN_CURVE[16] =
+        {
+            0, 0, 0, 0, 0, 0, 0, 0, 32, 64,
+            128, 255, 255, 255, 255, 255
+        };
+
+        /**
+         * @brief Selecting thermistors to ignore
+         * 
+         * @note True / 1 will disable the thermistor
+         * 
+         */
+        const uint8_t THERM_DISABLE[4][11] =
+        {
+            {0,0,0,0,1,0,0,0,0,0,0},
+            {1,0,0,0,0,0,0,0,0,0,0},
+            {1,1,0,0,0,0,0,0,0,0,0},
+            {1,1,0,0,0,0,0,0,0,0,0},
+        };
+
         void enQueue(AccumulatorData_t data);
 
         void calcPackVoltageStats();
@@ -114,6 +142,10 @@ class Analyzer
         void calcContCCL();
 
         void printData();
+
+        void calcOpenCellVoltage();
+
+        void disableTherms();
     
     public:
         Analyzer();
@@ -135,6 +167,14 @@ class Analyzer
          * @param newSize 
          */
         void resize(uint16_t newSize);
+
+        /**
+         * @brief 
+         * 
+         * @param bmsdata 
+         * @return uint8_t 
+         */
+        uint8_t calcFanPWM();
 
         /**
          * @brief Pointer to the address of the most recent data point

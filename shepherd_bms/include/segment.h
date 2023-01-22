@@ -6,16 +6,10 @@
 #include "datastructs.h"
 #include "bmsConfig.h"
 
-#define MIN_VOLT            2.9
-#define MAX_VOLT            4.2
-#define MAX_DELTA_V         0.02
-#define BAL_MIN_V           4.00
-#define MAX_CELL_TEMP       55
-
 #define THERM_WAIT_TIME     500 //ms
 #define VOLTAGE_WAIT_TIME   250 //ms
 
-#define THERM_AVG           5 // Number of values to average
+#define THERM_AVG           15 // Number of values to average
 
 /**
  * @brief This class serves as the interface for all of the segment boards
@@ -32,14 +26,17 @@ class SegmentInterface
 
         uint16_t thermSettleTime = 0;
 
-        const uint32_t VOLT_TEMP_CONV[57] = 
+        const uint32_t VOLT_TEMP_CONV[91] = 
         {
+            44260, 43970, 43670, 43450, 43030, 42690, 42340, 41980, 41620, 41240,
             40890, 40460, 40040, 39580, 39130, 38660, 38210, 37710, 37210, 36190,
             35670, 35160, 34620, 34080, 33550, 32990, 32390, 31880, 31270, 30690, 
             30160, 29590, 28990, 28450, 27880, 27270, 26740, 26080, 25610, 25000,
             24440, 23880, 23330, 22780, 22240, 21700, 21180, 20660, 20150, 19640, 
             19140, 18650, 18170, 17700, 17230, 16780, 16330, 15890, 15470, 15030, 
-            14640, 14230, 13850, 13450, 13070, 12710, 0
+            14640, 14230, 13850, 13450, 13070, 12710, 11490, 11170, 10850, 10550,
+            10250, 9960, 9670, 9400, 9130, 8870, 8620, 8370, 8130, 7900, 
+            0
         };
 
         const int32_t VOLT_TEMP_CALIB_OFFSET = 0;

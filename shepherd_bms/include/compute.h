@@ -5,138 +5,178 @@
 #include "nerduino.h"
 #include "canMsgHandler.h"
 
-#define CURRENT_SENSOR_PIN_L    A1
-#define CURRENT_SENSOR_PIN_H    A0
-#define FAULT_PIN               RELAY_PIN
-#define CHARGE_VOLTAGE_PIN 3
-#define CHARGE_SAFETY_RELAY 6
-#define CHARGE_DETECT 7
-#define CHARGER_BAUD 250000U
-#define MC_BAUD 1000000U
+#define CURRENT_SENSOR_PIN_L  A1
+#define CURRENT_SENSOR_PIN_H  A0
+#define FAULT_PIN             RELAY_PIN
+#define CHARGE_VOLTAGE_PIN    3
+#define CHARGE_SAFETY_RELAY   6
+#define CHARGE_DETECT         7
+#define CHARGER_BAUD          250000U
+#define MC_BAUD               1000000U
 
-#define MAX_ADC_RESOLUTION      1023 // 13 bit ADC
+#define CHARGER_CAN_ID        0x18E54024
+
+#define MAX_ADC_RESOLUTION    1023 // 13 bit ADC
 
 class ComputeInterface
 {
-    private:
-        uint8_t fanSpeed;
-        bool isChargingEnabled;
+   private:
+      uint8_t fanSpeed;
+      bool isChargingEnabled;
 
-        enum
-        {
-            CHARGE_ENABLED,
-            CHARGE_DISABLED
-        };
+      enum
+      {
+         CHARGE_ENABLED,
+         CHARGE_DISABLED
+      };
 
-        union 
-        {
-            uint8_t msg[4] = {0,0,0,0};
+   public:
+      ComputeInterface();
 
-            struct
-            {
-                uint16_t maxDischarge;
-                uint16_t maxCharge;
+      ~ComputeInterface();
 
-            }config;
-        }mcMsg;
+      /**
+      * @brief sets safeguard bool to check whether charging is enabled or disabled
+      *
+      * @param isEnabled
+      */
+      void enableCharging(bool isEnabled);
 
-        const float current_lowChannelMax = 75.0; //Amps
-        const float current_lowChannelMin = -75.0; //Amps
-        const int16_t current_highChannelMax = 500; //Amps
-        const int16_t current_highChannelMin = -500; //Amps
-        const float current_supplyVoltage = 5.038;
-        const float current_ADCResolution = 5.0 / MAX_ADC_RESOLUTION;
+      /**
+      * @brief sends charger message
+      * 
+      * @param voltageToSet
+      * @param currentToSet
+      *
+      * @return Returns a fault if we are not able to communicate with charger
+      */
+      FaultStatus_t sendChargingMessage(uint16_t voltageToSet, uint16_t currentToSet);
 
-        const float current_lowChannelOffset = 2.58; // Calibrated with current = 0A
-        const float current_highChannelOffset = 2.57; // Calibrated with current = 0A
+      /**
+      * @brief Returns if we are detecting a charging voltage
+      *
+      * @return true
+      * @return false
+      */
+      bool isCharging();
 
-        const float highChannelGain = 1 / 0.0040;
-        const float lowChannelGain = 1 / 0.0267;
+      /**
+      * @brief Handle any messages received from the charger
+      * 
+      * @param msg 
+      */
+      static void chargerCallback(const CAN_message_t &msg);
 
-        union 
-        {
-           uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0xFF, 0xFF};
+      static void MCCallback(const CAN_message_t &msg);
 
-           struct
-           {
-                bool chargerControl         :8;
-                uint16_t chargerVoltage     :16;    //Note the charger voltage sent over should be 10*desired voltage
-                uint16_t chargerCurrent     :16;    //Note the charge current sent over should be 10*desired current + 3200
-                uint8_t chargerLEDs         :8;
-                uint8_t reserved1           :8;
-                uint8_t reserved2           :8;
-           } cfg;
-           
-        } chargerMsg;
+      /**
+      * @brief Sets the desired fan speed
+      *
+      * @param newFanSpeed
+      */
+      void setFanSpeed(uint8_t newFanSpeed);
 
-    public:
-        ComputeInterface();
+      /**
+      * @brief Returns the pack current sensor reading
+      *
+      * @return int16_t
+      */
+      int16_t getPackCurrent();
 
-        ~ComputeInterface();
+      /**
+      * @brief sends max charge/discharge current to Motor Controller
+      *
+      * @param maxCharge
+      * @param maxDischarge
+      */
+      void sendMCMsg(uint16_t maxCharge, uint16_t maxDischarge);
 
-        /**
-         * @brief sets safeguard bool to check whether charging is enabled or disabled
-         *
-         * @param isEnabled
-         */
-        void enableCharging(bool isEnabled);
+      /**
+      * @brief updates fault relay
+      *
+      * @param faultState
+      */
+      void setFault(FaultStatus_t faultState);
 
-        /**
-         * @brief sends charger message
-         * 
-         * @param voltageToSet
-         * @param currentToSet
-         *
-         * @return Returns a fault if we are not able to communicate with charger
-         */
-        FaultStatus_t sendChargingMessage(uint8_t voltageToSet, uint8_t currentToSet);
+      /**
+      * @brief sends acc status message
+      * 
+      * @param voltage
+      * @param current
+      * @param AH
+      * @param SoC
+      * @param health
+      *
+      * @return Returns a fault if we are not able to send
+      */
+      void sendAccStatusMessage(uint16_t voltage, int16_t current, uint16_t AH, uint8_t SoC, uint8_t health);
 
-        /**
-         * @brief Returns if we are detecting a charging voltage
-         *
-         * @return true
-         * @return false
-         */
-        bool isCharging();
+      /**
+      * @brief sends BMS status message 
+      * 
+      * @param failsafe
+      * @param dtc1
+      * @param dtc2
+      * @param currentLimit
+      * @param tempAvg
+      * @param tempInternal
+      * 
+      * @return Returns a fault if we are not able to send
+      */
+      void sendBMSStatusMessage(uint8_t failsafe, uint8_t dtc1, uint16_t dtc2, uint16_t currentLimit, int8_t tempAvg, int8_t tempInternal);
 
-        /**
-         * @brief Handle any messages received from the charger
-         * 
-         * @param msg 
-         */
-        static void chargerCallback(const CAN_message_t &msg);
+      /**
+      * @brief sends shutdown control message
+      * 
+      * @param mpeState
+      *
+      * @return Returns a fault if we are not able to send
+      */
+      void sendShutdownControlMessage(uint8_t mpeState);
 
-        static void MCCallback(const CAN_message_t &msg);
+      /**
+      * @brief sends cell data message
+      * 
+      * @param hv
+      * @param hvID
+      * @param lv
+      * @param lvID
+      * @param voltAvg
+      *
+      * @return Returns a fault if we are not able to send
+      */
+      void sendCellDataMessage(uint16_t hv, uint8_t hvID, uint16_t lv, uint8_t lvID, uint16_t voltAvg);
 
-        /**
-         * @brief Sets the desired fan speed
-         *
-         * @param newFanSpeed
-         */
-        void setFanSpeed(uint8_t newFanSpeed);
+      /**
+      * @brief sends cell voltage message
+      * 
+      * @param cellID
+      * @param instantVoltage
+      * @param internalResistance
+      * @param shunted
+      * @param openVoltage
+      *
+      * @return Returns a fault if we are not able to send
+      */
+      void sendCellVoltageMessage(uint8_t cellID, uint16_t instantVoltage, uint16_t internalResistance, uint8_t shunted, uint16_t openVoltage);
 
-        /**
-         * @brief Returns the pack current sensor reading
-         *
-         * @return int16_t
-         */
-        int16_t getPackCurrent();
+      /**
+      * @brief sends "is charging" message
+      * 
+      * @param chargingStatus
+      *
+      * @return Returns a fault if we are not able to send
+      */
+      void sendChargingStatus(bool chargingStatus);
 
-        /**
-         * @brief sends max charge/discharge current to Motor Controller
-         *
-         * @param maxCharge
-         * @param maxDischarge
-         */
-        void sendMCMsg(uint16_t maxCharge, uint16_t maxDischarge);
-
-        /**
-         * @brief updates fault relay
-         *
-         * @param faultState
-         */
-        void setFault(FaultStatus_t faultState);
-
+      /**
+       * @brief sends out the calculated values of currents
+       * 
+       * @param discharge 
+       * @param charge 
+       * @param current 
+       */
+      void sendCurrentsStatus(uint16_t discharge, uint16_t charge, uint16_t current);
 };
 
 extern ComputeInterface compute;
