@@ -271,6 +271,29 @@ void ComputeInterface::sendCurrentsStatus(uint16_t discharge, uint16_t charge, u
     sendMessageCAN1(0x06, 8, currentsStatusMsg.msg);
 }
 
+void ComputeInterface::sendFaultStatus(BMSFault_t fault_status)
+{
+    static union
+    {
+        uint8_t msg[4] = {0, 0, 0, 0};
+
+        struct 
+        {
+            uint8_t faults_byte_3;
+            uint8_t faults_byte_2;
+            uint8_t faults_byte_1;
+            uint8_t faults_byte_0;
+        } cfg;
+    } fault_status_msg;
+
+    fault_status_msg.cfg.faults_byte_0 = fault_status & 0xFF;
+    fault_status_msg.cfg.faults_byte_1 = (fault_status >> 2) & 0xFF;
+    fault_status_msg.cfg.faults_byte_2 = (fault_status >> 4) & 0xFF;
+    fault_status_msg.cfg.faults_byte_3 = (fault_status >> 6) & 0xFF;
+
+    sendMessageCAN1(0x09, 4, fault_status_msg.msg);
+}
+
 void ComputeInterface::sendChargingStatus(bool chargingStatus)
 {
     uint8_t chargingArray[1] = {chargingStatus};
