@@ -33,9 +33,9 @@ FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, uint1
         currentToSet = 10;
     }
     chargerMsg.cfg.chargerCurrent = currentToSet * 10 + 3200;
-    bool is_charging = isCharging();
     
-    chargerMsg.cfg.chargerLEDs = calcChargerLEDState(state_of_charge, is_charging);
+    
+    chargerMsg.cfg.chargerLEDs = calcChargerLEDState(state_of_charge, );
     chargerMsg.cfg.reserved2_3 = 0xFFFF;
 
     uint8_t msg[8] = {chargerMsg.cfg.chargerControl, static_cast<uint8_t>(chargerMsg.cfg.chargerVoltage), chargerMsg.cfg.chargerVoltage >> 8, static_cast<uint8_t>(chargerMsg.cfg.chargerCurrent), chargerMsg.cfg.chargerCurrent >> 8, chargerMsg.cfg.chargerLEDs, 0xFF, 0xFF};
@@ -165,35 +165,46 @@ void ComputeInterface::MCCallback(const CAN_message_t &msg)
     return;
 }
 
-uint8_t ComputeInterface::calcChargerLEDState(uint8_t state_of_charge, bool current)
+uint8_t ComputeInterface::calcChargerLEDState(uint8_t state_of_charge, AccumulatorData_t bms_data)
 {
-  if((state_of_charge < 80) && (current))
+  enum LED_state
   {
-    return 0x00;
+    RED_BLINKING =       0x00,
+    RED_CONSTANT =       0x01,
+    YELLOW_BLINKING =    0x02,
+    YELLOW_CONSTANT =    0x03,
+    GREEN_BLINKING =     0x04,
+    GREEN_CONSTANT =     0x05,
+    RED_GREEN_BLINKING = 0x06
+  };
+
+  if((state_of_charge < 80) && (bms_data.packCurrent > 1))
+  {
+    return RED_BLINKING;
   }
-  else if((state_of_charge < 80) && (!current))
+  else if((state_of_charge < 80) && (bms_data.packCurrent <= 1))
   {
-    return 0x01;
+    return RED_CONSTANT;
   }
-  else if((state_of_charge >= 80 && state_of_charge < 95) && (current))
+  else if((state_of_charge >= 80 && state_of_charge < 95) && (bms_data.packCurrent > 1))
   {
-    return 0x02;
+    return YELLOW_BLINKING;
   }
-  else if((state_of_charge >= 80 && state_of_charge < 95) && (!current))
+  else if((state_of_charge >= 80 && state_of_charge < 95) && (bms_data.packCurrent <= 1))
   {
-    return 0x03;
+    return YELLOW_CONSTANT;
   }
-  else if((state_of_charge >= 95) && (current))
+  else if((state_of_charge >= 95) && (bms_data.packCurrent > 1))
   {
-    return 0x04;
+    return GREEN_BLINKING;
   }
-  else if((state_of_charge >= 95) && (!current))
+  else if((state_of_charge >= 95) && (bms_data.packCurrent <= 1))
   {
-    return 0x05;
+    return GREEN_BLINKING;
   }
   else
   {
-    return 0x06;
+    return RED_GREEN_BLINKING;
   }
   
 }
