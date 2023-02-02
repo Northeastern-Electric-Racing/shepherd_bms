@@ -178,27 +178,27 @@ uint8_t ComputeInterface::calcChargerLEDState(uint8_t state_of_charge, Accumulat
     RED_GREEN_BLINKING = 0x06
   };
 
-  if((state_of_charge < 80) && (bms_data->packCurrent > .7))
+  if((state_of_charge < 80) && (bms_data->packCurrent > .7 * 10))
   {
     return RED_BLINKING;
   }
-  else if((state_of_charge < 80) && (bms_data->packCurrent <= .7))
+  else if((state_of_charge < 80) && (bms_data->packCurrent <= .7 * 10))
   {
     return RED_CONSTANT;
   }
-  else if((state_of_charge >= 80 && state_of_charge < 95) && (bms_data->packCurrent > .7))
+  else if((state_of_charge >= 80 && state_of_charge < 95) && (bms_data->packCurrent > .7 * 10))
   {
     return YELLOW_BLINKING;
   }
-  else if((state_of_charge >= 80 && state_of_charge < 95) && (bms_data->packCurrent <= .7))
+  else if((state_of_charge >= 80 && state_of_charge < 95) && (bms_data->packCurrent <= .7 * 10))
   {
     return YELLOW_CONSTANT;
   }
-  else if((state_of_charge >= 95) && (bms_data->packCurrent > .7))
+  else if((state_of_charge >= 95) && (bms_data->packCurrent > .7 * 10))
   {
     return GREEN_BLINKING;
   }
-  else if((state_of_charge >= 95) && (bms_data->packCurrent <= .7))
+  else if((state_of_charge >= 95) && (bms_data->packCurrent <= .7 * 10))
   {
     return GREEN_BLINKING;
   }
