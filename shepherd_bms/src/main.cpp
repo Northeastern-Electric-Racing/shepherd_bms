@@ -291,7 +291,7 @@ void shepherdMain()
 		// Send CAN message, but not too often
 		if (currTime > lastChargeMsg + 250) {
 			lastChargeMsg = currTime;
-			compute.sendChargingMessage(MAX_CHARGE_VOLT * NUM_CELLS_PER_CHIP * NUM_CHIPS, accData->chargeLimit, calcStateOfCharge(accData));
+			compute.sendChargingMessage(MAX_CHARGE_VOLT * NUM_CELLS_PER_CHIP * NUM_CHIPS, accData->chargeLimit, calcStateOfCharge(accData), accData);
 		}
 	} else if (bmsFault == FAULTS_CLEAR) {
 		digitalWrite(CHARGE_SAFETY_RELAY, LOW);
