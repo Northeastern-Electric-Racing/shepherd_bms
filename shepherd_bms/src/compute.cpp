@@ -15,7 +15,7 @@ void ComputeInterface::enableCharging(bool enableCharging){
     isChargingEnabled = enableCharging;
 }
 
-FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, uint16_t currentToSet, uint8_t state_of_charge)
+FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, uint16_t currentToSet, uint8_t state_of_charge, AccumulatorData_t *bms_data)
 {
     if (!isChargingEnabled)
     {
@@ -34,8 +34,8 @@ FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, uint1
     }
     chargerMsg.cfg.chargerCurrent = currentToSet * 10 + 3200;
     
-    // Having trouble figuring out what to pass to this function, im pretty sure what im passing rn is wrong.
-    chargerMsg.cfg.chargerLEDs = calcChargerLEDState(state_of_charge, accStatusMsg.cfg.packCurrent);
+    
+    chargerMsg.cfg.chargerLEDs = calcChargerLEDState(state_of_charge, bms_data);
     chargerMsg.cfg.reserved2_3 = 0xFFFF;
 
     uint8_t msg[8] = {chargerMsg.cfg.chargerControl, static_cast<uint8_t>(chargerMsg.cfg.chargerVoltage), chargerMsg.cfg.chargerVoltage >> 8, static_cast<uint8_t>(chargerMsg.cfg.chargerCurrent), chargerMsg.cfg.chargerCurrent >> 8, chargerMsg.cfg.chargerLEDs, 0xFF, 0xFF};
@@ -165,7 +165,7 @@ void ComputeInterface::MCCallback(const CAN_message_t &msg)
     return;
 }
 
-uint8_t ComputeInterface::calcChargerLEDState(uint8_t state_of_charge, uint16_t pack_current)
+uint8_t ComputeInterface::calcChargerLEDState(uint8_t state_of_charge, AccumulatorData_t *bms_data)
 {
   enum LED_state
   {
@@ -178,27 +178,27 @@ uint8_t ComputeInterface::calcChargerLEDState(uint8_t state_of_charge, uint16_t 
     RED_GREEN_BLINKING = 0x06
   };
 
-  if((state_of_charge < 80) && (pack_current > 1))
+  if((state_of_charge < 80) && (bms_data->packCurrent > .7))
   {
     return RED_BLINKING;
   }
-  else if((state_of_charge < 80) && (pack_current <= 1))
+  else if((state_of_charge < 80) && (bms_data->packCurrent <= .7))
   {
     return RED_CONSTANT;
   }
-  else if((state_of_charge >= 80 && state_of_charge < 95) && (pack_current > 1))
+  else if((state_of_charge >= 80 && state_of_charge < 95) && (bms_data->packCurrent > .7))
   {
     return YELLOW_BLINKING;
   }
-  else if((state_of_charge >= 80 && state_of_charge < 95) && (pack_current <= 1))
+  else if((state_of_charge >= 80 && state_of_charge < 95) && (bms_data->packCurrent <= .7))
   {
     return YELLOW_CONSTANT;
   }
-  else if((state_of_charge >= 95) && (pack_current > 1))
+  else if((state_of_charge >= 95) && (bms_data->packCurrent > .7))
   {
     return GREEN_BLINKING;
   }
-  else if((state_of_charge >= 95) && (pack_current <= 1))
+  else if((state_of_charge >= 95) && (bms_data->packCurrent <= .7))
   {
     return GREEN_BLINKING;
   }
