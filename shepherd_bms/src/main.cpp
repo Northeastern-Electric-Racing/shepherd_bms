@@ -75,7 +75,7 @@ void balanceCells(AccumulatorData_t *bms_data)
  */
 bool balancingCheck(AccumulatorData_t *bmsdata)
 {
-	if (!compute.isCharging()) return false;
+	if (!compute.isChargingEnabled()) return false;
 	if (bmsdata->maxTemp.val > MAX_CELL_TEMP_BAL) return false;
 	if (bmsdata->maxVoltage.val <= (BAL_MIN_V * 10000)) return false;
 	if(bmsdata->deltVoltage <= (MAX_DELTA_V * 10000)) return false;
@@ -95,7 +95,7 @@ bool chargingCheck(AccumulatorData_t *bmsdata)
 	static Timer chargeTimeout;
 
 	if(!chargeTimeout.isTimerExpired()) return false;
-	if(!compute.isCharging()) return false;
+	if(!compute.isChargingEnabled() | bmsdata->packCurrent < .7) return false;
 	if(bmsdata->maxVoltage.val >= (MAX_CHARGE_VOLT * 10000))
 	{
 		chargeOverVolt++;

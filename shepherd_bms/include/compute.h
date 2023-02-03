@@ -22,7 +22,7 @@ class ComputeInterface
 {
    private:
       uint8_t fanSpeed;
-      bool isChargingEnabled;
+      bool is_charging_enabled;
 
       enum
       {
@@ -53,12 +53,12 @@ class ComputeInterface
       FaultStatus_t sendChargingMessage(uint16_t voltageToSet, uint16_t currentToSet);
 
       /**
-      * @brief Returns if we are detecting a charging voltage
+      * @brief Returns if we have charging enabled
       *
       * @return true
       * @return false
       */
-      bool isCharging();
+      bool isChargingEnabled();
 
       /**
       * @brief Handle any messages received from the charger

@@ -14,7 +14,7 @@ ComputeInterface::~ComputeInterface(){}
 
 void ComputeInterface::enableCharging(bool enableCharging)
 {
-    isChargingEnabled = enableCharging;
+    is_charging_enabled = enableCharging;
 }
 
 FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, uint16_t currentToSet)
@@ -33,7 +33,7 @@ FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, uint1
         } cfg;
     } chargerMsg;
 
-    if (!isChargingEnabled)
+    if (!is_charging_enabled)
     {
         chargerMsg.cfg.chargerControl = 0b101;
         sendMessageCAN2(CANMSG_CHARGER, 8, chargerMsg.msg);
@@ -61,7 +61,7 @@ FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, uint1
     return NOT_FAULTED;
 }
 
-bool ComputeInterface::isCharging() // This is useless kinda, especially if we move to DCDC
+bool ComputeInterface::isChargingEnabled() // This is useless kinda, especially if we move to DCDC
 {
     return digitalRead(CHARGE_VOLTAGE_PIN);
 }
