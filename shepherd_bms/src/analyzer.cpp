@@ -386,7 +386,7 @@ void Analyzer::disableTherms()
     }
 }
 
-void Analyzer::calcCellResistances(node *bms_data)
+void Analyzer::calcPackResistance(node *bms_data)
 {
     if(bms_data->data.packCurrent >= 100)
     {

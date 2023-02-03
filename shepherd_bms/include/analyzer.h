@@ -147,7 +147,7 @@ class Analyzer
 
         void disableTherms();
 
-        void calcCellResistances(node *bms_data);
+        void calcPackResistance(node *bms_data);
     
     public:
         Analyzer();
