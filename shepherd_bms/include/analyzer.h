@@ -146,6 +146,8 @@ class Analyzer
         void calcOpenCellVoltage();
 
         void disableTherms();
+
+        void calcPackResistances(node bms_data);
     
     public:
         Analyzer();

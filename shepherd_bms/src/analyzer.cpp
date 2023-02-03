@@ -385,3 +385,8 @@ void Analyzer::disableTherms()
         }
     }
 }
+
+void Analyzer::calcPackResistances(node bms_data)
+{
+    
+}
