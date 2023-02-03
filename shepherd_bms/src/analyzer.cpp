@@ -386,7 +386,16 @@ void Analyzer::disableTherms()
     }
 }
 
-void Analyzer::calcPackResistances(node bms_data)
+void Analyzer::calcPackResistances(node *bms_data)
 {
-    
+    if(bms_data->data.packCurrent >= 100)
+    {
+        for(int i = 0; i < NUM_CHIPS; i++)
+        {
+            for(int j = 0; j < NUM_CELLS_PER_CHIP; j++)
+            {
+                bms_data->data.chipData[i].cellResistance[j] =  (bms_data->data.chipData[i].openCellVoltage[j] - bms_data->data.chipData[i].voltageReading[j]) / bms_data->data.packCurrent;
+            }
+        }
+    }
 }
