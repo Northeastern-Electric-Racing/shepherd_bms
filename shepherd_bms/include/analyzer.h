@@ -83,9 +83,9 @@ class Analyzer
         /**
          * @brief Lookup table for State of Charge
          * 
-         * @note Each index corresponds to 10% charge
+         * @note each index covers 0.1 volt increase (voltage range is 2.9V - 4.2V, deltaV = 1.3V, currently 13 data points)
+         * @note values are unitless percentages that represent % charge
          * 
-         * @note Assuming linear curve
          */
         const uint8_t STATE_OF_CHARGE_CURVE[13] =
         {

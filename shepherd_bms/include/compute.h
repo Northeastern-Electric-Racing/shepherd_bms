@@ -33,13 +33,12 @@ class ComputeInterface
       /**
       * @brief Determines state of the charger LEDs based on the battery charge percentage
       * 
-      * @param state_of_charge 8 bit integer representing battery charge
-      * @param pack_current 16 bit integer representing current
+      * @param bms_data
       * 
       * @return uint8_t Value to be used for setting LED bits for charger message
       * 
       */
-      uint8_t calcChargerLEDState(uint8_t state_of_charge, AccumulatorData_t *bms_data);
+      uint8_t calcChargerLEDState(AccumulatorData_t *bms_data);
 
    public:
       ComputeInterface();
