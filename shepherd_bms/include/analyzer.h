@@ -83,7 +83,7 @@ class Analyzer
         /**
          * @brief Lookup table for State of Charge
          * 
-         * @note each index covers 0.1 volt increase (voltage range is 2.9V - 4.2V, deltaV = 1.3V, currently 13 data points)
+         * @note each index covers 0.1V increase (voltage range is 2.9V - 4.2V, deltaV = 1.3V, currently 13 data points)
          * @note values are unitless percentages that represent % charge
          * 
          */
