@@ -409,7 +409,7 @@ void shepherdMain()
 			// Send CAN message, but not too often
 			if (chargeMessageTimer.isTimerExpired()) 
 			{
-				compute.sendChargingMessage(MAX_CHARGE_VOLT * NUM_CELLS_PER_CHIP * NUM_CHIPS, analyzer.bmsdata->chargeLimit,analyzer.bmsdata->soc , analyzer.bmsdata);
+				compute.sendChargingMessage((MAX_CHARGE_VOLT * NUM_CELLS_PER_CHIP * NUM_CHIPS), analyzer.bmsdata);
 				chargeMessageTimer.startTimer(CHARGE_MESSAGE_WAIT);
 			}
 		} 
