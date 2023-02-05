@@ -17,7 +17,7 @@ void ComputeInterface::enableCharging(bool enableCharging)
     isChargingEnabled = enableCharging;
 }
 
-FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, uint16_t currentToSet, uint8_t state_of_charge, AccumulatorData_t *bms_data)
+FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, uint16_t currentToSet, AccumulatorData_t *bms_data)
 {
     static union 
     {
