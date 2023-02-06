@@ -30,6 +30,16 @@ class ComputeInterface
          CHARGE_DISABLED
       };
 
+      /**
+      * @brief Determines state of the charger LEDs based on the battery charge percentage
+      * 
+      * @param bms_data
+      * 
+      * @return uint8_t Value to be used for setting LED bits for charger message
+      * 
+      */
+      uint8_t calcChargerLEDState(AccumulatorData_t *bms_data);
+
    public:
       ComputeInterface();
 
@@ -50,7 +60,7 @@ class ComputeInterface
       *
       * @return Returns a fault if we are not able to communicate with charger
       */
-      FaultStatus_t sendChargingMessage(uint16_t voltageToSet, uint16_t currentToSet);
+      FaultStatus_t sendChargingMessage(uint16_t voltageToSet, AccumulatorData_t *bms_data);
 
       /**
       * @brief Returns if we are detecting a charging voltage

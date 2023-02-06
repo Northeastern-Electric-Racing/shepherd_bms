@@ -21,6 +21,20 @@ const float TEMP_TO_CELL_RES[16] =
     2.12, 1.98, 1.92, 1.90, 1.90, 1.90, 1.90
 };
 
+
+/**
+ * @brief Lookup table for State of Charge
+ * 
+ * @note each index covers 0.1V increase (voltage range is 2.9V - 4.2V, deltaV = 1.3V, currently 13 data points)
+ * @note values are unitless percentages that represent % charge
+ * 
+ */
+const uint8_t STATE_OF_CHARGE_CURVE[13] =
+{
+    0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 100
+};
+
+
 /**
  * @brief Mapping Cell temperatue to the discharge current limit based on the 
  *      temperature discharge limit curve profile of the Samsung 186500 INR
@@ -117,5 +131,7 @@ void calcOpenCellVoltage(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsd
 uint8_t calcFanPWM(AccumulatorData_t *bmsdata);
 
 void disableTherms(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata);
+
+void calcStateOfCharge(AccumulatorData_t *bmsdata);
 
 #endif
