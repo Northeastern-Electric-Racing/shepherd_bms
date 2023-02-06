@@ -135,7 +135,7 @@ void broadcastCurrentLimit(AccumulatorData_t *bmsdata)
 		BoostState = BOOST_STANDBY;
 	}
 	//Transition to boosting
-	if(bmsdata->packCurrent > (int16_t)bmsdata->contDCL && BoostState == BOOST_STANDBY)
+	if((bmsdata->packCurrent) > ((bmsdata->contDCL)*10) && BoostState == BOOST_STANDBY)
 	{
 		BoostState = BOOSTING;
 		boostTimer.startTimer(BOOST_TIME);
@@ -163,7 +163,7 @@ const void printBMSStats(AccumulatorData_t *accData)
 	if(!debug_statTimer.isTimerExpired()) return;
 
 	Serial.print("Current: ");
-	Serial.println(accData->packCurrent);
+	Serial.println((accData->packCurrent)/10);
 	Serial.print("Min, Max, Avg Temps: ");
 	Serial.print(accData->minTemp.val);
 	Serial.print(",  ");
@@ -240,7 +240,7 @@ uint32_t faultCheck(AccumulatorData_t *accData)
 	uint32_t faultStatus = 0;
 
 	// Over current fault for discharge
-	if (accData->packCurrent > accData->dischargeLimit) 
+	if ((accData->packCurrent) > ((accData->dischargeLimit)*10)) 
 	{
 		overCurrCount++;
 		if (overCurrCount > 10) 
@@ -253,7 +253,7 @@ uint32_t faultCheck(AccumulatorData_t *accData)
 	}
 
 	// Over current fault for charge
-	if (accData->packCurrent < 0 && abs(accData->packCurrent) > accData->chargeLimit) 
+	if ((accData->packCurrent) < 0 && abs((accData->packCurrent)) > ((accData->chargeLimit)*10))
 	{
 		overChgCurrCount++;
 		if (overChgCurrCount > 100) 
