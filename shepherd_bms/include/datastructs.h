@@ -79,7 +79,7 @@ struct AccumulatorData_t
 
     FaultStatus_t faultStatus = NOT_FAULTED;
 
-    int16_t packCurrent;
+    int16_t packCurrent;                        // this value is multiplied by 10 to account for decimal precision
     uint16_t packVoltage;
     uint16_t packRes;
 

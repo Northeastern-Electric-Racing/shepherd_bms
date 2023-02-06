@@ -177,7 +177,7 @@ void calcOpenCellVoltage(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsd
         }
     }
     // If we are within the current threshold for open voltage measurments
-    else if (bmsdata->packCurrent < OCV_CURR_THRESH && bmsdata->packCurrent > -OCV_CURR_THRESH) 
+     else if (bmsdata->packCurrent < (OCV_CURR_THRESH * 10) && bmsdata->packCurrent > (-OCV_CURR_THRESH * 10)) 
     {
         for (uint8_t chip = 0; chip < NUM_CHIPS; chip++) 
         {
