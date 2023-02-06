@@ -232,3 +232,17 @@ void disableTherms(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata)
         }
     }
 }
+
+void calcStateOfCharge(AccumulatorData_t *bmsdata)
+{
+    int index = (((bmsdata->minVoltage.val) - MIN_VOLT) / .1);
+
+    // .1 = 1.3V range / 13 datapoints on curve
+    if (index >= 13) 
+        bmsdata->soc = 100;
+    else
+    {
+        float distance_from_higher = (bmsdata->minVoltage.val) - ((index / 10) + 2.9);
+        bmsdata->soc = ((distance_from_higher*STATE_OF_CHARGE_CURVE[index+1]) + ((1-distance_from_higher)*STATE_OF_CHARGE_CURVE[index]));
+    }
+}

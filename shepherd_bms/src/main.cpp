@@ -185,6 +185,9 @@ const void printBMSStats(AccumulatorData_t *accData)
 	Serial.print("CCL: ");
 	Serial.println(accData->chargeLimit);
 
+	Serial.print("SoC: ");
+	Serial.println(accData->soc);
+
 	Serial.print("Is Balancing?: ");
 	Serial.println(segment.isBalancing()); 
 
@@ -343,6 +346,7 @@ void shepherdMain()
 	calcDCL(accData);
 	calcContDCL(accData);
 	calcContCCL(accData);
+	calcStateOfCharge(accData);
 
 	#ifdef DEBUG_STATS
 	printBMSStats(accData);
@@ -415,7 +419,7 @@ void shepherdMain()
 			// Send CAN message, but not too often
 			if (chargeMessageTimer.isTimerExpired()) 
 			{
-				compute.sendChargingMessage(MAX_CHARGE_VOLT * NUM_CELLS_PER_CHIP * NUM_CHIPS, accData->chargeLimit);
+				compute.sendChargingMessage((MAX_CHARGE_VOLT * NUM_CELLS_PER_CHIP * NUM_CHIPS), accData);
 				chargeMessageTimer.startTimer(CHARGE_MESSAGE_WAIT);
 			}
 		} 

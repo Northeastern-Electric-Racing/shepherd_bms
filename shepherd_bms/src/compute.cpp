@@ -18,9 +18,9 @@ void ComputeInterface::enableCharging(bool enableCharging)
     isChargingEnabled = enableCharging;
 }
 
-FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, uint16_t currentToSet)
+FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, AccumulatorData_t *bms_data)
 {
-    static union 
+    static union
     {
         uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0xFF, 0xFF};
 
@@ -33,6 +33,8 @@ FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, uint1
             uint16_t reserved2_3;
         } cfg;
     } chargerMsg;
+
+    uint16_t currentToSet = bms_data->chargeLimit;
 
     if (!isChargingEnabled)
     {
@@ -50,7 +52,7 @@ FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, uint1
         currentToSet = 10;
     }
     chargerMsg.cfg.chargerCurrent = currentToSet * 10 + 3200;
-    chargerMsg.cfg.chargerLEDs = 0x01;
+    chargerMsg.cfg.chargerLEDs = calcChargerLEDState(bms_data);
     chargerMsg.cfg.reserved2_3 = 0xFFFF;
 
     uint8_t msg[8] = {chargerMsg.cfg.chargerControl, static_cast<uint8_t>(chargerMsg.cfg.chargerVoltage), chargerMsg.cfg.chargerVoltage >> 8, static_cast<uint8_t>(chargerMsg.cfg.chargerCurrent), chargerMsg.cfg.chargerCurrent >> 8, chargerMsg.cfg.chargerLEDs, 0xFF, 0xFF};
@@ -282,4 +284,48 @@ void ComputeInterface::sendChargingStatus(bool chargingStatus)
 void ComputeInterface::MCCallback(const CAN_message_t &msg)
 {
     return;
+}
+
+uint8_t ComputeInterface::calcChargerLEDState(AccumulatorData_t *bms_data)
+{
+  enum LED_state
+  {
+    RED_BLINKING =       0x00,
+    RED_CONSTANT =       0x01,
+    YELLOW_BLINKING =    0x02,
+    YELLOW_CONSTANT =    0x03,
+    GREEN_BLINKING =     0x04,
+    GREEN_CONSTANT =     0x05,
+    RED_GREEN_BLINKING = 0x06
+  };
+
+  if((bms_data->soc < 80) && (bms_data->packCurrent > .5 * 10))
+  {
+    return RED_BLINKING;
+  }
+  else if((bms_data->soc < 80) && (bms_data->packCurrent <= .5 * 10))
+  {
+    return RED_CONSTANT;
+  }
+  else if((bms_data->soc >= 80 && bms_data->soc < 95) && (bms_data->packCurrent > .5 * 10))
+  {
+    return YELLOW_BLINKING;
+  }
+  else if((bms_data->soc >= 80 && bms_data->soc < 95) && (bms_data->packCurrent <= .5 * 10))
+  {
+    return YELLOW_CONSTANT;
+  }
+  else if((bms_data->soc >= 95) && (bms_data->packCurrent > .5 * 10))
+  {
+    return GREEN_BLINKING;
+  }
+  else if((bms_data->soc >= 95) && (bms_data->packCurrent <= .5 * 10))
+  {
+    return GREEN_BLINKING;
+  }
+  else
+  {
+    return RED_GREEN_BLINKING;
+  }
+
 }
