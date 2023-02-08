@@ -212,8 +212,11 @@ void Analyzer::calcOpenCellVoltage()
         {
             for (uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++) 
             {
-                // Sets open cell voltage to a moving average of OCV_AVG values
-                bmsdata->chipData[chip].openCellVoltage[cell] = (uint32_t(bmsdata->chipData[chip].voltageReading[cell]) + (uint32_t(prevbmsdata->chipData[chip].openCellVoltage[cell])  * (OCV_AVG - 1))) / OCV_AVG;
+                // Sets open cell voltage to current reading but pulls previous if out of range
+                bmsdata->chipData[chip].openCellVoltage[cell] = bmsdata->chipData[chip].voltageReading[cell];
+                if (bmsdata->chipData[chip].openCellVoltage[cell] > MAX_CHARGE_VOLT * 10000 || bmsdata->chipData[chip].openCellVoltage[cell] < MIN_VOLT * 10000) {
+                    bmsdata->chipData[chip].openCellVoltage[cell] = prevbmsdata->chipData[chip].openCellVoltage[cell];
+                }
             }
         }
     } 
