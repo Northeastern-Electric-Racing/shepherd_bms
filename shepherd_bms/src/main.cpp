@@ -159,7 +159,7 @@ void broadcastCurrentLimit(AccumulatorData_t *bmsdata)
 const void printBMSStats(AccumulatorData_t *accData)
 {
 	static Timer debug_statTimer;
-	static const uint16_t PRINT_STAT_WAIT = 500; //ms
+	static const uint16_t PRINT_STAT_WAIT = 50; //ms
 	
 	if(!debug_statTimer.isTimerExpired()) return;
 
@@ -191,6 +191,17 @@ const void printBMSStats(AccumulatorData_t *accData)
 
 	Serial.print("Is Balancing?: ");
 	Serial.println(segment.isBalancing()); 
+
+	Serial.println("Live Cell Voltage:");
+	for(uint8_t c = 0; c < NUM_CHIPS; c++)
+	{
+		for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+		{
+			Serial.print(accData->chipData[c].voltageReading[cell]);
+			Serial.print("\t");
+		}
+		Serial.println();
+	}
 
 	Serial.println("Open Cell Voltage:");
 	for(uint8_t c = 0; c < NUM_CHIPS; c++)
@@ -247,8 +258,8 @@ uint32_t faultCheck(AccumulatorData_t *accData)
 	if ((accData->packCurrent) > ((accData->dischargeLimit)*10)) 
 	{
 		overCurrCount++;
-		if (overCurrCount > 10) 
-		{ // 0.10 seconds @ 100Hz rate
+		if (overCurrCount > 50) 
+		{ // 0.50 seconds @ 100Hz rate
 			faultStatus |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
 		}
 	} else 
