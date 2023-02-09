@@ -58,7 +58,7 @@ class ComputeInterface
       * @return true
       * @return false
       */
-      bool isChargingEnabled();
+      bool isChargerConnected();
 
       /**
       * @brief Handle any messages received from the charger

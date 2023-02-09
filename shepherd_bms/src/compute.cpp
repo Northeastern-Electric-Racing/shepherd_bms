@@ -61,7 +61,7 @@ FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, uint1
     return NOT_FAULTED;
 }
 
-bool ComputeInterface::isChargingEnabled() // This is useless kinda, especially if we move to DCDC
+bool ComputeInterface::isChargerConnected() // This is useless kinda, especially if we move to DCDC
 {
     return digitalRead(CHARGE_VOLTAGE_PIN);
 }
