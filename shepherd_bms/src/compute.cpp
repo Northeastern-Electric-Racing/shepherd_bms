@@ -329,3 +329,20 @@ uint8_t ComputeInterface::calcChargerLEDState(AccumulatorData_t *bms_data)
   }
 
 }
+
+void ComputeInterface::sendFaultStatus(BMSFault_t fault_status)
+{
+    static union
+    {
+        uint8_t msg[4] = {0, 0, 0, 0};
+
+        struct 
+        {
+            uint32_t faults;
+        } cfg;
+    } fault_status_msg;
+
+    fault_status_msg.cfg.faults = fault_status;
+
+    sendMessageCAN1(0x09, 4, fault_status_msg.msg);
+}
