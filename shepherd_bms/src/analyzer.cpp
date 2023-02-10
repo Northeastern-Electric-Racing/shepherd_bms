@@ -15,7 +15,6 @@ void Analyzer::push(AccumulatorData_t *data)
     bmsdata = data;
 
     disableTherms();
-
     calcCellTemps();
 	calcPackTemps();
 	calcPackVoltageStats();
@@ -297,6 +296,6 @@ void Analyzer::calcPackResistances(AccumulatorData_t *bms_data)
             {
                 bms_data->chipData[i].cellResistance[j] = packResistances[i][j];
             }
-        };
+        }
     }
 }
