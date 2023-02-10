@@ -283,3 +283,28 @@ void ComputeInterface::MCCallback(const CAN_message_t &msg)
 {
     return;
 }
+
+void ComputeInterface::sendCellTemp(uint16_t mCellTemp, uint8_t mCellID, uint16_t minCellTemp, uint8_t minCellID, uint16_t tempAvg)
+{
+    static union
+    {
+        uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+        struct 
+        {
+            uint16_t maxCellTemp;
+            uint8_t maxCellID;
+            uint16_t minCellTemp;
+            uint8_t minCellID;
+            uint16_t averageTemp;
+        } cfg;
+    } cellTempMsg;
+    
+    cellTempMsg.cfg.maxCellTemp = mCellTemp;
+    cellTempMsg.cfg.maxCellID = mCellID;
+    cellTempMsg.cfg.minCellTemp = minCellTemp;
+    cellTempMsg.cfg.minCellID = minCellID;
+    cellTempMsg.cfg.averageTemp = tempAvg;
+
+    sendMessageCAN1(0x08, 8, cellTempMsg.msg);
+}

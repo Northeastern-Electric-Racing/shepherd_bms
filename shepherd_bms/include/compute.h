@@ -177,6 +177,16 @@ class ComputeInterface
        * @param current 
        */
       void sendCurrentsStatus(uint16_t discharge, uint16_t charge, uint16_t current);
+
+      void sendCellTemp(uint16_t mCellTemp, uint8_t mCellID, uint16_t cellTemp, uint8_t cellID, uint16_t tempAvg);
+      
+      /**
+       * @brief sends cell temperature message
+       * 
+       * 
+       * 
+       * @return Returns a fault if we are not able to send
+      */
 };
 
 extern ComputeInterface compute;
