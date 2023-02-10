@@ -275,3 +275,28 @@ void Analyzer::calcStateOfCharge()
         bmsdata->soc = ((distance_from_higher*STATE_OF_CHARGE_CURVE[index+1]) + ((1-distance_from_higher)*STATE_OF_CHARGE_CURVE[index]));
     }
 }
+
+void Analyzer::calcPackResistances(AccumulatorData_t *bms_data)
+{
+    float packResistances[NUM_CHIPS][NUM_CELLS_PER_CHIP];
+    if(bms_data->packCurrent >= 100)
+    {
+        for(int i = 0; i < NUM_CHIPS; i++)
+        {
+            for(int j = 0; j < NUM_CELLS_PER_CHIP; j++)
+            {
+                packResistances[i][j] = (bms_data->chipData[i].openCellVoltage[j] - bms_data->chipData[i].voltageReading[j]) / bms_data->packCurrent;
+            }
+        };
+    }
+    if(bms_data->packCurrent < 5)
+    {
+       for(int i = 0; i < NUM_CHIPS; i++)
+        {
+            for(int j = 0; j < NUM_CELLS_PER_CHIP; j++)
+            {
+                bms_data->chipData[i].cellResistance[j] = packResistances[i][j];
+            }
+        };
+    }
+}

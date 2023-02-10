@@ -147,6 +147,8 @@ class Analyzer
         void disableTherms();
 
         void calcStateOfCharge();
+
+        void calcPackResistances(AccumulatorData_t *bms_data);
     
     public:
         Analyzer();
