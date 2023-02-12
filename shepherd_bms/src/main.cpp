@@ -72,10 +72,31 @@ void balanceCells(AccumulatorData_t *bms_data)
  */
 bool balancingCheck(AccumulatorData_t *bmsdata)
 {
+	static Timer balanceTimer;
+
 	if (!compute.isCharging()) return false;
 	if (bmsdata->maxTemp.val > MAX_CELL_TEMP_BAL) return false;
 	if (bmsdata->maxVoltage.val <= (BAL_MIN_V * 10000)) return false;
 	if(bmsdata->deltVoltage <= (MAX_DELTA_V * 10000)) return false;
+
+	//balance timer state 0 == not balancing
+	//balance timer state 1 == balancing
+
+	if (balanceTimer.isTimerExpired() && balanceTimerState == 0)
+	{
+		balanceTimerState = 1;
+		balanceTimer.startTimer(BALANCE_TIME);	//start balance
+	}
+	if (balanceTimer.isTimerExpired() && balanceTimerState == 1)
+	{
+		balanceTimerState = 0;
+		balanceTimer.startTimer(BALANCE_TIME);	//pause balancing
+		return false;
+	}
+	if (!balanceTimer.isTimerExpired() && balanceTimerState == 0)
+	{
+		return false;
+	}
 
 	return true;
 }
