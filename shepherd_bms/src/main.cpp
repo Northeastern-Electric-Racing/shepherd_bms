@@ -347,11 +347,12 @@ void shepherdMain()
 	// Check for faults
 	bmsFault |= faultCheck(analyzer.bmsdata);
 
-	// ACTIVE/NORMAL STATE
+	// ACTIVE/NORMAL STATE // Shove this into handlestate for active state in SM
 	if (bmsFault == FAULTS_CLEAR) 
 	{
 		compute.setFault(NOT_FAULTED);
 	}
+	// FAULTED STATE can put in  handlestate for faultstatus in SM
 	else
 	{
 		compute.setFault(FAULTED);

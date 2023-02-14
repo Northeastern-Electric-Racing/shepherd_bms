@@ -16,6 +16,14 @@ class StateMachine
 {
     private:
 
+        AccumulatorData_t *prevAccData;
+        uint32_t bmsFault;
+        uint16_t overVoltCount;
+        uint16_t underVoltCount;
+        uint16_t overCurrCount;
+        uint16_t chargeOverVolt;
+        uint16_t overChgCurrCount;
+        uint16_t lowCellCount;
         const bool validTransitionFromTo[NUM_STATES][NUM_STATES] = 
         { 
             //BOOT,     READY,      CHARGING,   FAULTED

@@ -11,7 +11,14 @@ StateMachine::~StateMachine()
 
 void StateMachine::initBoot()
 {
-    return;
+    AccumulatorData_t *prevAccData = nullptr;
+    uint32_t bmsFault = FAULTS_CLEAR;
+    uint16_t overVoltCount = 0;
+    uint16_t underVoltCount = 0;
+    uint16_t overCurrCount = 0;
+    uint16_t chargeOverVolt = 0;
+    uint16_t overChgCurrCount = 0;
+    uint16_t lowCellCount = 0;
 }
 
 void StateMachine::handleBoot(AccumulatorData_t *bmsdata)
@@ -31,7 +38,8 @@ void StateMachine::handleReady(AccumulatorData_t *bmsdata)
 
 void StateMachine::initCharging()
 {
-    return;
+    static Timer chargeMessageTimer;
+	static const uint16_t CHARGE_MESSAGE_WAIT = 250; //ms
 }
 
 void StateMachine::handleCharging(AccumulatorData_t *bmsdata)
