@@ -20,7 +20,7 @@ void ComputeInterface::enableCharging(bool enableCharging)
 
 FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, AccumulatorData_t *bms_data)
 {
-    static union
+    union
     {
         uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0xFF, 0xFF};
 
@@ -113,7 +113,7 @@ int16_t ComputeInterface::getPackCurrent()
 
 void ComputeInterface::sendMCMsg(uint16_t userMaxCharge, uint16_t userMaxDischarge)
 {
-    static union 
+    union 
     {
         uint8_t msg[4] = {0,0,0,0};
 
@@ -132,7 +132,7 @@ void ComputeInterface::sendMCMsg(uint16_t userMaxCharge, uint16_t userMaxDischar
 
 void ComputeInterface::sendAccStatusMessage(uint16_t voltage, int16_t current, uint16_t AH, uint8_t SoC, uint8_t health)
 {
-    static union 
+    union 
     {
         uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -157,7 +157,7 @@ void ComputeInterface::sendAccStatusMessage(uint16_t voltage, int16_t current, u
 
 void ComputeInterface::sendBMSStatusMessage(uint8_t failsafe, uint8_t dtc1, uint16_t dtc2, uint16_t currentLimit, int8_t tempAvg, int8_t tempInternal)
 {
-    static union 
+    union 
     {
         uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -185,7 +185,7 @@ void ComputeInterface::sendBMSStatusMessage(uint8_t failsafe, uint8_t dtc1, uint
 
 void ComputeInterface::sendShutdownControlMessage(uint8_t mpeState)
 {
-    static union 
+    union 
     {
         uint8_t msg[1] = {0};
 
@@ -203,7 +203,7 @@ void ComputeInterface::sendShutdownControlMessage(uint8_t mpeState)
 
 void ComputeInterface::sendCellDataMessage(uint16_t hv, uint8_t hvID, uint16_t lv, uint8_t lvID, uint16_t voltAvg)
 {
-    static union 
+    union 
     {
         uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -228,7 +228,7 @@ void ComputeInterface::sendCellDataMessage(uint16_t hv, uint8_t hvID, uint16_t l
 
 void ComputeInterface::sendCellVoltageMessage(uint8_t cellID, uint16_t instantVoltage, uint16_t internalResistance, uint8_t shunted, uint16_t openVoltage)
 {
-    static union 
+    union 
     {
         uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -253,7 +253,7 @@ void ComputeInterface::sendCellVoltageMessage(uint8_t cellID, uint16_t instantVo
 
 void ComputeInterface::sendCurrentsStatus(uint16_t discharge, uint16_t charge, uint16_t current)
 {
-    static union 
+    union 
     {
         uint8_t msg[6] = {0, 0, 0, 0, 0, 0};
 
@@ -276,7 +276,7 @@ void ComputeInterface::sendChargingStatus(bool chargingStatus)
 {
     uint8_t chargingArray[1] = {chargingStatus};
 
-    sendMessageCAN1(0x05, 1, chargingArray);
+    sendMessageCAN1(CANMSG_BMSCHARGINGSTATE, 1, chargingArray);
 }
 
 void ComputeInterface::MCCallback(const CAN_message_t &msg)
