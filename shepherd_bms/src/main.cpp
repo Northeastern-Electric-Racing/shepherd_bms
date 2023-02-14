@@ -19,12 +19,12 @@ AccumulatorData_t *prevAccData = nullptr;
 
 uint32_t bmsFault = FAULTS_CLEAR;
 
-uint16_t overVoltCount = 0;
-uint16_t underVoltCount = 0;
-uint16_t overCurrCount = 0;
-uint16_t chargeOverVolt = 0;
-uint16_t overChgCurrCount = 0;
-uint16_t lowCellCount = 0;
+uint16_t over_volt_count = 0;
+uint16_t under_volt_count = 0;
+uint16_t over_curr_count = 0;
+uint16_t charge_over_volt = 0;
+uint16_t over_chg_curr_count = 0;
+uint16_t low_cell_count = 0;
 
 /**
  * @brief Algorithm behind determining which cells we want to balance
@@ -96,8 +96,8 @@ bool chargingCheck(AccumulatorData_t *bmsdata)
 	if(!compute.isCharging()) return false;
 	if(bmsdata->maxVoltage.val >= (MAX_CHARGE_VOLT * 10000))
 	{
-		chargeOverVolt++;
-		if (chargeOverVolt > 100) 
+		charge_over_volt++;
+		if (charge_over_volt > 100) 
 		{
 			chargeTimeout.startTimer(CHARGE_TIMEOUT);
 			return false;
@@ -105,7 +105,7 @@ bool chargingCheck(AccumulatorData_t *bmsdata)
 	} 
 	else 
 	{
-		chargeOverVolt = 0;
+		charge_over_volt = 0;
 	}
 
 	return true;
@@ -246,56 +246,56 @@ uint32_t faultCheck(AccumulatorData_t *accData)
 	// Over current fault for discharge
 	if ((accData->packCurrent) > ((accData->dischargeLimit)*10)) 
 	{
-		overCurrCount++;
-		if (overCurrCount > 10) 
+		over_curr_count++;
+		if (over_curr_count > 10) 
 		{ // 0.10 seconds @ 100Hz rate
 			faultStatus |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
 		}
 	} else 
 	{
-		overCurrCount = 0;
+		over_curr_count = 0;
 	}
 
 	// Over current fault for charge
 	if ((accData->packCurrent) < 0 && abs((accData->packCurrent)) > ((accData->chargeLimit)*10))
 	{
-		overChgCurrCount++;
-		if (overChgCurrCount > 100) 
+		over_chg_curr_count++;
+		if (over_chg_curr_count > 100) 
 		{ // 1 seconds @ 100Hz rate
 			faultStatus |= CHARGE_LIMIT_ENFORCEMENT_FAULT;
 		}
 	} 
 	else 
 	{
-		overChgCurrCount = 0;
+		over_chg_curr_count = 0;
 	} 
 
 	// Low cell voltage fault
 	if (accData->minVoltage.val < MIN_VOLT * 10000) 
 	{
 
-		underVoltCount++;
-		if (underVoltCount > 900)
+		under_volt_count++;
+		if (under_volt_count > 900)
 		{ // 9 seconds @ 100Hz rate
 			faultStatus |= CELL_VOLTAGE_TOO_LOW;
 		}
 	} 
 	else 
 	{
-		underVoltCount = 0;
+		under_volt_count = 0;
 	}
 
 	// High cell voltage fault
 	if (((accData->maxVoltage.val > MAX_VOLT * 10000) && digitalRead(CHARGE_DETECT) == HIGH) || (accData->maxVoltage.val > MAX_CHARGE_VOLT * 10000)) 
 	{ // Needs to be reimplemented with a flag for every cell in case multiple go over
-		overVoltCount++;
-		if (overVoltCount > 900) { // 9 seconds @ 100Hz rate
+		over_volt_count++;
+		if (over_volt_count > 900) { // 9 seconds @ 100Hz rate
 			faultStatus |= CELL_VOLTAGE_TOO_HIGH;
 		}
 	} 
 	else 
 	{
-		overVoltCount = 0;
+		over_volt_count = 0;
 	}
 
 	// High Temp Fault
@@ -306,14 +306,14 @@ uint32_t faultCheck(AccumulatorData_t *accData)
 	// Extremely low cell voltage fault
 	if (accData->minVoltage.val < 900) 
 	{ // 90mV
-		lowCellCount++;
-		if (lowCellCount > 100) { // 1 seconds @ 100Hz rate
+		low_cell_count++;
+		if (low_cell_count > 100) { // 1 seconds @ 100Hz rate
 			faultStatus |= LOW_CELL_VOLTAGE;
 		}
 	} 
 	else 
 	{
-		lowCellCount = 0;
+		low_cell_count = 0;
 	}
 
 	return faultStatus;

@@ -24,7 +24,7 @@ class SegmentInterface
         FaultStatus_t voltageError = NOT_FAULTED;
         FaultStatus_t thermError = NOT_FAULTED;
 
-        uint16_t thermSettleTime = 0;
+        uint16_t therm_settle_time_ = 0;
 
         const uint32_t VOLT_TEMP_CONV[91] = 
         {
@@ -45,9 +45,9 @@ class SegmentInterface
 
         ChipData_t previousData[NUM_CHIPS];
 
-        uint8_t localConfig[NUM_CHIPS][6] = {};
+        uint8_t local_config[NUM_CHIPS][6] = {};
 
-        uint16_t dischargeCommands[NUM_CHIPS] = {};
+        uint16_t discharge_commands[NUM_CHIPS] = {};
 
         void pullChipConfigurations();
 
@@ -61,7 +61,7 @@ class SegmentInterface
 
         uint8_t steinhartEst(uint16_t V);
 
-        void serializeI2CMsg(uint8_t dataToWrite[][3], uint8_t commOutput[][6]);
+        void serializeI2CMsg(uint8_t data_to_write[][3], uint8_t comm_output[][6]);
 
         void configureDischarge(uint8_t chip, uint16_t cells);
 
@@ -89,34 +89,34 @@ class SegmentInterface
         /**
          * @brief Enables/disables balancing for all cells
          * 
-         * @param balanceEnable
+         * @param balance_enable
          */
-        void enableBalancing(bool balanceEnable);
+        void enableBalancing(bool balance_enable);
 
         /**
          * @brief Enables/disables balancing for a specific cell
          * 
-         * @param chipNum 
-         * @param cellNum 
-         * @param balanceEnable 
+         * @param chip_num 
+         * @param cell_num 
+         * @param balance_enable 
          */
-        void enableBalancing(uint8_t chipNum, uint8_t cellNum, bool balanceEnable);
+        void enableBalancing(uint8_t chip_num, uint8_t cell_num, bool balance_enable);
 
         /**
          * @brief Sets each cell to whatever state is passed in the boolean config area
          * 
-         * @param dischargeConfig 
+         * @param discharge_config 
          */
-        void configureBalancing(bool dischargeConfig[NUM_CHIPS][NUM_CELLS_PER_CHIP]);
+        void configureBalancing(bool discharge_config[NUM_CHIPS][NUM_CELLS_PER_CHIP]);
 
         /**
          * @brief Returns if a specific cell is balancing
          * 
-         * @param chipNum 
+         * @param chip_num 
          * @return true 
          * @return false 
          */
-        bool isBalancing(uint8_t chipNum, uint8_t cellNum);
+        bool isBalancing(uint8_t chip_num, uint8_t cell_num);
 
         /**
          * @brief Returns if any cells are balancing

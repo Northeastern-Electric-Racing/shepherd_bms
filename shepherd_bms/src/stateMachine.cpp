@@ -2,7 +2,7 @@
 
 StateMachine::StateMachine()
 {
-    currentState = BOOT_STATE;
+    current_state = BOOT_STATE;
     initBoot();
 }
 
@@ -51,14 +51,14 @@ void StateMachine::handleFaulted(AccumulatorData_t *bmsdata)
 
 void StateMachine::handleState(AccumulatorData_t *bmsdata)
 {
-    (this->*handlerLUT[currentState])(bmsdata);
+    (this->*handlerLUT[current_state])(bmsdata);
 }
 
-void StateMachine::requestTransition(BMSState_t nextState)
+void StateMachine::requestTransition(BMSState_t next_state)
 {
-    if(currentState == nextState) return;
+    if(current_state == next_state) return;
 
-    if(!validTransitionFromTo[currentState][nextState]) return;
+    if(!validTransitionFromTo[current_state][next_state]) return;
 
-    (this->*initLUT[nextState])();
+    (this->*initLUT[next_state])();
 }

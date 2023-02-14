@@ -28,7 +28,7 @@ class StateMachine
         typedef void (StateMachine::*HandlerFunction_t)(AccumulatorData_t *bmsdata);
         typedef void (StateMachine::*InitFunction_t)();
 
-        void requestTransition(BMSState_t nextState);
+        void requestTransition(BMSState_t next_state);
 
         void handleBoot(AccumulatorData_t *bmsdata);
 
@@ -69,7 +69,7 @@ class StateMachine
 
         void handleState(AccumulatorData_t *bmsdata);
 
-        BMSState_t currentState;
+        BMSState_t current_state;
 };
 
 #endif
