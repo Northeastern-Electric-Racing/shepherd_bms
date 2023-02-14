@@ -57,8 +57,7 @@ FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, Accum
 
     uint8_t msg[8] = {chargerMsg.cfg.chargerControl, static_cast<uint8_t>(chargerMsg.cfg.chargerVoltage), chargerMsg.cfg.chargerVoltage >> 8, static_cast<uint8_t>(chargerMsg.cfg.chargerCurrent), chargerMsg.cfg.chargerCurrent >> 8, chargerMsg.cfg.chargerLEDs, 0xFF, 0xFF};
 
-    //todo put charger ID somewhere else
-    sendMessageCAN2(0x18E54024, 8, msg);
+    sendMessageCAN2(CANMSG_CHARGER, 8, msg);
 
     //return isCharging() ? NOT_FAULTED : FAULTED; //return a fault if we DON'T detect a voltage after we begin charging
     return NOT_FAULTED;
@@ -128,7 +127,7 @@ void ComputeInterface::sendMCMsg(uint16_t userMaxCharge, uint16_t userMaxDischar
 
     mcMsg.config.maxCharge = userMaxCharge;
     mcMsg.config.maxDischarge = userMaxDischarge;
-    sendMessageCAN1(0x202, 4, mcMsg.msg);
+    sendMessageCAN1(CANMSG_BMSCURRENTLIMITS, 4, mcMsg.msg);
 }
 
 void ComputeInterface::sendAccStatusMessage(uint16_t voltage, int16_t current, uint16_t AH, uint8_t SoC, uint8_t health)
@@ -153,8 +152,7 @@ void ComputeInterface::sendAccStatusMessage(uint16_t voltage, int16_t current, u
     accStatusMsg.cfg.packSoC = SoC;
     accStatusMsg.cfg.packHealth = health;
 
-    //todo put ID somewhere else
-    sendMessageCAN1(0x01, 8, accStatusMsg.msg);
+    sendMessageCAN1(CANMSG_BMSACCSTATUS, 8, accStatusMsg.msg);
 }
 
 void ComputeInterface::sendBMSStatusMessage(uint8_t failsafe, uint8_t dtc1, uint16_t dtc2, uint16_t currentLimit, int8_t tempAvg, int8_t tempInternal)
@@ -182,7 +180,7 @@ void ComputeInterface::sendBMSStatusMessage(uint8_t failsafe, uint8_t dtc1, uint
     BMSStatusMsg.cfg.tempInternal = static_cast<uint8_t>(tempInternal);
 
     
-    sendMessageCAN1(0x02, 8, BMSStatusMsg.msg);
+    sendMessageCAN1(CANMSG_BMSDTCSTATUS, 8, BMSStatusMsg.msg);
 }
 
 void ComputeInterface::sendShutdownControlMessage(uint8_t mpeState)
@@ -225,7 +223,7 @@ void ComputeInterface::sendCellDataMessage(uint16_t hv, uint8_t hvID, uint16_t l
     cellDataMsg.cfg.lowCellID = lvID;
     cellDataMsg.cfg.voltAvg = __builtin_bswap16(voltAvg);
 
-    sendMessageCAN1(0x04, 8, cellDataMsg.msg);
+    sendMessageCAN1(CANMSG_BMSCELLDATA, 8, cellDataMsg.msg);
 }
 
 void ComputeInterface::sendCellVoltageMessage(uint8_t cellID, uint16_t instantVoltage, uint16_t internalResistance, uint8_t shunted, uint16_t openVoltage)
@@ -250,7 +248,7 @@ void ComputeInterface::sendCellVoltageMessage(uint8_t cellID, uint16_t instantVo
     cellVoltageMsg.cfg.shunted = shunted;
     cellVoltageMsg.cfg.openVoltage = __builtin_bswap16(openVoltage);
 
-    sendMessageCAN1(0x07, 8, cellVoltageMsg.msg);
+    sendMessageCAN1(CANMSG_CELLVOLTAGE, 8, cellVoltageMsg.msg);
 }
 
 void ComputeInterface::sendCurrentsStatus(uint16_t discharge, uint16_t charge, uint16_t current)
@@ -271,7 +269,7 @@ void ComputeInterface::sendCurrentsStatus(uint16_t discharge, uint16_t charge, u
     currentsStatusMsg.cfg.CCL = charge;
     currentsStatusMsg.cfg.packCurr = current;
 
-    sendMessageCAN1(0x06, 8, currentsStatusMsg.msg);
+    sendMessageCAN1(CANMSG_BMSCURRENTS, 8, currentsStatusMsg.msg);
 }
 
 void ComputeInterface::sendChargingStatus(bool chargingStatus)

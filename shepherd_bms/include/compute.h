@@ -14,7 +14,6 @@
 #define CHARGER_BAUD          250000U
 #define MC_BAUD               1000000U
 
-#define CHARGER_CAN_ID        0x18E54024
 
 #define MAX_ADC_RESOLUTION    1023 // 13 bit ADC
 
