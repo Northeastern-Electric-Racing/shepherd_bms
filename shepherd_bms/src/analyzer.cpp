@@ -230,7 +230,7 @@ void Analyzer::calcOpenCellVoltage()
     }
 }
 
-uint8_t Analyzer::calcFanPWM()
+uint8_t Analyzer::calcFanPWM(AccumulatorData_t *bmsdata)
 {
     // Resistance LUT increments by 5C for each index, plus we account for negative minimum
     uint8_t minResIndex = (bmsdata->maxTemp.val - MIN_TEMP) / 5;

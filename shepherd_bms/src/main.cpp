@@ -9,7 +9,7 @@
 #include <LTC68041.h>
 #include "segment.h"
 #include "compute.h"
-#include "calcs.h"
+
 #include "datastructs.h"
 #include "analyzer.h"
 
@@ -425,7 +425,7 @@ void shepherdMain()
 	broadcastCurrentLimit(analyzer.bmsdata);
 	compute.sendAccStatusMessage(analyzer.bmsdata->packVoltage, analyzer.bmsdata->packCurrent, 0, 0, 0);
 	compute.sendCurrentsStatus(analyzer.bmsdata->dischargeLimit, analyzer.bmsdata->chargeLimit, analyzer.bmsdata->packCurrent);
-	compute.setFanSpeed(calcFanPWM(analyzer.bmsdata));
+	compute.setFanSpeed(analyzer.calcFanPWM(analyzer.bmsdata));
 }
 
 void setup()
