@@ -185,7 +185,7 @@ class ComputeInterface
        * 
        * @return Returns a fault if we are not able to send
       */
-      void sendCellTemp(uint16_t mCellTemp, uint8_t mCellID, uint16_t cellTemp, uint8_t cellID, uint16_t tempAvg);
+      void sendCellTemp(uint16_t m_cell_temp, uint8_t m_cell_id, uint16_t min_cell_temp, uint8_t min_cell_id, uint16_t avg_temp);
       
     
 };
