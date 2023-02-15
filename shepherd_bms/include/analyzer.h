@@ -20,7 +20,7 @@ class Analyzer
 
         Timer analysisTimer;
 
-        bool isFirstReading = true;
+        bool is_first_reading_ = true;
 
         /**
          * @brief Mapping Cell temperature to the cell resistance based on the 
