@@ -332,7 +332,7 @@ uint8_t ComputeInterface::calcChargerLEDState(AccumulatorData_t *bms_data)
 
 void ComputeInterface::sendFaultStatus(BMSFault_t fault_status)
 {
-    static union
+    union
     {
         uint8_t msg[4] = {0, 0, 0, 0};
 
