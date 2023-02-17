@@ -35,4 +35,11 @@
 
 #define OCV_AVG             3
 
+//Fault times
+#define OVER_CURR_TIME      10
+#define OVER_CHG_CURR_TIME  10
+#define UNDER_VOLT_TIME     10
+#define OVER_VOLT_TIME      10
+#define LOW_CELL_TIME       10
+
 #endif

@@ -18,13 +18,12 @@ WDT_T4<WDT1> wdt;
 AccumulatorData_t *prevAccData = nullptr;
 
 uint32_t bmsFault = FAULTS_CLEAR;
-
-uint16_t overVoltCount = 0;
-uint16_t underVoltCount = 0;
-uint16_t overCurrCount = 0;
 uint16_t chargeOverVolt = 0;
-uint16_t overChgCurrCount = 0;
-uint16_t lowCellCount = 0;
+
+//states for fault timers
+enum f{BEFORE_TIMER_START, FAULT_EVAL};
+//initial fault enum state
+f faultEvalState = BEFORE_TIMER_START;
 
 /**
  * @brief Algorithm behind determining which cells we want to balance
@@ -243,60 +242,89 @@ uint32_t faultCheck(AccumulatorData_t *accData)
 	// Check for fuckies
 	uint32_t faultStatus = 0;
 
+    //Fault Timers
+    static Timer overCurrTimer;
+    static Timer overChgCurrTimer;
+    static Timer underVoltTimer;
+    static Timer overVoltTimer;
+    static Timer lowCellTimer;
+
+
 	// Over current fault for discharge
-	if ((accData->packCurrent) > ((accData->dischargeLimit)*10)) 
-	{
-		overCurrCount++;
-		if (overCurrCount > 10) 
-		{ // 0.10 seconds @ 100Hz rate
-			faultStatus |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
-		}
-	} else 
-	{
-		overCurrCount = 0;
-	}
+    if (faultEvalState == BEFORE_TIMER_START && (accData->packCurrent) > ((accData->dischargeLimit)*10))
+    {
+        overCurrTimer.startTimer(OVER_CURR_TIME);
+        faultEvalState = FAULT_EVAL;
+    }
+    else if (faultEvalState == FAULT_EVAL)
+    {
+        if (overCurrTimer.isTimerExpired())
+        {
+            faultStatus |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
+        }
+        else if (!((accData->packCurrent) > ((accData->dischargeLimit)*10)))
+        {
+            overCurrTimer.cancelTimer();
+            faultEvalState = BEFORE_TIMER_START;
+        }
+    }
 
 	// Over current fault for charge
-	if ((accData->packCurrent) < 0 && abs((accData->packCurrent)) > ((accData->chargeLimit)*10))
-	{
-		overChgCurrCount++;
-		if (overChgCurrCount > 100) 
-		{ // 1 seconds @ 100Hz rate
-			faultStatus |= CHARGE_LIMIT_ENFORCEMENT_FAULT;
-		}
-	} 
-	else 
-	{
-		overChgCurrCount = 0;
-	} 
+    if (faultEvalState == BEFORE_TIMER_START && ((accData->packCurrent) < 0 && abs((accData->packCurrent)) > ((accData->chargeLimit)*10)))
+    {
+        overChgCurrTimer.startTimer(OVER_CHG_CURR_TIME);
+        faultEvalState = FAULT_EVAL;
+    }
+    else if (faultEvalState == FAULT_EVAL)
+    {
+        if (overChgCurrTimer.isTimerExpired())
+        {
+            faultStatus |= CHARGE_LIMIT_ENFORCEMENT_FAULT;
+        }
+        else if (!(accData->packCurrent) < 0 && abs((accData->packCurrent)) > ((accData->chargeLimit)*10))
+        {
+            overChgCurrTimer.cancelTimer();
+            faultEvalState = BEFORE_TIMER_START;
+        }
+    }
 
 	// Low cell voltage fault
-	if (accData->minVoltage.val < MIN_VOLT * 10000) 
-	{
-
-		underVoltCount++;
-		if (underVoltCount > 900)
-		{ // 9 seconds @ 100Hz rate
-			faultStatus |= CELL_VOLTAGE_TOO_LOW;
-		}
-	} 
-	else 
-	{
-		underVoltCount = 0;
-	}
+    if (faultEvalState == BEFORE_TIMER_START && accData->minVoltage.val < MIN_VOLT * 10000)
+    {
+        underVoltTimer.startTimer(UNDER_VOLT_TIME );
+        faultEvalState = FAULT_EVAL;
+    }
+    else if (faultEvalState == FAULT_EVAL)
+    {
+        if (underVoltTimer.isTimerExpired())
+        {
+            faultStatus |= CELL_VOLTAGE_TOO_LOW;
+        }
+        else if (!(accData->minVoltage.val < MIN_VOLT * 10000))
+        {
+            underVoltTimer.cancelTimer();
+            faultEvalState = BEFORE_TIMER_START;
+        }
+    }
 
 	// High cell voltage fault
-	if (((accData->maxVoltage.val > MAX_VOLT * 10000) && digitalRead(CHARGE_DETECT) == HIGH) || (accData->maxVoltage.val > MAX_CHARGE_VOLT * 10000)) 
-	{ // Needs to be reimplemented with a flag for every cell in case multiple go over
-		overVoltCount++;
-		if (overVoltCount > 900) { // 9 seconds @ 100Hz rate
-			faultStatus |= CELL_VOLTAGE_TOO_HIGH;
-		}
-	} 
-	else 
-	{
-		overVoltCount = 0;
-	}
+    if (faultEvalState == BEFORE_TIMER_START && ((accData->maxVoltage.val > MAX_VOLT * 10000) && digitalRead(CHARGE_DETECT) == HIGH) || (accData->maxVoltage.val > MAX_CHARGE_VOLT * 10000))
+    {
+        overVoltTimer.startTimer(OVER_VOLT_TIME);
+        faultEvalState = FAULT_EVAL;
+    }
+    else if (faultEvalState == FAULT_EVAL)
+    {
+        if (overVoltTimer.isTimerExpired())
+        {
+            faultStatus |= CELL_VOLTAGE_TOO_HIGH;
+        }
+        else if (!((accData->maxVoltage.val > MAX_VOLT * 10000) && digitalRead(CHARGE_DETECT) == HIGH) || (accData->maxVoltage.val > MAX_CHARGE_VOLT * 10000))
+        {
+            overVoltTimer.cancelTimer();
+            faultEvalState = BEFORE_TIMER_START;
+        }
+    }
 
 	// High Temp Fault
 	if (accData->maxTemp.val > MAX_CELL_TEMP) {
@@ -304,17 +332,23 @@ uint32_t faultCheck(AccumulatorData_t *accData)
 	}
 
 	// Extremely low cell voltage fault
-	if (accData->minVoltage.val < 900) 
-	{ // 90mV
-		lowCellCount++;
-		if (lowCellCount > 100) { // 1 seconds @ 100Hz rate
-			faultStatus |= LOW_CELL_VOLTAGE;
-		}
-	} 
-	else 
-	{
-		lowCellCount = 0;
-	}
+    if (faultEvalState == BEFORE_TIMER_START && (accData->minVoltage.val < 900))
+    {
+        lowCellTimer.startTimer(LOW_CELL_TIME);
+        faultEvalState = FAULT_EVAL;
+    }
+    else if (faultEvalState == FAULT_EVAL)
+    {
+        if (lowCellTimer.isTimerExpired())
+        {
+            faultStatus |= LOW_CELL_VOLTAGE;
+        }
+        else if (!(accData->minVoltage.val < 900))
+        {
+            lowCellTimer.cancelTimer();
+            faultEvalState = BEFORE_TIMER_START;
+        }
+    }
 
 	return faultStatus;
 }
