@@ -79,13 +79,14 @@ struct AccumulatorData_t
 
     FaultStatus_t faultStatus = NOT_FAULTED;
 
-    int16_t packCurrent;
+    int16_t packCurrent;                        // this value is multiplied by 10 to account for decimal precision
     uint16_t packVoltage;
     uint16_t packRes;
 
     uint16_t dischargeLimit;
     uint16_t chargeLimit;
     uint16_t contDCL;
+    uint8_t soc;
 
     /**
      * @brief Note that this is a 32 bit integer, so there are 32 max possible fault codes

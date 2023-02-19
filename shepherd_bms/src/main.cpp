@@ -11,6 +11,7 @@
 #include "compute.h"
 #include "calcs.h"
 #include "datastructs.h"
+#include "analyzer.h"
 
 WDT_T4<WDT1> wdt;
 
@@ -135,7 +136,7 @@ void broadcastCurrentLimit(AccumulatorData_t *bmsdata)
 		BoostState = BOOST_STANDBY;
 	}
 	//Transition to boosting
-	if(bmsdata->packCurrent > (int16_t)bmsdata->contDCL && BoostState == BOOST_STANDBY)
+	if((bmsdata->packCurrent) > ((bmsdata->contDCL)*10) && BoostState == BOOST_STANDBY)
 	{
 		BoostState = BOOSTING;
 		boostTimer.startTimer(BOOST_TIME);
@@ -163,7 +164,7 @@ const void printBMSStats(AccumulatorData_t *accData)
 	if(!debug_statTimer.isTimerExpired()) return;
 
 	Serial.print("Current: ");
-	Serial.println(accData->packCurrent);
+	Serial.println((accData->packCurrent)/10);
 	Serial.print("Min, Max, Avg Temps: ");
 	Serial.print(accData->minTemp.val);
 	Serial.print(",  ");
@@ -184,6 +185,9 @@ const void printBMSStats(AccumulatorData_t *accData)
 
 	Serial.print("CCL: ");
 	Serial.println(accData->chargeLimit);
+
+	Serial.print("SoC: ");
+	Serial.println(accData->soc);
 
 	Serial.print("Is Balancing?: ");
 	Serial.println(segment.isBalancing()); 
@@ -240,7 +244,7 @@ uint32_t faultCheck(AccumulatorData_t *accData)
 	uint32_t faultStatus = 0;
 
 	// Over current fault for discharge
-	if (accData->packCurrent > accData->dischargeLimit) 
+	if ((accData->packCurrent) > ((accData->dischargeLimit)*10)) 
 	{
 		overCurrCount++;
 		if (overCurrCount > 10) 
@@ -253,7 +257,7 @@ uint32_t faultCheck(AccumulatorData_t *accData)
 	}
 
 	// Over current fault for charge
-	if (accData->packCurrent < 0 && abs(accData->packCurrent) > accData->chargeLimit) 
+	if ((accData->packCurrent) < 0 && abs((accData->packCurrent)) > ((accData->chargeLimit)*10))
 	{
 		overChgCurrCount++;
 		if (overChgCurrCount > 100) 
@@ -329,27 +333,19 @@ void shepherdMain()
 	//Not state specific
 	segment.retrieveSegmentData(accData->chipData);
 	accData->packCurrent = compute.getPackCurrent();
-	disableTherms(accData, prevAccData);
 	//compute.getTSGLV();
 	//etc
 
 	//Perform calculations on the data in the frame
 	//Some calculations might be state dependent
-	calcCellTemps(accData);
-	calcPackTemps(accData);
-	calcPackVoltageStats(accData);
-	calcOpenCellVoltage(accData, prevAccData);
-	calcCellResistances(accData);
-	calcDCL(accData);
-	calcContDCL(accData);
-	calcContCCL(accData);
+	analyzer.push(accData);
 
 	#ifdef DEBUG_STATS
-	printBMSStats(accData);
+	printBMSStats(analyzer.bmsdata);
 	#endif
 
 	// Check for faults
-	bmsFault |= faultCheck(accData);
+	bmsFault |= faultCheck(analyzer.bmsdata);
 
 	// ACTIVE/NORMAL STATE
 	if (bmsFault == FAULTS_CLEAR) 
@@ -389,7 +385,7 @@ void shepherdMain()
 		if (digitalRead(CHARGE_DETECT) == LOW && bmsFault == FAULTS_CLEAR) 
 		{
 			// Check if we should charge
-			if (chargingCheck(accData)) 
+			if (chargingCheck(analyzer.bmsdata)) 
 			{
 				digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
 				compute.enableCharging(true);
@@ -403,9 +399,9 @@ void shepherdMain()
 			}
 
 			// Check if we should balance
-			if (balancingCheck(accData)) 
+			if (balancingCheck(analyzer.bmsdata)) 
 			{
-				balanceCells(accData);
+				balanceCells(analyzer.bmsdata);
 			} 
 			else 
 			{
@@ -415,7 +411,7 @@ void shepherdMain()
 			// Send CAN message, but not too often
 			if (chargeMessageTimer.isTimerExpired()) 
 			{
-				compute.sendChargingMessage(MAX_CHARGE_VOLT * NUM_CELLS_PER_CHIP * NUM_CHIPS, accData->chargeLimit);
+				compute.sendChargingMessage((MAX_CHARGE_VOLT * NUM_CELLS_PER_CHIP * NUM_CHIPS), analyzer.bmsdata);
 				chargeMessageTimer.startTimer(CHARGE_MESSAGE_WAIT);
 			}
 		} 
@@ -426,13 +422,10 @@ void shepherdMain()
 	}
 
 
-	broadcastCurrentLimit(accData);
-	compute.sendAccStatusMessage(accData->packVoltage, accData->packCurrent, 0, 0, 0);
-	compute.sendCurrentsStatus(accData->dischargeLimit, accData->chargeLimit, accData->packCurrent);
-	compute.setFanSpeed(calcFanPWM(accData));
-
-	prevAccData = accData;
-	delete accData;
+	broadcastCurrentLimit(analyzer.bmsdata);
+	compute.sendAccStatusMessage(analyzer.bmsdata->packVoltage, analyzer.bmsdata->packCurrent, 0, 0, 0);
+	compute.sendCurrentsStatus(analyzer.bmsdata->dischargeLimit, analyzer.bmsdata->chargeLimit, analyzer.bmsdata->packCurrent);
+	compute.setFanSpeed(calcFanPWM(analyzer.bmsdata));
 }
 
 void setup()

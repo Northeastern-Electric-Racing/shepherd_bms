@@ -1,6 +1,35 @@
-#include "calcs.h"
+#include "analyzer.h"
 
-void calcCellTemps(AccumulatorData_t *bmsdata)
+Analyzer analyzer;
+
+Analyzer::Analyzer(){}
+
+Analyzer::~Analyzer(){}
+
+void Analyzer::push(AccumulatorData_t *data)
+{
+    if(prevbmsdata != nullptr)
+        delete prevbmsdata;
+
+    prevbmsdata = bmsdata;
+    bmsdata = data;
+
+    disableTherms();
+
+    calcCellTemps();
+	calcPackTemps();
+	calcPackVoltageStats();
+	calcOpenCellVoltage();
+	calcCellResistances();
+	calcDCL();
+	calcContDCL();
+	calcContCCL();
+	calcStateOfCharge();
+
+    isFirstReading = false;
+}
+
+void Analyzer::calcCellTemps()
 {
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
@@ -25,7 +54,7 @@ void calcCellTemps(AccumulatorData_t *bmsdata)
     }
 }
 
-void calcPackTemps(AccumulatorData_t *bmsdata)
+void Analyzer::calcPackTemps()
 {
     bmsdata->maxTemp = {MIN_TEMP, 0, 0};
     bmsdata->minTemp = {MAX_TEMP, 0, 0};
@@ -54,7 +83,7 @@ void calcPackTemps(AccumulatorData_t *bmsdata)
     bmsdata->avgTemp = totalTemp / 44;
 }
 
-void calcPackVoltageStats(AccumulatorData_t *bmsdata) {
+void Analyzer::calcPackVoltageStats() {
     bmsdata->maxVoltage = {MIN_VOLT_MEAS, 0, 0};
     bmsdata->minVoltage = {MAX_VOLT_MEAS, 0, 0};
     uint32_t totalVolt = 0;
@@ -84,7 +113,7 @@ void calcPackVoltageStats(AccumulatorData_t *bmsdata) {
     bmsdata->deltVoltage = bmsdata->maxVoltage.val - bmsdata->minVoltage.val;
 }
 
-void calcCellResistances(AccumulatorData_t *bmsdata)
+void Analyzer::calcCellResistances()
 {
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
@@ -105,7 +134,7 @@ void calcCellResistances(AccumulatorData_t *bmsdata)
     }
 }
 
-void calcDCL(AccumulatorData_t *bmsdata)
+void Analyzer::calcDCL()
 {
     int16_t currentLimit = 0x7FFF;
 
@@ -133,7 +162,7 @@ void calcDCL(AccumulatorData_t *bmsdata)
     }
 }
 
-void calcContDCL(AccumulatorData_t *bmsdata)
+void Analyzer::calcContDCL()
 {
     uint8_t minResIndex = (bmsdata->minTemp.val - MIN_TEMP) / 5;  //resistance LUT increments by 5C for each index
     uint8_t maxResIndex = (bmsdata->maxTemp.val - MIN_TEMP) / 5;
@@ -148,7 +177,7 @@ void calcContDCL(AccumulatorData_t *bmsdata)
     }
 }
 
-void calcContCCL(AccumulatorData_t *bmsdata)
+void Analyzer::calcContCCL()
 {
     uint8_t minResIndex = (bmsdata->minTemp.val - MIN_TEMP) / 5;  //resistance LUT increments by 5C for each index
     uint8_t maxResIndex = (bmsdata->maxTemp.val - MIN_TEMP) / 5;
@@ -163,10 +192,10 @@ void calcContCCL(AccumulatorData_t *bmsdata)
     }
 }
 
-void calcOpenCellVoltage(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata) 
+void Analyzer::calcOpenCellVoltage() 
 {
     // if there is no previous data point, set inital open cell voltage to current reading
-    if (prevbmsdata == NULL) 
+    if (isFirstReading)
     {
         for (uint8_t chip = 0; chip < NUM_CHIPS; chip++) 
         {
@@ -201,7 +230,7 @@ void calcOpenCellVoltage(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsd
     }
 }
 
-uint8_t calcFanPWM(AccumulatorData_t *bmsdata)
+uint8_t Analyzer::calcFanPWM()
 {
     // Resistance LUT increments by 5C for each index, plus we account for negative minimum
     uint8_t minResIndex = (bmsdata->maxTemp.val - MIN_TEMP) / 5;
@@ -214,10 +243,10 @@ uint8_t calcFanPWM(AccumulatorData_t *bmsdata)
     return ((FAN_CURVE[maxResIndex] * partOfIndex) + (FAN_CURVE[minResIndex] * (5 - partOfIndex))) / (2 * 5);
 }
 
-void disableTherms(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata)
+void Analyzer::disableTherms()
 {
     int8_t tempRepl = 25; // Iniitalize to room temp (necessary to stabilize when the BMS first boots up/has null values)
-    if (prevbmsdata->avgTemp != 0) tempRepl = prevbmsdata->avgTemp; // Set to actual average temp of the pack
+    if (!isFirstReading) tempRepl = prevbmsdata->avgTemp; // Set to actual average temp of the pack
 
     for(uint8_t c = 1; c < NUM_CHIPS; c+= 2)
     {
@@ -233,7 +262,7 @@ void disableTherms(AccumulatorData_t *bmsdata, AccumulatorData_t *prevbmsdata)
     }
 }
 
-void calcStateOfCharge(AccumulatorData_t *bmsdata)
+void Analyzer::calcStateOfCharge()
 {
     int index = (((bmsdata->minVoltage.val) - MIN_VOLT) / .1);
 
