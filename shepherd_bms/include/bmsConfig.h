@@ -37,51 +37,6 @@
 
 
 //this should be used to "activate" our therms, since we dont check or run calculations on all of them
-bool used_therm[8][32] = 
 
-{
-
-{ // chip 1
-false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-false, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false 
-},
-
-{// chip 2
-false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false
-},
-
-{ //chip 3
-false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-false, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false 
-},
-
-{// chip 4
-false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false
-},
-
-{// chip 5
-false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-false, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false 
-},
-
-{// chip 6
-false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false
-},
-
-{//chip 7
-false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-false, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false 
-},
-
-{//chip 8
-false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false
-}
-
-
-};
 
 #endif

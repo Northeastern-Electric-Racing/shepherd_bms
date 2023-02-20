@@ -249,10 +249,10 @@ FaultStatus_t SegmentInterface::pullThermistors()
 		{
             
             // Prevents filling in unused therm data
-            if (!used_therm[c][therm]) //? how can we differntiate therm vs therm +16 
-            {
-              break;
-            }
+            //if (!used_therm[c][therm]) //? how can we differntiate therm vs therm +16 
+            //{
+            //  break;
+           // }
             // Get current temperature LUT. Voltage is adjusted to account for 5V reg fluctuations (index 2 is a reading of the ADC 5V ref)
             segmentData[c].thermistorReading[therm - 1] = steinhartEst(rawTempVoltages[c][0] * (float(rawTempVoltages[c][2]) / 50000) + VOLT_TEMP_CALIB_OFFSET);
             segmentData[c].thermistorReading[therm + 15] = steinhartEst(rawTempVoltages[c][1] * (float(rawTempVoltages[c][2]) / 50000) + VOLT_TEMP_CALIB_OFFSET);

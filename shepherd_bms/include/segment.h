@@ -23,8 +23,6 @@ Depending on hardware setup, we may not always use every therm on every chip
 #define CHIP_INUSE_NUM     4
 
 
-
-
 /**
  * @brief This class serves as the interface for all of the segment boards
  */
@@ -139,6 +137,54 @@ class SegmentInterface
          * @return false 
          */
         bool isBalancing();
+
+        bool used_therm[8][32] = 
+
+{
+
+{ // chip 1
+false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+false, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false 
+},
+
+{// chip 2
+false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false
+},
+
+{ //chip 3
+false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+false, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false 
+},
+
+{// chip 4
+false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false
+},
+
+{// chip 5
+false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+false, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false 
+},
+
+{// chip 6
+false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false
+},
+
+{//chip 7
+false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+false, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false 
+},
+
+{//chip 8
+false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false
+}
+
+
+};
+
 };
 
 extern SegmentInterface segment;
