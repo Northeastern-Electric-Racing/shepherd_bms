@@ -61,7 +61,7 @@ void Analyzer::calcPackTemps()
     int totalTemp = 0;
     for(uint8_t c = 1; c < NUM_CHIPS; c += 2)
     {
-        for(uint8_t therm = 17; therm < 28; therm++) 
+        for(uint8_t therm = 17; therm < 28; therm++) //todo 4 - do we want to keep this the same or utilize the same bool table for portability?
         {
             // finds out the maximum cell temp and location
             if (bmsdata->chipData[c].thermistorValue[therm] > bmsdata->maxTemp.val) 

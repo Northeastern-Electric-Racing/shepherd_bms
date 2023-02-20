@@ -173,7 +173,7 @@ FaultStatus_t SegmentInterface::pullVoltages()
      * If we haven't waited long enough between pulling voltage data
      * just copy over the contents of the last good reading and the fault status from the most recent attempt
      */
-    if(!voltageReadingTimer.isTimerExpired()) //todo ? 1
+    if(!voltageReadingTimer.isTimerExpired()) 
     {
         for(uint8_t c=0; c<NUM_CHIPS; c++)
         {
@@ -182,7 +182,7 @@ FaultStatus_t SegmentInterface::pullVoltages()
         return voltageError;
     }
 
-    uint16_t segmentVoltages[NUM_CHIPS][12];   //todo ? 2
+    uint16_t segmentVoltages[NUM_CHIPS][12];   
 
     pushChipConfigurations();
     LTC6804_adcv();
@@ -191,7 +191,7 @@ FaultStatus_t SegmentInterface::pullVoltages()
      * If we received an incorrect PEC indicating a bad read
      * copy over the data from the last good read and indicate an error
      */
-    if(LTC6804_rdcv(0, NUM_CHIPS, segmentVoltages) == -1)   //todo ? 3
+    if(LTC6804_rdcv(0, NUM_CHIPS, segmentVoltages) == -1)   
     {
         for(uint8_t i=0; i<NUM_CHIPS; i++)
         {
@@ -203,7 +203,7 @@ FaultStatus_t SegmentInterface::pullVoltages()
     /**
      * If the read was successful, copy the voltage data
      */
-    for (uint8_t i = 0; i < NUM_CHIPS; i++)         //todo ? 4 
+    for (uint8_t i = 0; i < NUM_CHIPS; i++)         
     {
         for (uint8_t j = 0; j < NUM_CELLS_PER_CHIP; j++)
         {
@@ -223,18 +223,20 @@ FaultStatus_t SegmentInterface::pullThermistors()
     // If polled too soon, just copy existing values from memory
 	if (!thermTimer.isTimerExpired())
 	{
-		for(uint8_t c=0; c<NUM_CHIPS; c++)  //todo ? 5 
+		for(uint8_t c=0; c<NUM_CHIPS; c++)  //todo ? 1 
         {
             memcpy(segmentData[c].thermistorReading, previousData[c].thermistorReading, sizeof(segmentData[c].thermistorReading));
         }
         return voltageError;
 	}
 
-    uint16_t rawTempVoltages[NUM_CHIPS][6];     //todo ? 6
+    uint16_t rawTempVoltages[NUM_CHIPS][6];
 
     // Rotate through all thermistor pairs (we can poll two at once)
-    for (int therm = 1; therm <= 16; therm++) // todo ? 7 - how can we do this pair logic with 11 therms 17-28?
+    for (int therm = 1; therm <= 16; therm++) // todo 2 - do we wanna prevent this top code chunk from running too?
 	{
+
+        
         // Sets multiplexors to select thermistors
         SelectTherm(therm);
         SelectTherm(therm + 16);
@@ -243,8 +245,14 @@ FaultStatus_t SegmentInterface::pullThermistors()
         LTC6804_adax(); // Run ADC for AUX (GPIOs and refs)
         LTC6804_rdaux(0, NUM_CHIPS, rawTempVoltages); // Fetch ADC results from AUX registers
 
-        for (int c = 0; c < NUM_CHIPS; c++) //todo ? 8
+        for (int c = 0; c < NUM_CHIPS; c++) 
 		{
+            
+            // Prevents filling in unused therm data
+            if (!used_therm[c][therm]) //? how can we differntiate therm vs therm +16 
+            {
+              break;
+            }
             // Get current temperature LUT. Voltage is adjusted to account for 5V reg fluctuations (index 2 is a reading of the ADC 5V ref)
             segmentData[c].thermistorReading[therm - 1] = steinhartEst(rawTempVoltages[c][0] * (float(rawTempVoltages[c][2]) / 50000) + VOLT_TEMP_CALIB_OFFSET);
             segmentData[c].thermistorReading[therm + 15] = steinhartEst(rawTempVoltages[c][1] * (float(rawTempVoltages[c][2]) / 50000) + VOLT_TEMP_CALIB_OFFSET);
@@ -290,7 +298,7 @@ FaultStatus_t SegmentInterface::pullThermistors()
 	return NOT_FAULTED; // Read successfully
 }
 
-void SegmentInterface::SelectTherm(uint8_t therm) 
+void SegmentInterface::SelectTherm(uint8_t therm) //todo 3 - nothing to be done here I assume?
 {
 	// Exit if out of range values
 	if (therm < 0 || therm > 32) {
