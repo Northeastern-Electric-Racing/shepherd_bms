@@ -56,26 +56,27 @@ void Analyzer::calcCellTemps()
 
 void Analyzer::calcPackTemps()
 {
+
     bmsdata->maxTemp = {MIN_TEMP, 0, 0};
     bmsdata->minTemp = {MAX_TEMP, 0, 0};
     int totalTemp = 0;
-    for(uint8_t c = 1; c < NUM_CHIPS; c += 2)
+    for(uint8_t c = 1; c < NUM_CHIPS; c++)
     {
-        for(uint8_t therm = 17; therm < 28; therm++) //todo 4 - do we want to keep this the same or utilize the same bool table for portability?
+        for(uint8_t therm = START_THERM; therm < END_THERM; therm++) 
         {
             // finds out the maximum cell temp and location
-            if (bmsdata->chipData[c].thermistorValue[therm] > bmsdata->maxTemp.val) 
+            if (bmsdata->chipData[c].thermistorValue[therm - START_THERM] > bmsdata->maxTemp.val) 
             {
-                bmsdata->maxTemp = {bmsdata->chipData[c].thermistorValue[therm], c, therm};
+                bmsdata->maxTemp = {bmsdata->chipData[c].thermistorValue[therm - START_THERM], c, static_cast<uint8_t>(therm - START_THERM)};
             }
 
             // finds out the minimum cell temp and location
-            if (bmsdata->chipData[c].thermistorValue[therm] < bmsdata->minTemp.val) 
+            if (bmsdata->chipData[c].thermistorValue[therm - START_THERM] < bmsdata->minTemp.val) 
             {
-                bmsdata->minTemp = {bmsdata->chipData[c].thermistorValue[therm], c, therm};
+                bmsdata->minTemp = {bmsdata->chipData[c].thermistorValue[therm - START_THERM], c, static_cast<uint8_t>(therm - START_THERM)};
             }
             
-            totalTemp += bmsdata->chipData[c].thermistorValue[therm];
+            totalTemp += bmsdata->chipData[c].thermistorValue[therm - START_THERM];
         }
     }
 
@@ -250,13 +251,13 @@ void Analyzer::disableTherms()
 
     for(uint8_t c = 1; c < NUM_CHIPS; c+= 2)
     {
-        for(uint8_t therm = 17; therm < 28; therm++)
+        for(uint8_t therm = START_THERM; therm < END_THERM; therm++)
         {
             // If 2D LUT shows therm should be disable
-            if (THERM_DISABLE[(c - 1) / 2][therm - 17])
+            if (THERM_DISABLE[(c - 1) / 2][therm - START_THERM])
             {
                 // Nullify thermistor by setting to pack average
-                bmsdata->chipData[c].thermistorValue[therm] = tempRepl;
+                bmsdata->chipData[c].thermistorValue[therm - START_THERM] = tempRepl;
             }
         }
     }

@@ -35,8 +35,10 @@
 
 #define OCV_AVG             3
 
-
-//this should be used to "activate" our therms, since we dont check or run calculations on all of them
+//we do not check all therms, so these represent the start and end therm iterators
+#define START_THERM         17
+#define END_THERM           28
+#define THERM_RANGE         12 // we have to pull two therms at a time, so we need to round the odd range up 1 to ge to even value
 
 
 #endif
