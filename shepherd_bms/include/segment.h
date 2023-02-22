@@ -11,18 +11,6 @@
 
 #define THERM_AVG           15 // Number of values to average
 
-/* 
-these values are used to shift our therm data to appropriate settings. 
-Depending on hardware setup, we may not always use every therm on every chip 
-*/
-
-#define THERM_START_NUM    17 // starting therm
-#define THERM_END_NUM      28 // ending therm
-#define THERM_CHIP_INCR    2 // chip frequency (2 = only check every other chip)
-#define THERM_INUSE_NUM    11 
-#define CHIP_INUSE_NUM     4
-
-
 /**
  * @brief This class serves as the interface for all of the segment boards
  */
