@@ -262,7 +262,7 @@ FaultStatus_t SegmentInterface::pullThermistors()
                 // Directly update for a set time from start up due to therm voltages needing to settle
                 if (thermSettleTime < THERM_AVG * 10) 
                 {
-                    segmentData[c].thermistorValue[therm - START_THERM] = segmentData[c].thermistorReading[therm - 1];
+                    segmentData[c].thermistorValue[therm - START_THERM] = segmentData[c].thermistorReading[therm - START_THERM];
                     thermSettleTime++;
                 }   else 
                 {
@@ -271,11 +271,11 @@ FaultStatus_t SegmentInterface::pullThermistors()
                     if (segmentData[c].thermistorReading[therm - START_THERM] != 33) 
                     {
                         // If measured value is larger than current "averaged" value, increment value
-                        if (segmentData[c].thermistorReading[therm - START_THERM] > segmentData[c].thermistorValue[therm - 1]) 
+                        if (segmentData[c].thermistorReading[therm - START_THERM] > segmentData[c].thermistorValue[therm - START_THERM]) 
                         {
                         segmentData[c].thermistorValue[therm - START_THERM]++;
                     // If measured value is smaller than current "averaged" value, decrement value
-                        } else if (segmentData[c].thermistorReading[therm - START_THERM] < segmentData[c].thermistorValue[therm - 1]) 
+                        } else if (segmentData[c].thermistorReading[therm - START_THERM] < segmentData[c].thermistorValue[therm - START_THERM]) 
                         {
                             segmentData[c].thermistorValue[therm - START_THERM]--;
                         }
@@ -295,7 +295,7 @@ FaultStatus_t SegmentInterface::pullThermistors()
                 // Directly update for a set time from start up due to therm voltages needing to settle
                 if (thermSettleTime < THERM_AVG * 10) 
                 {
-                    segmentData[c].thermistorValue[(therm+16) - START_THERM] = segmentData[c].thermistorReading[therm - 1];
+                    segmentData[c].thermistorValue[(therm+16) - START_THERM] = segmentData[c].thermistorReading[(therm+16) - START_THERM];
                     thermSettleTime++;
                 }   else 
                 {
@@ -304,11 +304,11 @@ FaultStatus_t SegmentInterface::pullThermistors()
                     if (segmentData[c].thermistorReading[(therm+16) - START_THERM] != 33) 
                     {
                         // If measured value is larger than current "averaged" value, increment value
-                        if (segmentData[c].thermistorReading[(therm+16) - START_THERM] > segmentData[c].thermistorValue[therm - 1]) 
+                        if (segmentData[c].thermistorReading[(therm+16) - START_THERM] > segmentData[c].thermistorValue[(therm+16) - START_THERM]) 
                         {
                         segmentData[c].thermistorValue[(therm+16) - START_THERM]++;
                     // If measured value is smaller than current "averaged" value, decrement value
-                        } else if (segmentData[c].thermistorReading[(therm+16) - START_THERM] < segmentData[c].thermistorValue[therm - 1]) 
+                        } else if (segmentData[c].thermistorReading[(therm+16) - START_THERM] < segmentData[c].thermistorValue[(therm+16) - START_THERM]) 
                         {
                             segmentData[c].thermistorValue[(therm+16) - START_THERM]--;
                         }
