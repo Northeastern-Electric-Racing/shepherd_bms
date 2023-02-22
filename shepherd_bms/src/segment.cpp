@@ -231,64 +231,96 @@ FaultStatus_t SegmentInterface::pullThermistors()
 	}
 
     uint16_t rawTempVoltages[NUM_CHIPS][6];
+    uint8_t therm_up_iterator = 0;
+    uint8_t therm_down_iterator = 0;
 
     // Rotate through all thermistor pairs (we can poll two at once)
-    for (int therm = START_THERM; therm <= (END_THERM - 6); therm++) // therm range = 11 = ~12, two at a time = 6 iterations
+    for (int therm = 1; therm <= 16; therm++) // therm range = 11 = ~12, two at a time = 6 iterations
 	{
 
-        
         // Sets multiplexors to select thermistors
-        SelectTherm(therm);
-        SelectTherm(therm + 6);
+        if (therm >= START_THERM && therm < END_THERM)
+        {
+            SelectTherm(therm);
+        }
+        
+        if ((therm +16) >= START_THERM && (therm+16) < END_THERM)
+        {
+            SelectTherm(therm + 16);
+        }
+
 		
 		pushChipConfigurations();
         LTC6804_adax(); // Run ADC for AUX (GPIOs and refs)
         LTC6804_rdaux(0, NUM_CHIPS, rawTempVoltages); // Fetch ADC results from AUX registers
 
-        for (int c = 0; c < NUM_CHIPS; c++) 
-		{
-            
-          
-            // Get current temperature LUT. Voltage is adjusted to account for 5V reg fluctuations (index 2 is a reading of the ADC 5V ref)
-            segmentData[c].thermistorReading[therm - START_THERM] = steinhartEst(rawTempVoltages[c][0] * (float(rawTempVoltages[c][2]) / 50000) + VOLT_TEMP_CALIB_OFFSET);
-            segmentData[c].thermistorReading[therm - ((END_THERM - 6)/2)] = steinhartEst(rawTempVoltages[c][1] * (float(rawTempVoltages[c][2]) / 50000) + VOLT_TEMP_CALIB_OFFSET);
+        if (therm >= START_THERM && therm < END_THERM)
+        {
+            for (int c = 0; c < NUM_CHIPS; c++) 
+		    {
+                // Get current temperature LUT. Voltage is adjusted to account for 5V reg fluctuations (index 2 is a reading of the ADC 5V ref)
+                segmentData[c].thermistorReading[therm - START_THERM] = steinhartEst(rawTempVoltages[c][0] * (float(rawTempVoltages[c][2]) / 50000) + VOLT_TEMP_CALIB_OFFSET);
 
-            // Directly update for a set time from start up due to therm voltages needing to settle
-            if (thermSettleTime < THERM_AVG * 10) 
-            {
-                segmentData[c].thermistorValue[therm - START_THERM] = segmentData[c].thermistorReading[therm - 1];
-                segmentData[c].thermistorValue[therm - ((END_THERM - 6)/2)] = segmentData[c].thermistorReading[therm + 15];
-                thermSettleTime++;
-            } else 
-            {
-                // We need to investigate this. Very sloppy
-                // Discard if reading is 33C
-                if (segmentData[c].thermistorReading[therm - START_THERM] != 33) 
+                // Directly update for a set time from start up due to therm voltages needing to settle
+                if (thermSettleTime < THERM_AVG * 10) 
                 {
-                    // If measured value is larger than current "averaged" value, increment value
-                    if (segmentData[c].thermistorReading[therm - START_THERM] > segmentData[c].thermistorValue[therm - 1]) 
+                    segmentData[c].thermistorValue[therm - START_THERM] = segmentData[c].thermistorReading[therm - 1];
+                    thermSettleTime++;
+                }   else 
+                {
+                    // We need to investigate this. Very sloppy
+                    // Discard if reading is 33C
+                    if (segmentData[c].thermistorReading[therm - START_THERM] != 33) 
                     {
-                    segmentData[c].thermistorValue[therm - 1]++;
+                        // If measured value is larger than current "averaged" value, increment value
+                        if (segmentData[c].thermistorReading[therm - START_THERM] > segmentData[c].thermistorValue[therm - 1]) 
+                        {
+                        segmentData[c].thermistorValue[therm - 1]++;
                     // If measured value is smaller than current "averaged" value, decrement value
-                    } else if (segmentData[c].thermistorReading[therm - START_THERM] < segmentData[c].thermistorValue[therm - 1]) 
-                    {
-                        segmentData[c].thermistorValue[therm - START_THERM]--;
-                    }
-                }
-                
-                // See comments above. Identical but for the upper 16 therms
-                if (segmentData[c].thermistorReading[therm - ((END_THERM - 6)/2)] != 33)
-                {
-                    if (segmentData[c].thermistorReading[therm - ((END_THERM - 6)/2)] > segmentData[c].thermistorValue[therm + 5])
-                    {
-                    segmentData[c].thermistorValue[therm - ((END_THERM - 6)/2)]++;
-                    } else if (segmentData[c].thermistorReading[therm - ((END_THERM - 6)/2)] < segmentData[c].thermistorValue[therm + 5])
-                    {
-                        segmentData[c].thermistorValue[therm - ((END_THERM - 6)/2)]--;
+                        } else if (segmentData[c].thermistorReading[therm - START_THERM] < segmentData[c].thermistorValue[therm - 1]) 
+                        {
+                            segmentData[c].thermistorValue[therm - START_THERM]--;
+                        }
                     }
                 }
             }
         }
+
+        // same as a bove but for upper therms
+        if ((therm +16) >= START_THERM && (therm+16) < END_THERM)
+        {
+            for (int c = 0; c < NUM_CHIPS; c++) 
+		    {
+                // Get current temperature LUT. Voltage is adjusted to account for 5V reg fluctuations (index 2 is a reading of the ADC 5V ref)
+                segmentData[c].thermistorReading[(therm+16) - START_THERM] = steinhartEst(rawTempVoltages[c][0] * (float(rawTempVoltages[c][2]) / 50000) + VOLT_TEMP_CALIB_OFFSET);
+
+                // Directly update for a set time from start up due to therm voltages needing to settle
+                if (thermSettleTime < THERM_AVG * 10) 
+                {
+                    segmentData[c].thermistorValue[(therm+16) - START_THERM] = segmentData[c].thermistorReading[therm - 1];
+                    thermSettleTime++;
+                }   else 
+                {
+                    // We need to investigate this. Very sloppy
+                    // Discard if reading is 33C
+                    if (segmentData[c].thermistorReading[(therm+16) - START_THERM] != 33) 
+                    {
+                        // If measured value is larger than current "averaged" value, increment value
+                        if (segmentData[c].thermistorReading[(therm+16) - START_THERM] > segmentData[c].thermistorValue[therm - 1]) 
+                        {
+                        segmentData[c].thermistorValue[(therm+16) - 1]++;
+                    // If measured value is smaller than current "averaged" value, decrement value
+                        } else if (segmentData[c].thermistorReading[(therm+16) - START_THERM] < segmentData[c].thermistorValue[therm - 1]) 
+                        {
+                            segmentData[c].thermistorValue[(therm+16) - START_THERM]--;
+                        }
+                    }
+                
+                    
+                }
+            }
+        }
+        
     }
 	thermTimer.startTimer(THERM_WAIT_TIME); // Set timeout for reading therms
 	return NOT_FAULTED; // Read successfully
