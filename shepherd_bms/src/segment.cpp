@@ -231,8 +231,6 @@ FaultStatus_t SegmentInterface::pullThermistors()
 	}
 
     uint16_t rawTempVoltages[NUM_CHIPS][6];
-    uint8_t therm_up_iterator = 0;
-    uint8_t therm_down_iterator = 0;
 
     // Rotate through all thermistor pairs (we can poll two at once)
     for (int therm = 1; therm <= 16; therm++) // therm range = 11 = ~12, two at a time = 6 iterations
@@ -275,7 +273,7 @@ FaultStatus_t SegmentInterface::pullThermistors()
                         // If measured value is larger than current "averaged" value, increment value
                         if (segmentData[c].thermistorReading[therm - START_THERM] > segmentData[c].thermistorValue[therm - 1]) 
                         {
-                        segmentData[c].thermistorValue[therm - 1]++;
+                        segmentData[c].thermistorValue[therm - START_THERM]++;
                     // If measured value is smaller than current "averaged" value, decrement value
                         } else if (segmentData[c].thermistorReading[therm - START_THERM] < segmentData[c].thermistorValue[therm - 1]) 
                         {
@@ -308,7 +306,7 @@ FaultStatus_t SegmentInterface::pullThermistors()
                         // If measured value is larger than current "averaged" value, increment value
                         if (segmentData[c].thermistorReading[(therm+16) - START_THERM] > segmentData[c].thermistorValue[therm - 1]) 
                         {
-                        segmentData[c].thermistorValue[(therm+16) - 1]++;
+                        segmentData[c].thermistorValue[(therm+16) - START_THERM]++;
                     // If measured value is smaller than current "averaged" value, decrement value
                         } else if (segmentData[c].thermistorReading[(therm+16) - START_THERM] < segmentData[c].thermistorValue[therm - 1]) 
                         {

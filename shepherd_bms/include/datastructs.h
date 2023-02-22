@@ -13,8 +13,8 @@ struct ChipData_t
 {
     //These are retrieved from the initial LTC comms
     uint16_t voltageReading[NUM_CELLS_PER_CHIP];          //store voltage readings from each chip
-    int8_t thermistorReading[THERM_RANGE];       //store all therm readings from each chip
-    int8_t thermistorValue[THERM_RANGE];
+    int8_t thermistorReading[END_THERM - START_THERM];       //store all therm readings from each chip
+    int8_t thermistorValue[END_THERM - START_THERM];
     FaultStatus_t errorReading;
 
     //These are calculated during the analysis of data
