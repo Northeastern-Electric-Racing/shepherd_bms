@@ -4,6 +4,7 @@
 #include "datastructs.h"
 #include "analyzer.h"
 #include "compute.h"
+#include "segment.h"
 
 typedef enum
 {

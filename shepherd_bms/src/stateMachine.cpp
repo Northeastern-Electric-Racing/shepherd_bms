@@ -29,6 +29,8 @@ void StateMachine::handleBoot(AccumulatorData_t *bmsdata)
 
 void StateMachine::initReady()
 {
+    segment.enableBalancing(false);
+    compute.enableCharging(false);
     analyzer.push(prevAccData);
 }
 
@@ -40,6 +42,7 @@ void StateMachine::handleReady(AccumulatorData_t *bmsdata)
 void StateMachine::initCharging()
 {
     compute.enableCharging(true);
+    segment.enableBalancing(true);
     static Timer chargeMessageTimer;
 	static const uint16_t CHARGE_MESSAGE_WAIT = 250; //ms
 }
