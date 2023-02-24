@@ -2,6 +2,8 @@
 #define BMS_STATES_H
 
 #include "datastructs.h"
+#include "analyzer.h"
+#include "compute.h"
 
 typedef enum
 {
@@ -24,6 +26,7 @@ class StateMachine
         uint16_t chargeOverVolt;
         uint16_t overChgCurrCount;
         uint16_t lowCellCount;
+
         const bool validTransitionFromTo[NUM_STATES][NUM_STATES] = 
         { 
             //BOOT,     READY,      CHARGING,   FAULTED

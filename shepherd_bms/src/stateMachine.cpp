@@ -19,6 +19,7 @@ void StateMachine::initBoot()
     uint16_t chargeOverVolt = 0;
     uint16_t overChgCurrCount = 0;
     uint16_t lowCellCount = 0;
+    analyzer.push(prevAccData);
 }
 
 void StateMachine::handleBoot(AccumulatorData_t *bmsdata)
@@ -28,7 +29,7 @@ void StateMachine::handleBoot(AccumulatorData_t *bmsdata)
 
 void StateMachine::initReady()
 {
-    return;
+    analyzer.push(prevAccData);
 }
 
 void StateMachine::handleReady(AccumulatorData_t *bmsdata)
@@ -38,6 +39,7 @@ void StateMachine::handleReady(AccumulatorData_t *bmsdata)
 
 void StateMachine::initCharging()
 {
+    compute.enableCharging(true);
     static Timer chargeMessageTimer;
 	static const uint16_t CHARGE_MESSAGE_WAIT = 250; //ms
 }
