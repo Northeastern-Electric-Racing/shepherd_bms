@@ -2,6 +2,8 @@
 #define BMS_STATES_H
 
 #include "datastructs.h"
+#include "segment.cpp"
+#include "compute.cpp"
 
 typedef enum
 {
@@ -11,6 +13,15 @@ typedef enum
     FAULTED_STATE,    //State when BMS has detected a catastrophic fault and we need to hault operations
     NUM_STATES
 }BMSState_t;
+
+uint32_t bmsFault = FAULTS_CLEAR;
+
+uint16_t overVoltCount = 0;
+uint16_t underVoltCount = 0;
+uint16_t overCurrCount = 0;
+uint16_t chargeOverVolt = 0;
+uint16_t overChgCurrCount = 0;
+uint16_t lowCellCount = 0;
 
 class StateMachine
 {
@@ -61,6 +72,48 @@ class StateMachine
             &StateMachine::handleCharging,
             &StateMachine::handleFaulted
         };
+
+        /**
+        * @brief Algorithm behind determining which cells we want to balance
+        * @note Directly interfaces with the segments
+        * 
+        * @param bms_data 
+        */
+        void balanceCells(AccumulatorData_t *bms_data);
+
+
+        /**
+        * @brief Returns if we want to balance cells during a particular frame
+        * 
+        * @param bmsdata 
+        * @return true 
+        * @return false 
+        */
+        bool balancingCheck(AccumulatorData_t *bmsdata);
+
+        /**
+        * @brief Returns if we want to charge cells during a particular frame
+        * 
+        * @param bmsdata 
+        * @return true 
+        * @return false 
+        */
+        bool chargingCheck(AccumulatorData_t *bmsdata);
+
+        void broadcastCurrentLimit(AccumulatorData_t *bmsdata);
+
+        /**
+        * @brief Returns any new faults or current faults that have come up
+        * @note Should be bitwise OR'ed with the current fault status
+        * 
+        * @param accData 
+        * @return uint32_t 
+        */
+        uint32_t faultCheck(AccumulatorData_t *accData);
+
+
+
+
 
     public:
         StateMachine();
