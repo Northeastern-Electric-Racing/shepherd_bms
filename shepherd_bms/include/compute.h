@@ -187,13 +187,6 @@ class ComputeInterface
        * @param current 
        */
       void sendCurrentsStatus(uint16_t discharge, uint16_t charge, uint16_t current);
-
-      /**
-       * @brief Sends out the BMS fault status
-       * 
-       * @param fault_status 
-       */
-      void sendFaultStatus(BMSFault_t fault_status);
 };
 
 extern ComputeInterface compute;
