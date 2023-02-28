@@ -42,7 +42,7 @@ void StateMachine::handleReady(AccumulatorData_t *bmsdata)
 void StateMachine::initCharging()
 {
     compute.enableCharging(true);
-    segment.enableBalancing(true);
+    segment.enableBalancing(false);
     static Timer chargeMessageTimer;
 	static const uint16_t CHARGE_MESSAGE_WAIT = 250; //ms
 }
