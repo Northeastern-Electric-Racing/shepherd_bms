@@ -198,11 +198,11 @@ void Analyzer::calcCCL()
     // ceiling for current limit
     if (currentLimit > MAX_CELL_CURR) 
     {
-        bmsdata->dischargeLimit = MAX_CELL_CURR;
+        bmsdata->chargeLimit = MAX_CELL_CURR;
     }
     else 
     {
-        bmsdata->dischargeLimit = currentLimit;
+        bmsdata->chargeLimit = currentLimit;
     }
 }
 
