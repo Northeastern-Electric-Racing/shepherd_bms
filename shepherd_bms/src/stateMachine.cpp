@@ -11,6 +11,10 @@ StateMachine::~StateMachine()
 
 void StateMachine::initBoot()
 {
+    if(prevAccData->faultStatus != FAULTS_CLEAR)
+    {
+        requestTransition(FAULTED_STATE);
+    }
     prevAccData = nullptr;
     bmsFault = FAULTS_CLEAR;
     overVoltCount = 0;
@@ -29,6 +33,10 @@ void StateMachine::handleBoot(AccumulatorData_t *bmsdata)
 
 void StateMachine::initReady()
 {
+    if(prevAccData->faultStatus != FAULTS_CLEAR)
+    {
+        requestTransition(FAULTED_STATE);
+    }
     segment.enableBalancing(false);
     compute.enableCharging(false);
     analyzer.push(prevAccData);
@@ -41,6 +49,10 @@ void StateMachine::handleReady(AccumulatorData_t *bmsdata)
 
 void StateMachine::initCharging()
 {
+    if(prevAccData->faultStatus != FAULTS_CLEAR)
+    {
+        requestTransition(FAULTED_STATE);
+    }
     compute.enableCharging(true);
     segment.enableBalancing(false);
 }
@@ -55,6 +67,7 @@ void StateMachine::initFaulted()
     segment.enableBalancing(false);
     compute.enableCharging(false);
     bmsFault = prevAccData->faultCode;
+    compute.sendShutdownControlMessage(bmsFault);
 }
 
 void StateMachine::handleFaulted(AccumulatorData_t *bmsdata)
