@@ -26,7 +26,7 @@ void StateMachine::initReady()
 
 void StateMachine::handleReady(AccumulatorData_t *bmsdata)
 {
-    return;
+    broadcastCurrentLimit(bmsdata);
 }
 
 void StateMachine::initCharging()
@@ -36,7 +36,52 @@ void StateMachine::initCharging()
 
 void StateMachine::handleCharging(AccumulatorData_t *bmsdata)
 {
-    return;
+
+    if (digitalRead(CHARGE_DETECT) == HIGH)
+    {
+        requestTransition(READY_STATE);
+        return;
+    }
+
+    if (digitalRead(CHARGE_DETECT) == LOW && bmsFault == FAULTS_CLEAR) 
+		{
+			// Check if we should charge
+			if (chargingCheck(analyzer.bmsdata)) 
+			{
+				digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
+				compute.enableCharging(true);
+				compute.sendChargingStatus(true);
+			} 
+			else 
+			{
+				digitalWrite(CHARGE_SAFETY_RELAY, LOW);
+				compute.enableCharging(false);
+				compute.sendChargingStatus(false);
+			}
+
+			// Check if we should balance
+			if (balancingCheck(analyzer.bmsdata)) 
+			{
+				balanceCells(analyzer.bmsdata);
+			} 
+			else 
+			{
+				segment.enableBalancing(false);
+			}
+			
+			// Send CAN message, but not too often
+			if (chargeMessageTimer.isTimerExpired()) 
+			{
+				compute.sendChargingMessage((MAX_CHARGE_VOLT * NUM_CELLS_PER_CHIP * NUM_CHIPS), analyzer.bmsdata);
+				chargeMessageTimer.startTimer(CHARGE_MESSAGE_WAIT);
+			}
+		} 
+		else if (bmsFault == FAULTS_CLEAR) 
+		{
+			digitalWrite(CHARGE_SAFETY_RELAY, LOW);
+		}
+
+        return;
 }
 
 void StateMachine::initFaulted()
@@ -46,6 +91,40 @@ void StateMachine::initFaulted()
 
 void StateMachine::handleFaulted(AccumulatorData_t *bmsdata)
 {
+    if (bmsFault = FAULTS_CLEAR)
+    {
+        compute.setFault(NOT_FAULTED);
+        requestTransition(BOOT_STATE);
+        return;
+    }
+
+    else 
+    {
+
+        compute.setFault(FAULTED);
+        bmsdata->dischargeLimit = 0;
+        broadcastCurrentLimit(bmsdata);
+
+    
+	    segment.enableBalancing(false);
+	    digitalWrite(CHARGE_SAFETY_RELAY, LOW);
+	    compute.enableCharging(false);
+
+	    Serial.print("BMS FAULT: ");
+	    Serial.println(bmsFault, HEX);
+	    Serial.println("Hit Spacebar to clear");
+	    delay(1000);
+	    if (Serial.available()) 
+	    { // Check for key presses
+	        char keyPress = Serial.read(); // Read key
+		    if (keyPress == ' ') 
+		    {
+			    bmsFault = FAULTS_CLEAR;
+		    }   
+	    }
+    
+    }
+
     return;
 }
 

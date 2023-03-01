@@ -127,71 +127,16 @@ void shepherdMain()
 	}
 	else
 	{
-		compute.setFault(FAULTED);
-
-		segment.enableBalancing(false);
-		digitalWrite(CHARGE_SAFETY_RELAY, LOW);
-		compute.enableCharging(false);
-
-		Serial.print("BMS FAULT: ");
-		Serial.println(bmsFault, HEX);
-		Serial.println("Hit Spacebar to clear");
-		delay(1000);
-		if (Serial.available()) 
-		{ // Check for key presses
-			char keyPress = Serial.read(); // Read key
-			if (keyPress == ' ') 
-			{
-				bmsFault = FAULTS_CLEAR;
-			}
-		}
+		//todo put handle faulted here
 	}
 
 	/**
 	 * @todo move to charging state in SM
 	 */
 	{
-		static Timer chargeMessageTimer;
-		static const uint16_t CHARGE_MESSAGE_WAIT = 250; //ms
-
+		
 		// CHARGE STATE
-		if (digitalRead(CHARGE_DETECT) == LOW && bmsFault == FAULTS_CLEAR) 
-		{
-			// Check if we should charge
-			if (chargingCheck(analyzer.bmsdata)) 
-			{
-				digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
-				compute.enableCharging(true);
-				compute.sendChargingStatus(true);
-			} 
-			else 
-			{
-				digitalWrite(CHARGE_SAFETY_RELAY, LOW);
-				compute.enableCharging(false);
-				compute.sendChargingStatus(false);
-			}
-
-			// Check if we should balance
-			if (balancingCheck(analyzer.bmsdata)) 
-			{
-				balanceCells(analyzer.bmsdata);
-			} 
-			else 
-			{
-				segment.enableBalancing(false);
-			}
-			
-			// Send CAN message, but not too often
-			if (chargeMessageTimer.isTimerExpired()) 
-			{
-				compute.sendChargingMessage((MAX_CHARGE_VOLT * NUM_CELLS_PER_CHIP * NUM_CHIPS), analyzer.bmsdata);
-				chargeMessageTimer.startTimer(CHARGE_MESSAGE_WAIT);
-			}
-		} 
-		else if (bmsFault == FAULTS_CLEAR) 
-		{
-			digitalWrite(CHARGE_SAFETY_RELAY, LOW);
-		}
+		//todo out handle charge here
 	}
 
 

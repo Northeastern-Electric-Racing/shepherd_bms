@@ -4,6 +4,7 @@
 #include "datastructs.h"
 #include "segment.cpp"
 #include "compute.cpp"
+#include "analyzer.h"
 
 typedef enum
 {
@@ -22,6 +23,10 @@ uint16_t overCurrCount = 0;
 uint16_t chargeOverVolt = 0;
 uint16_t overChgCurrCount = 0;
 uint16_t lowCellCount = 0;
+
+static Timer chargeMessageTimer;
+static const uint16_t CHARGE_MESSAGE_WAIT = 250; //ms
+
 
 class StateMachine
 {
