@@ -26,7 +26,15 @@ void StateMachine::initReady()
 
 void StateMachine::handleReady(AccumulatorData_t *bmsdata)
 {
+    //check for faults
+    if (bmsFault != FAULTS_CLEAR)
+    {
+        requestTransition(FAULTED_STATE);
+        return;
+    }
+
     broadcastCurrentLimit(bmsdata);
+    return;
 }
 
 void StateMachine::initCharging()
@@ -36,6 +44,13 @@ void StateMachine::initCharging()
 
 void StateMachine::handleCharging(AccumulatorData_t *bmsdata)
 {
+
+    //check for faults
+    if (bmsFault != FAULTS_CLEAR)
+    {
+        requestTransition(FAULTED_STATE);
+        return;
+    }
 
     if (digitalRead(CHARGE_DETECT) == HIGH)
     {
@@ -91,7 +106,7 @@ void StateMachine::initFaulted()
 
 void StateMachine::handleFaulted(AccumulatorData_t *bmsdata)
 {
-    if (bmsFault = FAULTS_CLEAR)
+    if (bmsFault == FAULTS_CLEAR)
     {
         compute.setFault(NOT_FAULTED);
         requestTransition(BOOT_STATE);
@@ -105,7 +120,6 @@ void StateMachine::handleFaulted(AccumulatorData_t *bmsdata)
         bmsdata->dischargeLimit = 0;
         broadcastCurrentLimit(bmsdata);
 
-    
 	    segment.enableBalancing(false);
 	    digitalWrite(CHARGE_SAFETY_RELAY, LOW);
 	    compute.enableCharging(false);
