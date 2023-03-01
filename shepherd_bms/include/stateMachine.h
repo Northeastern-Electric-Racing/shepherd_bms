@@ -27,7 +27,9 @@ class StateMachine
         uint16_t chargeOverVolt;
         uint16_t overChgCurrCount;
         uint16_t lowCellCount;
-
+        static Timer chargeMessageTimer;
+	    static const uint16_t CHARGE_MESSAGE_WAIT = 250; //ms
+        
         const bool validTransitionFromTo[NUM_STATES][NUM_STATES] = 
         { 
             //BOOT,     READY,      CHARGING,   FAULTED

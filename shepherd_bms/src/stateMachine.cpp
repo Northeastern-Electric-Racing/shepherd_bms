@@ -11,14 +11,14 @@ StateMachine::~StateMachine()
 
 void StateMachine::initBoot()
 {
-    AccumulatorData_t *prevAccData = nullptr;
-    uint32_t bmsFault = FAULTS_CLEAR;
-    uint16_t overVoltCount = 0;
-    uint16_t underVoltCount = 0;
-    uint16_t overCurrCount = 0;
-    uint16_t chargeOverVolt = 0;
-    uint16_t overChgCurrCount = 0;
-    uint16_t lowCellCount = 0;
+    prevAccData = nullptr;
+    bmsFault = FAULTS_CLEAR;
+    overVoltCount = 0;
+    underVoltCount = 0;
+    overCurrCount = 0;
+    chargeOverVolt = 0;
+    overChgCurrCount = 0;
+    lowCellCount = 0;
     analyzer.push(prevAccData);
 }
 
@@ -43,8 +43,6 @@ void StateMachine::initCharging()
 {
     compute.enableCharging(true);
     segment.enableBalancing(false);
-    static Timer chargeMessageTimer;
-	static const uint16_t CHARGE_MESSAGE_WAIT = 250; //ms
 }
 
 void StateMachine::handleCharging(AccumulatorData_t *bmsdata)
@@ -54,7 +52,9 @@ void StateMachine::handleCharging(AccumulatorData_t *bmsdata)
 
 void StateMachine::initFaulted()
 {
-    return;
+    segment.enableBalancing(false);
+    compute.enableCharging(false);
+    bmsFault = prevAccData->faultCode;
 }
 
 void StateMachine::handleFaulted(AccumulatorData_t *bmsdata)
