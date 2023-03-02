@@ -275,7 +275,6 @@ void ComputeInterface::sendCurrentsStatus(uint16_t discharge, uint16_t charge, u
 void ComputeInterface::sendChargingStatus(bool chargingStatus)
 {
     uint8_t chargingArray[1] = {chargingStatus};
-
     sendMessageCAN1(0x05, 1, chargingArray);
 }
 
@@ -283,3 +282,45 @@ void ComputeInterface::MCCallback(const CAN_message_t &msg)
 {
     return;
 }
+
+#ifndef DEBUG_COMPUTE
+
+const void printComputeStats()
+{
+    Serial.print("Charger Control: " + chargerControl)
+    Serial.print("Charger Voltage: " + chargerVoltage)
+    Serial.print("Charger Current: " + chargerCurrent)
+    Serial.print("Charger LEDs: " + chargerLEDs)
+    Serial.print("Reserved2_3: " + reserved2_3)
+    Serial.print("Low pack current: " + lowCurrent)
+    Serial.print("High pack current: " + highCurrent)
+    Serial.print("Max Discharge: " + maxDischarge)
+    Serial.print("Max Charge: " + maxCharge)
+    Serial.print("Pack Voltage: " + packVolt)
+    Serial.print("Pack Current: " + packCurrent)
+    Serial.print("Pack Amp Hours: " + packAH)
+    Serial.print("Pack State of Charge: " + packSoC)
+    Serial.print("Pack Health: " + packHealth)
+    Serial.print("Fs Status: " + fsStatus)
+    Serial.print("DTC Status 1: " + dtcStatus1)
+    Serial.print("DTC Status 2: " + dtcStatus2)
+    Serial.print("Current Limit: " + currentLimit)
+    Serial.print("Accumulator Average Temperature: " + tempAvg)
+    Serial.print("Accumulator Internal Temperature: " + tempInternal)
+    Serial.print("Highest Cell Voltage: " + highCellVoltage)
+    Serial.print("Highest Cell ID: " + highCellID)
+    Serial.print("Lowest Cell Voltage: " + lowCellVoltage)
+    Serial.print("Lowest Cell ID: " + lowCellID)
+    Serial.print("Average Voltage of Cells: " + voltAvg)
+    Serial.print("Cell ID: " + cellID)
+    Serial.print("Instant Voltage: " + instantVoltage)
+    Serial.print("Interal Resistance: " + internalResistance)
+    Serial.print("Shunted: " + shunted)
+    Serial.print("Open Circuit Voltage: " + openVoltage)
+    Serial.print("DCL: " + DCL)
+    Serial.print("CCL: " + CCL)
+    Serial.print("Pack Current: " + packCurr)
+    Serial.print("Charging Array: " + chargingArray)
+}
+
+#endif
