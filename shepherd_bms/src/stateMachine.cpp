@@ -24,6 +24,7 @@ void StateMachine::handleBoot(AccumulatorData_t *bmsdata)
     }
 
 	broadcastCurrentLimit(bmsdata);
+	requestTransition(READY_STATE);
     return;
 }
 

@@ -12,6 +12,7 @@
 #include "datastructs.h"
 #include "analyzer.h"
 #include "stateMachine.h"
+#include "calcs.h"
 
 WDT_T4<WDT1> wdt;
 
