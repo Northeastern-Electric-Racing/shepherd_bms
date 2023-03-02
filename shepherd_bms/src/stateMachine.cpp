@@ -16,6 +16,13 @@ void StateMachine::initBoot()
 
 void StateMachine::handleBoot(AccumulatorData_t *bmsdata)
 {
+	//check for faults
+    if (bmsFault != FAULTS_CLEAR)
+    {
+        requestTransition(FAULTED_STATE);
+        return;
+    }
+	
     return;
 }
 
@@ -32,9 +39,17 @@ void StateMachine::handleReady(AccumulatorData_t *bmsdata)
         requestTransition(FAULTED_STATE);
         return;
     }
+	//check for charger
+	else if (digitalRead(CHARGE_DETECT) == LOW)
+	{
+		requestTransition(CHARGING_STATE);
+	}
 
-    broadcastCurrentLimit(bmsdata);
-    return;
+	else
+	{
+    	broadcastCurrentLimit(bmsdata);
+    	return;
+	}
 }
 
 void StateMachine::initCharging()
@@ -52,51 +67,55 @@ void StateMachine::handleCharging(AccumulatorData_t *bmsdata)
         return;
     }
 
-    if (digitalRead(CHARGE_DETECT) == HIGH)
+    else if (digitalRead(CHARGE_DETECT) == HIGH)
     {
         requestTransition(READY_STATE);
         return;
     }
 
-    if (digitalRead(CHARGE_DETECT) == LOW && bmsFault == FAULTS_CLEAR) 
-		{
-			// Check if we should charge
-			if (chargingCheck(analyzer.bmsdata)) 
+	else
+	{
+
+    	if (digitalRead(CHARGE_DETECT) == LOW && bmsFault == FAULTS_CLEAR) 
 			{
-				digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
-				compute.enableCharging(true);
-				compute.sendChargingStatus(true);
+				// Check if we should charge
+				if (chargingCheck(analyzer.bmsdata)) 
+				{
+					digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
+					compute.enableCharging(true);
+					compute.sendChargingStatus(true);
+				} 
+				else 
+				{
+					digitalWrite(CHARGE_SAFETY_RELAY, LOW);
+					compute.enableCharging(false);
+					compute.sendChargingStatus(false);
+				}
+
+				// Check if we should balance
+				if (balancingCheck(analyzer.bmsdata)) 
+				{
+					balanceCells(analyzer.bmsdata);
+				} 
+				else 
+				{
+					segment.enableBalancing(false);
+				}
+			
+				// Send CAN message, but not too often
+				if (chargeMessageTimer.isTimerExpired()) 
+				{
+					compute.sendChargingMessage((MAX_CHARGE_VOLT * NUM_CELLS_PER_CHIP * NUM_CHIPS), analyzer.bmsdata);
+					chargeMessageTimer.startTimer(CHARGE_MESSAGE_WAIT);
+				}
 			} 
-			else 
+			else if (bmsFault == FAULTS_CLEAR) //probably redundant now since this should only make it this far if faults clear
 			{
 				digitalWrite(CHARGE_SAFETY_RELAY, LOW);
-				compute.enableCharging(false);
-				compute.sendChargingStatus(false);
 			}
 
-			// Check if we should balance
-			if (balancingCheck(analyzer.bmsdata)) 
-			{
-				balanceCells(analyzer.bmsdata);
-			} 
-			else 
-			{
-				segment.enableBalancing(false);
-			}
-			
-			// Send CAN message, but not too often
-			if (chargeMessageTimer.isTimerExpired()) 
-			{
-				compute.sendChargingMessage((MAX_CHARGE_VOLT * NUM_CELLS_PER_CHIP * NUM_CHIPS), analyzer.bmsdata);
-				chargeMessageTimer.startTimer(CHARGE_MESSAGE_WAIT);
-			}
-		} 
-		else if (bmsFault == FAULTS_CLEAR) 
-		{
-			digitalWrite(CHARGE_SAFETY_RELAY, LOW);
-		}
-
-        return;
+        	return;
+	}
 }
 
 void StateMachine::initFaulted()
