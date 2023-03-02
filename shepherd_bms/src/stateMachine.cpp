@@ -22,7 +22,8 @@ void StateMachine::handleBoot(AccumulatorData_t *bmsdata)
         requestTransition(FAULTED_STATE);
         return;
     }
-	
+
+	broadcastCurrentLimit(bmsdata);
     return;
 }
 
@@ -46,7 +47,7 @@ void StateMachine::handleReady(AccumulatorData_t *bmsdata)
 	}
 
 	else
-	{
+	{	
     	broadcastCurrentLimit(bmsdata);
     	return;
 	}
@@ -75,8 +76,7 @@ void StateMachine::handleCharging(AccumulatorData_t *bmsdata)
 
 	else
 	{
-
-    	if (digitalRead(CHARGE_DETECT) == LOW && bmsFault == FAULTS_CLEAR) 
+    	if (digitalRead(CHARGE_DETECT) == LOW) 
 			{
 				// Check if we should charge
 				if (chargingCheck(analyzer.bmsdata)) 
@@ -109,7 +109,7 @@ void StateMachine::handleCharging(AccumulatorData_t *bmsdata)
 					chargeMessageTimer.startTimer(CHARGE_MESSAGE_WAIT);
 				}
 			} 
-			else if (bmsFault == FAULTS_CLEAR) //probably redundant now since this should only make it this far if faults clear
+			else
 			{
 				digitalWrite(CHARGE_SAFETY_RELAY, LOW);
 			}

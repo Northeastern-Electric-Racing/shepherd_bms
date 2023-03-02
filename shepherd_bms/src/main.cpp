@@ -117,9 +117,6 @@ void shepherdMain()
 	printBMSStats(analyzer.bmsdata);
 	#endif
 
-	// Check for faults
-	bmsFault |= faultCheck(analyzer.bmsdata);
-
 	// ACTIVE/NORMAL STATE
 	if (bmsFault == FAULTS_CLEAR) 
 	{
@@ -140,7 +137,6 @@ void shepherdMain()
 	}
 
 
-	broadcastCurrentLimit(analyzer.bmsdata);
 	compute.sendAccStatusMessage(analyzer.bmsdata->packVoltage, analyzer.bmsdata->packCurrent, 0, 0, 0);
 	compute.sendCurrentsStatus(analyzer.bmsdata->dischargeLimit, analyzer.bmsdata->chargeLimit, analyzer.bmsdata->packCurrent);
 	compute.setFanSpeed(calcFanPWM(analyzer.bmsdata));
@@ -156,7 +152,7 @@ void setup()
   
   segment.init();
 
-  compute.setFault(NOT_FAULTED);
+  compute.setFault(NOT_FAULTED); 
 }
 
 void loop()
