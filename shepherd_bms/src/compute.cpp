@@ -34,7 +34,7 @@ FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltage_to_set, Acc
         } cfg;
     } chargerMsg;
 
-    uint16_t current_to_set = bms_data->chargeLimit;
+    uint16_t current_to_set = bms_data->charge_limit;
 
     if (!is_charging_enabled_)
     {
@@ -139,7 +139,7 @@ void ComputeInterface::sendAccStatusMessage(uint16_t voltage, int16_t current, u
         struct
         {
             uint16_t packVolt;
-            uint16_t packCurrent;
+            uint16_t pack_current;
             uint16_t packAH;
             uint8_t packSoC;
             uint8_t packHealth;
@@ -147,7 +147,7 @@ void ComputeInterface::sendAccStatusMessage(uint16_t voltage, int16_t current, u
     } accStatusMsg;
 
     accStatusMsg.cfg.packVolt = __builtin_bswap16(voltage);
-    accStatusMsg.cfg.packCurrent = __builtin_bswap16(static_cast<uint16_t>(current)); // convert with 2s complement
+    accStatusMsg.cfg.pack_current = __builtin_bswap16(static_cast<uint16_t>(current)); // convert with 2s complement
     accStatusMsg.cfg.packAH = __builtin_bswap16(ah);
     accStatusMsg.cfg.packSoC = soc;
     accStatusMsg.cfg.packHealth = health;
@@ -248,7 +248,7 @@ void ComputeInterface::sendCellVoltageMessage(uint8_t cell_id, uint16_t instant_
     cellVoltageMsg.cfg.shunted = shunted;
     cellVoltageMsg.cfg.openVoltage = __builtin_bswap16(open_voltage);
 
-    sendMessageCAN1(CANMSG_CELLVOLTAGE, 8, cellVoltageMsg.msg);
+    sendMessageCAN1(0x07, 8, cellVoltageMsg.msg);
 }
 
 void ComputeInterface::sendCurrentsStatus(uint16_t discharge, uint16_t charge, uint16_t current)
@@ -297,27 +297,27 @@ uint8_t ComputeInterface::calcChargerLEDState(AccumulatorData_t *bms_data)
     RED_GREEN_BLINKING = 0x06
   };
 
-  if((bms_data->soc < 80) && (bms_data->packCurrent > .5 * 10))
+  if((bms_data->soc < 80) && (bms_data->pack_current > .5 * 10))
   {
     return RED_BLINKING;
   }
-  else if((bms_data->soc < 80) && (bms_data->packCurrent <= .5 * 10))
+  else if((bms_data->soc < 80) && (bms_data->pack_current <= .5 * 10))
   {
     return RED_CONSTANT;
   }
-  else if((bms_data->soc >= 80 && bms_data->soc < 95) && (bms_data->packCurrent > .5 * 10))
+  else if((bms_data->soc >= 80 && bms_data->soc < 95) && (bms_data->pack_current > .5 * 10))
   {
     return YELLOW_BLINKING;
   }
-  else if((bms_data->soc >= 80 && bms_data->soc < 95) && (bms_data->packCurrent <= .5 * 10))
+  else if((bms_data->soc >= 80 && bms_data->soc < 95) && (bms_data->pack_current <= .5 * 10))
   {
     return YELLOW_CONSTANT;
   }
-  else if((bms_data->soc >= 95) && (bms_data->packCurrent > .5 * 10))
+  else if((bms_data->soc >= 95) && (bms_data->pack_current > .5 * 10))
   {
     return GREEN_BLINKING;
   }
-  else if((bms_data->soc >= 95) && (bms_data->packCurrent <= .5 * 10))
+  else if((bms_data->soc >= 95) && (bms_data->pack_current <= .5 * 10))
   {
     return GREEN_BLINKING;
   }

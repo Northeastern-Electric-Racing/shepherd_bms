@@ -18,11 +18,11 @@ class SegmentInterface
 {
     private:
 
-        Timer thermTimer;
-        Timer voltageReadingTimer;
+        Timer therm_timer;
+        Timer voltage_reading_timer;
 
-        FaultStatus_t voltageError = NOT_FAULTED;
-        FaultStatus_t thermError = NOT_FAULTED;
+        FaultStatus_t voltage_error = NOT_FAULTED;
+        FaultStatus_t therm_error = NOT_FAULTED;
 
         uint16_t therm_settle_time_ = 0;
 
@@ -41,9 +41,9 @@ class SegmentInterface
 
         const int32_t VOLT_TEMP_CALIB_OFFSET = 0;
 
-        ChipData_t *segmentData = nullptr;
+        ChipData_t *segment_data = nullptr;
 
-        ChipData_t previousData[NUM_CHIPS];
+        ChipData_t previous_data[NUM_CHIPS];
 
         uint8_t local_config[NUM_CHIPS][6] = {};
 
