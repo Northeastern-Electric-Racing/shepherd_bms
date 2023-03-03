@@ -187,18 +187,18 @@ void Analyzer::calcCCL()
         for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
         {   
             // Apply equation
-            uint16_t tmpCCL = (MAX_VOLT - ((bmsdata->chipData[c].openCellVoltage[cell] + VOLT_SAG_MARGIN) * 10000)) / (bmsdata->chipData[c].cellResistance[cell] * 10);
+            uint16_t tmpCCL = ((MAX_VOLT * 1000) - (bmsdata->chipData[c].openCellVoltage[cell] + (VOLT_SAG_MARGIN * 10000))) / (bmsdata->chipData[c].cellResistance[cell] * 10);
             // Multiplying resistance by 10 to convert from mOhm to Ohm and then to Ohm * 10000 to account for the voltage units
 
-            //Taking the minimum DCL of all the cells
+            //Taking the minimum CCL of all the cells
             if(tmpCCL < currentLimit) currentLimit = tmpCCL;
         }
     }
 
     // ceiling for current limit
-    if (currentLimit > MAX_CELL_CURR) 
+    if (currentLimit > MAX_CHG_CELL_CURR) 
     {
-        bmsdata->chargeLimit = MAX_CELL_CURR;
+        bmsdata->chargeLimit = MAX_CHG_CELL_CURR;
     }
     else 
     {
