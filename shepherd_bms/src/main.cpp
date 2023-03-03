@@ -9,7 +9,7 @@
 #include <LTC68041.h>
 #include "segment.h"
 #include "compute.h"
-#include "calcs.h"
+
 #include "datastructs.h"
 #include "analyzer.h"
 
@@ -19,12 +19,12 @@ AccumulatorData_t *prevAccData = nullptr;
 
 uint32_t bmsFault = FAULTS_CLEAR;
 
-uint16_t overVoltCount = 0;
-uint16_t underVoltCount = 0;
-uint16_t overCurrCount = 0;
-uint16_t chargeOverVolt = 0;
-uint16_t overChgCurrCount = 0;
-uint16_t lowCellCount = 0;
+uint16_t over_volt_count = 0;
+uint16_t under_volt_count = 0;
+uint16_t over_curr_count = 0;
+uint16_t charge_over_volt = 0;
+uint16_t over_chg_curr_count = 0;
+uint16_t low_cell_count = 0;
 
 /**
  * @brief Algorithm behind determining which cells we want to balance
@@ -41,7 +41,7 @@ void balanceCells(AccumulatorData_t *bms_data)
     {
 		for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
 		{
-			uint16_t delta = bms_data->chipData[chip].voltageReading[cell] - (uint16_t)bms_data-> minVoltage.val;
+			uint16_t delta = bms_data->chip_data[chip].voltage_reading[cell] - (uint16_t)bms_data-> min_voltage.val;
 			if(delta > MAX_DELTA_V * 10000)
 				balanceConfig[chip][cell] = true;
 			else
@@ -74,9 +74,9 @@ void balanceCells(AccumulatorData_t *bms_data)
 bool balancingCheck(AccumulatorData_t *bmsdata)
 {
 	if (!compute.isCharging()) return false;
-	if (bmsdata->maxTemp.val > MAX_CELL_TEMP_BAL) return false;
-	if (bmsdata->maxVoltage.val <= (BAL_MIN_V * 10000)) return false;
-	if(bmsdata->deltVoltage <= (MAX_DELTA_V * 10000)) return false;
+	if (bmsdata->max_temp.val > MAX_CELL_TEMP_BAL) return false;
+	if (bmsdata->max_voltage.val <= (BAL_MIN_V * 10000)) return false;
+	if(bmsdata->delt_voltage <= (MAX_DELTA_V * 10000)) return false;
 
 	return true;
 }
@@ -94,10 +94,10 @@ bool chargingCheck(AccumulatorData_t *bmsdata)
 
 	if(!chargeTimeout.isTimerExpired()) return false;
 	if(!compute.isCharging()) return false;
-	if(bmsdata->maxVoltage.val >= (MAX_CHARGE_VOLT * 10000))
+	if(bmsdata->max_voltage.val >= (MAX_CHARGE_VOLT * 10000))
 	{
-		chargeOverVolt++;
-		if (chargeOverVolt > 100) 
+		charge_over_volt++;
+		if (charge_over_volt > 100) 
 		{
 			chargeTimeout.startTimer(CHARGE_TIMEOUT);
 			return false;
@@ -105,7 +105,7 @@ bool chargingCheck(AccumulatorData_t *bmsdata)
 	} 
 	else 
 	{
-		chargeOverVolt = 0;
+		charge_over_volt = 0;
 	}
 
 	return true;
@@ -136,7 +136,7 @@ void broadcastCurrentLimit(AccumulatorData_t *bmsdata)
 		BoostState = BOOST_STANDBY;
 	}
 	//Transition to boosting
-	if((bmsdata->packCurrent) > ((bmsdata->contDCL)*10) && BoostState == BOOST_STANDBY)
+	if((bmsdata->pack_current) > ((bmsdata->cont_DCL)*10) && BoostState == BOOST_STANDBY)
 	{
 		BoostState = BOOSTING;
 		boostTimer.startTimer(BOOST_TIME);
@@ -145,12 +145,12 @@ void broadcastCurrentLimit(AccumulatorData_t *bmsdata)
 	//Currently boosting
 	if(BoostState == BOOSTING || BoostState == BOOST_STANDBY)
 	{
-		compute.sendMCMsg(bmsdata->chargeLimit, min(bmsdata->dischargeLimit, bmsdata->contDCL * CONTDCL_MULTIPLIER));
+		compute.sendMCMsg(bmsdata->charge_limit, min(bmsdata->discharge_limit, bmsdata->cont_DCL * CONTDCL_MULTIPLIER));
 	}
 	//Currently recharging boost
 	else
 	{
-		compute.sendMCMsg(bmsdata->chargeLimit, min(bmsdata->contDCL, bmsdata->dischargeLimit));
+		compute.sendMCMsg(bmsdata->charge_limit, min(bmsdata->cont_DCL, bmsdata->discharge_limit));
 	}
 }
 
@@ -164,27 +164,27 @@ const void printBMSStats(AccumulatorData_t *accData)
 	if(!debug_statTimer.isTimerExpired()) return;
 
 	Serial.print("Current: ");
-	Serial.println((accData->packCurrent)/10);
+	Serial.println((accData->pack_current)/10);
 	Serial.print("Min, Max, Avg Temps: ");
-	Serial.print(accData->minTemp.val);
+	Serial.print(accData->min_temp.val);
 	Serial.print(",  ");
-	Serial.print(accData->maxTemp.val);
+	Serial.print(accData->max_temp.val);
 	Serial.print(",  ");
-	Serial.println(accData->avgTemp);
+	Serial.println(accData->avg_temp);
 	Serial.print("Min, Max, Avg, Delta Voltages: ");
-	Serial.print(accData->minVoltage.val);
+	Serial.print(accData->min_voltage.val);
 	Serial.print(",  ");
-	Serial.print(accData->maxVoltage.val);
+	Serial.print(accData->max_voltage.val);
 	Serial.print(",  ");
-	Serial.print(accData->avgVoltage);
+	Serial.print(accData->avg_voltage);
 	Serial.print(",  ");
-	Serial.println(accData->deltVoltage);
+	Serial.println(accData->delt_voltage);
 	
 	Serial.print("DCL: ");
-	Serial.println(accData->dischargeLimit);
+	Serial.println(accData->discharge_limit);
 
 	Serial.print("CCL: ");
-	Serial.println(accData->chargeLimit);
+	Serial.println(accData->charge_limit);
 
 	Serial.print("SoC: ");
 	Serial.println(accData->soc);
@@ -197,7 +197,7 @@ const void printBMSStats(AccumulatorData_t *accData)
 	{
 		for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
 		{
-			Serial.print(accData->chipData[c].openCellVoltage[cell]);
+			Serial.print(accData->chip_data[c].open_cell_voltage[cell]);
 			Serial.print("\t");
 		}
 		Serial.println();
@@ -208,7 +208,7 @@ const void printBMSStats(AccumulatorData_t *accData)
 	{
 		for(uint8_t cell = 17; cell < 28; cell++)
 		{
-			Serial.print(accData->chipData[c].thermistorReading[cell]);
+			Serial.print(accData->chip_data[c].thermistor_reading[cell]);
 			Serial.print("\t");
 		}
 		Serial.println();
@@ -219,7 +219,7 @@ const void printBMSStats(AccumulatorData_t *accData)
 	{
 		for(uint8_t cell = 17; cell < 28; cell++)
 		{
-			Serial.print(accData->chipData[c].thermistorValue[cell]);
+			Serial.print(accData->chip_data[c].thermistor_value[cell]);
 			Serial.print("\t");
 		}
 		Serial.println();
@@ -241,82 +241,82 @@ uint32_t faultCheck(AccumulatorData_t *accData)
 {
 	// FAULT CHECK
 	// Check for fuckies
-	uint32_t faultStatus = 0;
+	uint32_t fault_status = 0;
 
 	// Over current fault for discharge
-	if ((accData->packCurrent) > ((accData->dischargeLimit)*10)) 
+	if ((accData->pack_current) > ((accData->discharge_limit)*10)) 
 	{
-		overCurrCount++;
-		if (overCurrCount > 10) 
+		over_curr_count++;
+		if (over_curr_count > 10) 
 		{ // 0.10 seconds @ 100Hz rate
-			faultStatus |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
+			fault_status |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
 		}
 	} else 
 	{
-		overCurrCount = 0;
+		over_curr_count = 0;
 	}
 
 	// Over current fault for charge
-	if ((accData->packCurrent) < 0 && abs((accData->packCurrent)) > ((accData->chargeLimit)*10))
+	if ((accData->pack_current) < 0 && abs((accData->pack_current)) > ((accData->charge_limit)*10))
 	{
-		overChgCurrCount++;
-		if (overChgCurrCount > 100) 
+		over_chg_curr_count++;
+		if (over_chg_curr_count > 100) 
 		{ // 1 seconds @ 100Hz rate
-			faultStatus |= CHARGE_LIMIT_ENFORCEMENT_FAULT;
+			fault_status |= CHARGE_LIMIT_ENFORCEMENT_FAULT;
 		}
 	} 
 	else 
 	{
-		overChgCurrCount = 0;
+		over_chg_curr_count = 0;
 	} 
 
 	// Low cell voltage fault
-	if (accData->minVoltage.val < MIN_VOLT * 10000) 
+	if (accData->min_voltage.val < MIN_VOLT * 10000) 
 	{
 
-		underVoltCount++;
-		if (underVoltCount > 900)
+		under_volt_count++;
+		if (under_volt_count > 900)
 		{ // 9 seconds @ 100Hz rate
-			faultStatus |= CELL_VOLTAGE_TOO_LOW;
+			fault_status |= CELL_VOLTAGE_TOO_LOW;
 		}
 	} 
 	else 
 	{
-		underVoltCount = 0;
+		under_volt_count = 0;
 	}
 
 	// High cell voltage fault
-	if (((accData->maxVoltage.val > MAX_VOLT * 10000) && digitalRead(CHARGE_DETECT) == HIGH) || (accData->maxVoltage.val > MAX_CHARGE_VOLT * 10000)) 
+	if (((accData->max_voltage.val > MAX_VOLT * 10000) && digitalRead(CHARGE_DETECT) == HIGH) || (accData->max_voltage.val > MAX_CHARGE_VOLT * 10000)) 
 	{ // Needs to be reimplemented with a flag for every cell in case multiple go over
-		overVoltCount++;
-		if (overVoltCount > 900) { // 9 seconds @ 100Hz rate
-			faultStatus |= CELL_VOLTAGE_TOO_HIGH;
+		over_volt_count++;
+		if (over_volt_count > 900) { // 9 seconds @ 100Hz rate
+			fault_status |= CELL_VOLTAGE_TOO_HIGH;
 		}
 	} 
 	else 
 	{
-		overVoltCount = 0;
+		over_volt_count = 0;
 	}
 
 	// High Temp Fault
-	if (accData->maxTemp.val > MAX_CELL_TEMP) {
-		faultStatus |= PACK_TOO_HOT;
+	if (accData->max_temp.val > MAX_CELL_TEMP) {
+		fault_status |= PACK_TOO_HOT;
 	}
 
 	// Extremely low cell voltage fault
-	if (accData->minVoltage.val < 900) 
+	if (accData->min_voltage.val < 900) 
 	{ // 90mV
-		lowCellCount++;
-		if (lowCellCount > 100) { // 1 seconds @ 100Hz rate
-			faultStatus |= LOW_CELL_VOLTAGE;
+		low_cell_count++;
+		if (low_cell_count > 100) { // 1 seconds @ 100Hz rate
+			fault_status |= LOW_CELL_VOLTAGE;
 		}
 	} 
 	else 
 	{
-		lowCellCount = 0;
+		low_cell_count = 0;
 	}
 
-	return faultStatus;
+	return fault_status;
 }
 
 
@@ -331,8 +331,8 @@ void shepherdMain()
 
 	//Collect all the segment data needed to perform analysis
 	//Not state specific
-	segment.retrieveSegmentData(accData->chipData);
-	accData->packCurrent = compute.getPackCurrent();
+	segment.retrieveSegmentData(accData->chip_data);
+	accData->pack_current = compute.getPackCurrent();
 	//compute.getTSGLV();
 	//etc
 
@@ -423,9 +423,9 @@ void shepherdMain()
 
 
 	broadcastCurrentLimit(analyzer.bmsdata);
-	compute.sendAccStatusMessage(analyzer.bmsdata->packVoltage, analyzer.bmsdata->packCurrent, 0, 0, 0);
-	compute.sendCurrentsStatus(analyzer.bmsdata->dischargeLimit, analyzer.bmsdata->chargeLimit, analyzer.bmsdata->packCurrent);
-	compute.setFanSpeed(calcFanPWM(analyzer.bmsdata));
+	compute.sendAccStatusMessage(analyzer.bmsdata->pack_voltage, analyzer.bmsdata->pack_current, 0, 0, 0);
+	compute.sendCurrentsStatus(analyzer.bmsdata->discharge_limit, analyzer.bmsdata->charge_limit, analyzer.bmsdata->pack_current);
+	compute.setFanSpeed(analyzer.calcFanPWM(analyzer.bmsdata));
 }
 
 void setup()

@@ -20,7 +20,7 @@ class Analyzer
 
         Timer analysisTimer;
 
-        bool isFirstReading = true;
+        bool is_first_reading_ = true;
 
         /**
          * @brief Mapping Cell temperature to the cell resistance based on the 
@@ -166,7 +166,7 @@ class Analyzer
          * @param bmsdata 
          * @return uint8_t 
          */
-        uint8_t calcFanPWM();
+        uint8_t calcFanPWM(AccumulatorData_t *data);
 
         /**
          * @brief Pointer to the address of the most recent data point
