@@ -118,25 +118,6 @@ void shepherdMain()
 	printBMSStats(analyzer.bmsdata);
 	#endif
 
-	// ACTIVE/NORMAL STATE
-	if (bmsFault == FAULTS_CLEAR) 
-	{
-		compute.setFault(NOT_FAULTED);
-	}
-	else
-	{
-		//todo put handle faulted here
-	}
-
-	/**
-	 * @todo move to charging state in SM
-	 */
-	{
-		
-		// CHARGE STATE
-		//todo out handle charge here
-	}
-
 
 	compute.sendAccStatusMessage(analyzer.bmsdata->packVoltage, analyzer.bmsdata->packCurrent, 0, 0, 0);
 	compute.sendCurrentsStatus(analyzer.bmsdata->dischargeLimit, analyzer.bmsdata->chargeLimit, analyzer.bmsdata->packCurrent);
