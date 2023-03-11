@@ -284,6 +284,30 @@ void ComputeInterface::MCCallback(const CAN_message_t &msg)
     return;
 }
 
+void ComputeInterface::sendCellTemp(uint16_t m_cell_temp, uint8_t m_cell_id, uint16_t min_cell_temp, uint8_t min_cell_id, uint16_t avg_temp)
+{
+    union
+    {
+        uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+        struct 
+        {
+            uint16_t maxCellTemp;
+            uint8_t maxCellID;
+            uint16_t minCellTemp;
+            uint8_t minCellID;
+            uint16_t averageTemp;
+        } cfg;
+    } cellTempMsg;
+    
+    cellTempMsg.cfg.maxCellTemp = m_cell_temp;
+    cellTempMsg.cfg.maxCellID = m_cell_id;
+    cellTempMsg.cfg.minCellTemp = min_cell_temp;
+    cellTempMsg.cfg.minCellID = min_cell_id;
+    cellTempMsg.cfg.averageTemp = avg_temp;
+
+    sendMessageCAN1(0x08, 8, cellTempMsg.msg);
+}
 uint8_t ComputeInterface::calcChargerLEDState(AccumulatorData_t *bms_data)
 {
   enum LED_state
