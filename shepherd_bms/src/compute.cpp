@@ -350,5 +350,5 @@ void ComputeInterface::sendState(BMSState_t state)
 
    uint8_t bms_state[1] = {state};
 
-   sendMessageCAN1(0xFF, 1, bms_state); //todo update ID with actual value when created
+   sendMessageCAN1(0x0A, 1, bms_state);
 }
