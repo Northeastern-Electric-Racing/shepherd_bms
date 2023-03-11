@@ -4,6 +4,7 @@
 #include "datastructs.h"
 #include "nerduino.h"
 #include "canMsgHandler.h"
+#include "stateMachine.h"
 
 #define CURRENT_SENSOR_PIN_L  A1
 #define CURRENT_SENSOR_PIN_H  A0
@@ -193,6 +194,8 @@ class ComputeInterface
        * @param fault_status 
        */
       void sendFaultStatus(BMSFault_t fault_status);
+
+      void sendState(BMSState_t state);
 };
 
 extern ComputeInterface compute;

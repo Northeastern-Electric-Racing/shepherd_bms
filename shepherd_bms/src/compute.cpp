@@ -344,3 +344,11 @@ void ComputeInterface::sendFaultStatus(BMSFault_t fault_status)
 
     sendMessageCAN1(0x09, 4, fault_status_msg.msg);
 }
+
+void ComputeInterface::sendState(BMSState_t state)
+{
+
+   uint8_t bms_state[1] = {state};
+
+   sendMessageCAN1(0xFF, 1, bms_state); //todo update ID with actual value when created
+}
