@@ -186,6 +186,17 @@ class ComputeInterface
        * @param current 
        */
       void sendCurrentsStatus(uint16_t discharge, uint16_t charge, uint16_t current);
+   
+        /**
+       * @brief sends cell temperature message
+       * 
+       * 
+       * 
+       * @return Returns a fault if we are not able to send
+      */
+      void sendCellTemp(uint16_t m_cell_temp, uint8_t m_cell_id, uint16_t min_cell_temp, uint8_t min_cell_id, uint16_t avg_temp);
+      
+    
 
       /**
        * @brief Sends out the BMS fault status
