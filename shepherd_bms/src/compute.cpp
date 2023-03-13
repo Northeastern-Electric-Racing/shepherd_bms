@@ -171,6 +171,7 @@ void ComputeInterface::sendBMSStatusMessage(BMSState_t bms_state, BMSFault_t fau
     } bmsStatusMsg;
 
     bmsStatusMsg.cfg.state = bms_state;
+    bmsStatusMsg.cfg.fault = fault_status;
     bmsStatusMsg.cfg.temp_avg = static_cast<uint8_t>(avg_temp);
     bmsStatusMsg.cfg.temp_internal = static_cast<uint8_t>(internal_temp);
 
