@@ -389,13 +389,13 @@ void shepherdMain()
 			{
 				digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
 				compute.enableCharging(true);
-				compute.sendChargingStatus(true);
+				
 			} 
 			else 
 			{
 				digitalWrite(CHARGE_SAFETY_RELAY, LOW);
 				compute.enableCharging(false);
-				compute.sendChargingStatus(false);
+				
 			}
 
 			// Check if we should balance
