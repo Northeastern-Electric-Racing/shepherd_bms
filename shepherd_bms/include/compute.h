@@ -4,6 +4,7 @@
 #include "datastructs.h"
 #include "nerduino.h"
 #include "canMsgHandler.h"
+#include "stateMachine.h"
 
 #define CURRENT_SENSOR_PIN_L  A1
 #define CURRENT_SENSOR_PIN_H  A0
@@ -123,16 +124,14 @@ class ComputeInterface
       /**
       * @brief sends BMS status message 
       * 
-      * @param failsafe
-      * @param dtc_1
-      * @param dtc_2
-      * @param current_limit
+      * @param bms_state
+      * @param fault_status
       * @param avg_temp
       * @param internal_temp
       * 
       * @return Returns a fault if we are not able to send
       */
-      void sendBMSStatusMessage(uint8_t failsafe, uint8_t dtc_1, uint16_t dtc_2, uint16_t current_limit, int8_t avg_temp, int8_t internal_temp);
+      void sendBMSStatusMessage(BMSState_t bms_state, BMSFault_t fault_status, int8_t avg_temp, int8_t internal_temp);
 
       /**
       * @brief sends shutdown control message
@@ -170,15 +169,6 @@ class ComputeInterface
       void sendCellVoltageMessage(uint8_t cell_id, uint16_t instant_volt, uint16_t internal_res, uint8_t shunted, uint16_t open_voltage);
 
       /**
-      * @brief sends "is charging" message
-      * 
-      * @param charging_status
-      *
-      * @return Returns a fault if we are not able to send
-      */
-      void sendChargingStatus(bool charging_status);
-
-      /**
        * @brief sends out the calculated values of currents
        * 
        * @param discharge 
@@ -198,12 +188,7 @@ class ComputeInterface
       
     
 
-      /**
-       * @brief Sends out the BMS fault status
-       * 
-       * @param fault_status 
-       */
-      void sendFaultStatus(BMSFault_t fault_status);
+      
 };
 
 extern ComputeInterface compute;
