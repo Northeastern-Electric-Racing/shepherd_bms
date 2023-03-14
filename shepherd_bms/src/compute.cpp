@@ -155,7 +155,7 @@ void ComputeInterface::sendAccStatusMessage(uint16_t voltage, int16_t current, u
     sendMessageCAN1(CANMSG_BMSACCSTATUS, 8, accStatusMsg.msg);
 }
 
-void ComputeInterface::sendBMSStatusMessage(uint8_t failsafe, uint8_t dtc_1, uint16_t dtc_2, uint16_t current_limit, int8_t avg_temp, int8_t internal_temp)
+void ComputeInterface::sendBMSStatusMessage(BMSState_t bms_state, BMSFault_t fault_status, int8_t avg_temp, int8_t internal_temp)
 {
     union 
     {
@@ -163,24 +163,20 @@ void ComputeInterface::sendBMSStatusMessage(uint8_t failsafe, uint8_t dtc_1, uin
 
         struct
         {
-            uint8_t fsStatus;
-            uint8_t dtcStatus1;
-            uint16_t dtcStatus2;
-            uint16_t currentLimit;
-            uint8_t tempAvg;
-            uint8_t tempInternal;
+            uint8_t state;
+            uint32_t fault;
+            uint8_t temp_avg;
+            uint8_t temp_internal;
         } cfg;   
-    } BMSStatusMsg;
+    } bmsStatusMsg;
 
-    BMSStatusMsg.cfg.fsStatus = failsafe;
-    BMSStatusMsg.cfg.dtcStatus1 = dtc_1;
-    BMSStatusMsg.cfg.dtcStatus2 = __builtin_bswap16(dtc_2);
-    BMSStatusMsg.cfg.currentLimit = __builtin_bswap16(current_limit);
-    BMSStatusMsg.cfg.tempAvg = static_cast<uint8_t>(avg_temp);
-    BMSStatusMsg.cfg.tempInternal = static_cast<uint8_t>(internal_temp);
+    bmsStatusMsg.cfg.state = bms_state;
+    bmsStatusMsg.cfg.fault = fault_status;
+    bmsStatusMsg.cfg.temp_avg = static_cast<uint8_t>(avg_temp);
+    bmsStatusMsg.cfg.temp_internal = static_cast<uint8_t>(internal_temp);
 
     
-    sendMessageCAN1(CANMSG_BMSDTCSTATUS, 8, BMSStatusMsg.msg);
+    sendMessageCAN1(CANMSG_BMSDTCSTATUS, 8, bmsStatusMsg.msg);
 }
 
 void ComputeInterface::sendShutdownControlMessage(uint8_t mpe_state)
@@ -272,13 +268,6 @@ void ComputeInterface::sendCurrentsStatus(uint16_t discharge, uint16_t charge, u
     sendMessageCAN1(CANMSG_BMSCURRENTS, 8, currentsStatusMsg.msg);
 }
 
-void ComputeInterface::sendChargingStatus(bool charging_status)
-{
-    uint8_t charging_array[1] = {charging_status};
-
-    sendMessageCAN1(CANMSG_BMSCHARGINGSTATE, 1, charging_array);
-}
-
 void ComputeInterface::MCCallback(const CAN_message_t &msg)
 {
     return;
@@ -350,21 +339,4 @@ uint8_t ComputeInterface::calcChargerLEDState(AccumulatorData_t *bms_data)
     return RED_GREEN_BLINKING;
   }
 
-}
-
-void ComputeInterface::sendFaultStatus(BMSFault_t fault_status)
-{
-    union
-    {
-        uint8_t msg[4] = {0, 0, 0, 0};
-
-        struct 
-        {
-            uint32_t faults;
-        } cfg;
-    } fault_status_msg;
-
-    fault_status_msg.cfg.faults = fault_status;
-
-    sendMessageCAN1(0x09, 4, fault_status_msg.msg);
 }
