@@ -61,15 +61,9 @@ void StateMachine::initCharging()
 
 void StateMachine::handleCharging(AccumulatorData_t *bmsdata)
 {
+   
 
-    //check for faults
-    if (bmsFault != FAULTS_CLEAR)
-    {
-        requestTransition(FAULTED_STATE);
-        return;
-    }
-
-    else if (digitalRead(CHARGE_DETECT) == HIGH)
+    if (digitalRead(CHARGE_DETECT) == HIGH)
     {
         requestTransition(READY_STATE);
         return;
@@ -164,7 +158,23 @@ void StateMachine::handleFaulted(AccumulatorData_t *bmsdata)
 
 void StateMachine::handleState(AccumulatorData_t *bmsdata)
 {
+	faultCheck(bmsdata);
+
+	 if (bmsFault != FAULTS_CLEAR)
+    {
+		analyzer.bmsdata->dischargeLimit = 0;
+        requestTransition(FAULTED_STATE);
+    }
+
     (this->*handlerLUT[currentState])(bmsdata);
+
+
+	compute.setFanSpeed(analyzer.calcFanPWM());
+
+	
+	compute.sendAccStatusMessage(analyzer.bmsdata->packVoltage, analyzer.bmsdata->packCurrent, 0, 0, 0);
+	compute.sendCurrentsStatus(analyzer.bmsdata->dischargeLimit, analyzer.bmsdata->chargeLimit, analyzer.bmsdata->packCurrent);
+	
 }
 
 void StateMachine::requestTransition(BMSState_t nextState)

@@ -99,24 +99,17 @@ void shepherdMain()
 {
 	//Implement some simple controls and calcs behind shepherd
 
-	//Create a dynamically allocated structure
-	//@note this will move to a specialized container with a list of these structs
-	AccumulatorData_t *accData = new AccumulatorData_t;
+	
 
-	//Collect all the segment data needed to perform analysis
-	//Not state specific
-	segment.retrieveSegmentData(accData->chipData);
-	accData->packCurrent = compute.getPackCurrent();
+	
 	//compute.getTSGLV();
 	//etc
 
-	//Perform calculations on the data in the frame
+	
 	//Some calculations might be state dependent
-	analyzer.push(accData);
+	
 
-	#ifdef DEBUG_STATS
-	printBMSStats(analyzer.bmsdata);
-	#endif
+	
 
 
 	compute.sendAccStatusMessage(analyzer.bmsdata->packVoltage, analyzer.bmsdata->packCurrent, 0, 0, 0);
@@ -139,7 +132,22 @@ void setup()
 
 void loop()
 {
-	shepherdMain();
+	
+	//Create a dynamically allocated structure
+	AccumulatorData_t *accData = new AccumulatorData_t;
+
+	//Collect all the segment data needed to perform analysis
+	//Not state specific
+	segment.retrieveSegmentData(accData->chipData);
+	accData->packCurrent = compute.getPackCurrent();
+
+	//Perform calculations on the data in the frame
+	analyzer.push(accData);
+
+	#ifdef DEBUG_STATS
+	printBMSStats(analyzer.bmsdata);
+	#endif	
+	
 	wdt.feed();
 	delay(10); // not sure if we need this in, it was in before
 }
