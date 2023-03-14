@@ -226,6 +226,7 @@ FaultStatus_t SegmentInterface::pullThermistors()
 		for(uint8_t c=0; c<NUM_CHIPS; c++)   
         {
             memcpy(segmentData[c].thermistorReading, previousData[c].thermistorReading, sizeof(segmentData[c].thermistorReading));
+            memcpy(segmentData[c].thermistorValue, previousData[c].thermistorValue, sizeof(segmentData[c].thermistorValue));
         }
         return voltageError;
 	}
