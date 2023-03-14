@@ -289,7 +289,10 @@ void Analyzer::calcPackResistances(AccumulatorData_t *bms_data)
                 packResistances[chip][cell] = (bms_data->chipData[chip].openCellVoltage[cell] - bms_data->chipData[chip].voltageReading[cell]) / bms_data->packCurrent;
                 // If the tested resistance is greater than the thermal limit then it is set to the thermal limit
                 packResistances[chip][cell] = (packResistances[chip][cell] > bms_data->chipData[chip].cellResistance[cell]) ? bms_data->chipData[chip].cellResistance[cell] : packResistances[chip][cell];
+                Serial.println(packResistances[chip][cell]);
+                Serial.println("  ");
             }
+            Serial.println("\n");
         }
     }
     // Update the bms data when current is low
