@@ -2,8 +2,8 @@
 #define BMS_STATES_H
 
 #include "datastructs.h"
-#include "segment.cpp"
-#include "compute.cpp"
+#include "segment.h"
+#include "compute.h"
 #include "analyzer.h"
 
 typedef enum
@@ -14,23 +14,24 @@ typedef enum
     FAULTED_STATE,    //State when BMS has detected a catastrophic fault and we need to hault operations
     NUM_STATES
 }BMSState_t;
-
-uint32_t bmsFault = FAULTS_CLEAR;
-
-uint16_t overVoltCount = 0;
-uint16_t underVoltCount = 0;
-uint16_t overCurrCount = 0;
-uint16_t chargeOverVolt = 0;
-uint16_t overChgCurrCount = 0;
-uint16_t lowCellCount = 0;
-
-static Timer chargeMessageTimer;
-static const uint16_t CHARGE_MESSAGE_WAIT = 250; //ms
-
-
 class StateMachine
 {
     private:
+
+         AccumulatorData_t *prevAccData;
+
+        uint32_t bmsFault = FAULTS_CLEAR;
+
+        uint16_t overVoltCount;
+        uint16_t underVoltCount;
+        uint16_t overCurrCount;
+        uint16_t chargeOverVolt;
+        uint16_t overChgCurrCount;
+        uint16_t lowCellCount;
+
+        static Timer chargeMessageTimer;
+        static const uint16_t CHARGE_MESSAGE_WAIT = 250; //ms
+
 
         const bool validTransitionFromTo[NUM_STATES][NUM_STATES] = 
         { 
@@ -78,14 +79,6 @@ class StateMachine
             &StateMachine::handleFaulted
         };
 
-        /**
-        * @brief Algorithm behind determining which cells we want to balance
-        * @note Directly interfaces with the segments
-        * 
-        * @param bms_data 
-        */
-        void balanceCells(AccumulatorData_t *bms_data);
-
 
         /**
         * @brief Returns if we want to balance cells during a particular frame
@@ -105,7 +98,6 @@ class StateMachine
         */
         bool chargingCheck(AccumulatorData_t *bmsdata);
 
-        void broadcastCurrentLimit(AccumulatorData_t *bmsdata);
 
         /**
         * @brief Returns any new faults or current faults that have come up
@@ -129,5 +121,15 @@ class StateMachine
 
         BMSState_t currentState;
 };
+
+ /**
+        * @brief Algorithm behind determining which cells we want to balance
+        * @note Directly interfaces with the segments
+        * 
+        * @param bms_data 
+        */
+        void balanceCells(AccumulatorData_t *bms_data);
+
+        void broadcastCurrentLimit(AccumulatorData_t *bmsdata);
 
 #endif

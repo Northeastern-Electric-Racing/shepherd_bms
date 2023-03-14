@@ -12,11 +12,13 @@
 #include "datastructs.h"
 #include "analyzer.h"
 #include "stateMachine.h"
-#include "calcs.h"
+
 
 WDT_T4<WDT1> wdt;
 
 AccumulatorData_t *prevAccData = nullptr;
+
+StateMachine stateMachine; 
 
 
 #ifdef DEBUG_STATS
@@ -95,27 +97,6 @@ const void printBMSStats(AccumulatorData_t *accData)
 
 #endif
 
-void shepherdMain()
-{
-	//Implement some simple controls and calcs behind shepherd
-
-	
-
-	
-	//compute.getTSGLV();
-	//etc
-
-	
-	//Some calculations might be state dependent
-	
-
-	
-
-
-	compute.sendAccStatusMessage(analyzer.bmsdata->packVoltage, analyzer.bmsdata->packCurrent, 0, 0, 0);
-	compute.sendCurrentsStatus(analyzer.bmsdata->dischargeLimit, analyzer.bmsdata->chargeLimit, analyzer.bmsdata->packCurrent);
-	compute.setFanSpeed(calcFanPWM(analyzer.bmsdata));
-}
 
 void setup()
 {
@@ -124,10 +105,8 @@ void setup()
   config.timeout = 15;        /* in seconds, 0->128 */
   wdt.begin(config);
   NERduino.begin();
-  
-  segment.init();
-
   compute.setFault(NOT_FAULTED); 
+  segment.init();
 }
 
 void loop()
@@ -147,7 +126,7 @@ void loop()
 	#ifdef DEBUG_STATS
 	printBMSStats(analyzer.bmsdata);
 	#endif	
-	
+
 	wdt.feed();
 	delay(10); // not sure if we need this in, it was in before
 }
