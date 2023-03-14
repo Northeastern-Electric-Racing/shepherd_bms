@@ -123,6 +123,8 @@ void loop()
 	//Perform calculations on the data in the frame
 	analyzer.push(accData);
 
+	stateMachine.handleState(accData);
+
 	#ifdef DEBUG_STATS
 	printBMSStats(analyzer.bmsdata);
 	#endif	

@@ -87,18 +87,19 @@ void StateMachine::handleCharging(AccumulatorData_t *bmsdata)
 				{
 					digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
 					compute.enableCharging(true);
-					compute.sendChargingStatus(true);
+					
 				} 
 				else 
 				{
 					digitalWrite(CHARGE_SAFETY_RELAY, LOW);
 					compute.enableCharging(false);
-					compute.sendChargingStatus(false);
+					
 				}
 
 				// Check if we should balance
 				if (balancingCheck(analyzer.bmsdata)) 
 				{
+					segment.enableBalancing(true);
 					balanceCells(analyzer.bmsdata);
 				} 
 				else 
@@ -142,12 +143,8 @@ void StateMachine::handleFaulted(AccumulatorData_t *bmsdata)
     {
 
         compute.setFault(FAULTED);
-        bmsdata->dischargeLimit = 0;
-        broadcastCurrentLimit(bmsdata);
-
-	    segment.enableBalancing(false);
 	    digitalWrite(CHARGE_SAFETY_RELAY, LOW);
-	    compute.enableCharging(false);
+	
 
 	    Serial.print("BMS FAULT: ");
 	    Serial.println(bmsFault, HEX);
@@ -173,7 +170,7 @@ void StateMachine::handleState(AccumulatorData_t *bmsdata)
 
 	 if (bmsFault != FAULTS_CLEAR)
     {
-		analyzer.bmsdata->dischargeLimit = 0;
+		bmsdata->dischargeLimit = 0;
         requestTransition(FAULTED_STATE);
     }
 
@@ -181,10 +178,13 @@ void StateMachine::handleState(AccumulatorData_t *bmsdata)
 
 
 	compute.setFanSpeed(analyzer.calcFanPWM());
+	broadcastCurrentLimit(bmsdata);
 
-
+	//send relevant CAN msgs
 	compute.sendAccStatusMessage(analyzer.bmsdata->packVoltage, analyzer.bmsdata->packCurrent, 0, 0, 0);
 	compute.sendCurrentsStatus(analyzer.bmsdata->dischargeLimit, analyzer.bmsdata->chargeLimit, analyzer.bmsdata->packCurrent);
+	
+	//todo send BMS status msg once this gets merged with that PR (and any other msgs we want)
 	
 }
 
@@ -200,8 +200,7 @@ void StateMachine::requestTransition(BMSState_t nextState)
 
 uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
 {
-	// FAULT CHECK
-	// Check for fuckies
+	// FAULT CHECK (Check for fuckies)
 	uint32_t faultStatus = 0;
 
 	// Over current fault for discharge

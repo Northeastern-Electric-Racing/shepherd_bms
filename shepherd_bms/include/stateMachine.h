@@ -29,7 +29,7 @@ class StateMachine
         uint16_t overChgCurrCount;
         uint16_t lowCellCount;
 
-        static Timer chargeMessageTimer;
+        Timer chargeMessageTimer;
         static const uint16_t CHARGE_MESSAGE_WAIT = 250; //ms
 
 
