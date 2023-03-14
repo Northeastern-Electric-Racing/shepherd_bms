@@ -278,23 +278,28 @@ void Analyzer::calcStateOfCharge()
 void Analyzer::calcPackResistances(AccumulatorData_t *bms_data)
 {
     float packResistances[NUM_CHIPS][NUM_CELLS_PER_CHIP];
+    // Want to calculate the pack resistance when current is high
     if(bms_data->packCurrent >= 100)
     {
-        for(int i = 0; i < NUM_CHIPS; i++)
+        calcCellResistances();
+        for(int chip = 0; chip < NUM_CHIPS; chip++)
         {
-            for(int j = 0; j < NUM_CELLS_PER_CHIP; j++)
+            for(int cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
             {
-                packResistances[i][j] = (bms_data->chipData[i].openCellVoltage[j] - bms_data->chipData[i].voltageReading[j]) / bms_data->packCurrent;
+                packResistances[chip][cell] = (bms_data->chipData[chip].openCellVoltage[cell] - bms_data->chipData[chip].voltageReading[cell]) / bms_data->packCurrent;
+                // If the tested resistance is greater than the thermal limit then it is set to the thermal limit
+                packResistances[chip][cell] = (packResistances[chip][cell] > bms_data->chipData[chip].cellResistance[cell]) ? bms_data->chipData[chip].cellResistance[cell] : packResistances[chip][cell];
             }
-        };
+        }
     }
+    // Update the bms data when current is low
     if(bms_data->packCurrent < 5)
     {
-       for(int i = 0; i < NUM_CHIPS; i++)
+       for(int chip = 0; chip < NUM_CHIPS; chip++)
         {
-            for(int j = 0; j < NUM_CELLS_PER_CHIP; j++)
+            for(int cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
             {
-                bms_data->chipData[i].cellResistance[j] = packResistances[i][j];
+                bms_data->chipData[chip].cellResistance[cell] = packResistances[chip][cell];
             }
         }
     }
