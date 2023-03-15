@@ -204,22 +204,22 @@ const void printBMSStats(AccumulatorData_t *accData)
 	}
 
 	Serial.println("Cell Temps:");
-	for(uint8_t c = 1; c < NUM_CHIPS; c+= 2)
+	for(uint8_t c = 1; c < NUM_CHIPS; c+= 1)
 	{
 		for(uint8_t cell = 17; cell < 28; cell++)
 		{
-			Serial.print(accData->chipData[c].thermistorReading[cell]);
+			Serial.print(accData->chipData[c].thermistorReading[cell - START_THERM]);
 			Serial.print("\t");
 		}
 		Serial.println();
 	}
 
 	Serial.println("Avg Cell Temps:");
-	for(uint8_t c = 1; c < NUM_CHIPS; c+= 2)
+	for(uint8_t c = 1; c < NUM_CHIPS; c+= 1)
 	{
 		for(uint8_t cell = 17; cell < 28; cell++)
 		{
-			Serial.print(accData->chipData[c].thermistorValue[cell]);
+			Serial.print(accData->chipData[c].thermistorValue[cell - START_THERM]);
 			Serial.print("\t");
 		}
 		Serial.println();
