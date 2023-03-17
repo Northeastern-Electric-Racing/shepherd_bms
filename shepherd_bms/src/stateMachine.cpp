@@ -12,6 +12,7 @@ StateMachine::~StateMachine()
 
 void StateMachine::initBoot()
 {
+	Serial.println("boot");
     return;
 }
 
@@ -39,7 +40,7 @@ void StateMachine::handleBoot(AccumulatorData_t *bmsdata)
 
 void StateMachine::initReady()
 {
-	
+	Serial.println("ready");
 	segment.enableBalancing(false);
     compute.enableCharging(false);
     return;
@@ -128,6 +129,7 @@ void StateMachine::handleCharging(AccumulatorData_t *bmsdata)
 
 void StateMachine::initFaulted()
 {
+	Serial.println("faulted");
 	segment.enableBalancing(false);
     compute.enableCharging(false);
     return;
@@ -170,6 +172,7 @@ void StateMachine::handleFaulted(AccumulatorData_t *bmsdata)
 void StateMachine::handleState(AccumulatorData_t *bmsdata)
 {
 	bmsdata->faultCode = faultCheck(bmsdata);
+	bmsdata->faultCode = 32;
 
 	 if (bmsdata->faultCode != FAULTS_CLEAR)
     {
@@ -198,6 +201,7 @@ void StateMachine::requestTransition(BMSState_t nextState)
 	
     (this->*initLUT[nextState])();
 	currentState = nextState;
+	
 	
 }
 

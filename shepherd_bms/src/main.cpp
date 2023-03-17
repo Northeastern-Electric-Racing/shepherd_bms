@@ -63,7 +63,7 @@ const void printBMSStats(AccumulatorData_t *accData)
 	Serial.println(stateMachine.currentState);
 
 	Serial.print("Fault (in binary): ");	
-	Serial.println(prevAccData->faultCode, BIN);
+	Serial.println(accData->faultCode, BIN);
 
 	Serial.println("Raw Cell Voltage:");
 	for(uint8_t c = 0; c < NUM_CHIPS; c++)
@@ -125,7 +125,8 @@ void setup()
   NERduino.begin();
   compute.setFault(NOT_FAULTED); 
   segment.init();
-  analyzer.bmsdata->faultCode = FAULTS_CLEAR;
+  
+  
 }
 
 void loop()
@@ -133,6 +134,8 @@ void loop()
 	
 	//Create a dynamically allocated structure
 	AccumulatorData_t *accData = new AccumulatorData_t;
+
+	accData->faultCode = FAULTS_CLEAR;
 
 	//Collect all the segment data needed to perform analysis
 	//Not state specific
