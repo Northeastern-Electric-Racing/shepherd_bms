@@ -48,14 +48,8 @@ void StateMachine::initReady()
 
 void StateMachine::handleReady(AccumulatorData_t *bmsdata)
 {
-    //check for faults
-    if (bmsFault != FAULTS_CLEAR)
-    {
-        requestTransition(FAULTED_STATE);
-        return;
-    }
 	//check for charger
-	else if (digitalRead(CHARGE_DETECT) == LOW)
+	if (digitalRead(CHARGE_DETECT) == LOW)
 	{
 		requestTransition(CHARGING_STATE);
 	}
@@ -137,7 +131,7 @@ void StateMachine::initFaulted()
 
 void StateMachine::handleFaulted(AccumulatorData_t *bmsdata)
 {
-    if (bmsFault == FAULTS_CLEAR)
+    if (bmsdata->faultCode == FAULTS_CLEAR)
     {
         compute.setFault(NOT_FAULTED);
         requestTransition(BOOT_STATE);
@@ -152,7 +146,7 @@ void StateMachine::handleFaulted(AccumulatorData_t *bmsdata)
 	
 
 	    Serial.print("BMS FAULT: ");
-	    Serial.println(bmsFault, HEX);
+	    Serial.println(bmsdata->faultCode, HEX);
 	    Serial.println("Hit Spacebar to clear");
 	    delay(1000);
 	    if (Serial.available()) 
