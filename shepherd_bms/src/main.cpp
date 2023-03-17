@@ -59,6 +59,12 @@ const void printBMSStats(AccumulatorData_t *accData)
 	Serial.print("Is Balancing?: ");
 	Serial.println(segment.isBalancing()); 
 
+	Serial.print("State: ");
+	Serial.println(stateMachine.currentState);
+
+	Serial.print("Fault (in binary): ");	
+	Serial.println(prevAccData->faultCode, BIN);
+
 	Serial.println("Open Cell Voltage:");
 	for(uint8_t c = 0; c < NUM_CHIPS; c++)
 	{
@@ -91,6 +97,7 @@ const void printBMSStats(AccumulatorData_t *accData)
 		}
 		Serial.println();
 	}
+	
 
 	debug_statTimer.startTimer(PRINT_STAT_WAIT);
 }
@@ -107,6 +114,7 @@ void setup()
   NERduino.begin();
   compute.setFault(NOT_FAULTED); 
   segment.init();
+  analyzer.bmsdata->faultCode = FAULTS_CLEAR;
 }
 
 void loop()

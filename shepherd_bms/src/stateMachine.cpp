@@ -30,13 +30,16 @@ void StateMachine::handleBoot(AccumulatorData_t *bmsdata)
 	segment.enableBalancing(false);
     compute.enableCharging(false);
 
+	//bmsdata->faultCode = FAULTS_CLEAR;
+	
 	requestTransition(READY_STATE);
+	
     return;
 }
 
 void StateMachine::initReady()
 {
-
+	
 	segment.enableBalancing(false);
     compute.enableCharging(false);
     return;
@@ -166,9 +169,9 @@ void StateMachine::handleFaulted(AccumulatorData_t *bmsdata)
 
 void StateMachine::handleState(AccumulatorData_t *bmsdata)
 {
-	faultCheck(bmsdata);
+	bmsdata->faultCode = faultCheck(bmsdata);
 
-	 if (bmsFault != FAULTS_CLEAR)
+	 if (bmsdata->faultCode != FAULTS_CLEAR)
     {
 		bmsdata->dischargeLimit = 0;
         requestTransition(FAULTED_STATE);
@@ -191,10 +194,11 @@ void StateMachine::handleState(AccumulatorData_t *bmsdata)
 void StateMachine::requestTransition(BMSState_t nextState)
 {
     if(currentState == nextState) return;
-
     if(!validTransitionFromTo[currentState][nextState]) return;
-
+	
     (this->*initLUT[nextState])();
+	currentState = nextState;
+	
 }
 
 
