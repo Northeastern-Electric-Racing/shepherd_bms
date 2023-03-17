@@ -65,6 +65,17 @@ const void printBMSStats(AccumulatorData_t *accData)
 	Serial.print("Fault (in binary): ");	
 	Serial.println(prevAccData->faultCode, BIN);
 
+	Serial.println("Raw Cell Voltage:");
+	for(uint8_t c = 0; c < NUM_CHIPS; c++)
+	{
+		for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+		{
+			Serial.print(accData->chipData[c].voltageReading[cell]);
+			Serial.print("\t");
+		}
+		Serial.println();
+	}
+
 	Serial.println("Open Cell Voltage:");
 	for(uint8_t c = 0; c < NUM_CHIPS; c++)
 	{
