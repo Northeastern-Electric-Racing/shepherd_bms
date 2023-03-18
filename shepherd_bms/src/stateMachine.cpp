@@ -49,7 +49,7 @@ void StateMachine::initReady()
 void StateMachine::handleReady(AccumulatorData_t *bmsdata)
 {
 	//check for charger
-	if (digitalRead(CHARGE_DETECT) == LOW)
+	if (true)//(digitalRead(CHARGE_DETECT) == LOW)
 	{
 		requestTransition(CHARGING_STATE);
 	}
@@ -63,6 +63,7 @@ void StateMachine::handleReady(AccumulatorData_t *bmsdata)
 
 void StateMachine::initCharging()
 {
+	Serial.println('charge');
     return;
 }
 
@@ -166,7 +167,6 @@ void StateMachine::handleFaulted(AccumulatorData_t *bmsdata)
 void StateMachine::handleState(AccumulatorData_t *bmsdata)
 {
 	bmsdata->faultCode = faultCheck(bmsdata);
-	bmsdata->faultCode = 32;
 
 	 if (bmsdata->faultCode != FAULTS_CLEAR)
     {
