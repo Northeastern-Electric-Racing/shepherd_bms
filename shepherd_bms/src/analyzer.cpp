@@ -59,7 +59,7 @@ void Analyzer::calcPackTemps()
     bmsdata->maxTemp = {MIN_TEMP, 0, 0};
     bmsdata->minTemp = {MAX_TEMP, 0, 0};
     int totalTemp = 0;
-    for(uint8_t c = 1; c < NUM_CHIPS; c += 2)
+    for(uint8_t c = 1; c < NUM_CHIPS; c+=2)
     {
         for(uint8_t therm = 17; therm < 28; therm++) 
         {

@@ -12,7 +12,6 @@ StateMachine::~StateMachine()
 
 void StateMachine::initBoot()
 {
-	Serial.println("boot");
     return;
 }
 
@@ -40,7 +39,6 @@ void StateMachine::handleBoot(AccumulatorData_t *bmsdata)
 
 void StateMachine::initReady()
 {
-	Serial.println("ready");
 	segment.enableBalancing(false);
     compute.enableCharging(false);
     return;
@@ -49,7 +47,7 @@ void StateMachine::initReady()
 void StateMachine::handleReady(AccumulatorData_t *bmsdata)
 {
 	//check for charger
-	if (true)//(digitalRead(CHARGE_DETECT) == LOW)
+	if (digitalRead(CHARGE_DETECT) == LOW)
 	{
 		requestTransition(CHARGING_STATE);
 	}
@@ -63,7 +61,6 @@ void StateMachine::handleReady(AccumulatorData_t *bmsdata)
 
 void StateMachine::initCharging()
 {
-	Serial.println('charge');
     return;
 }
 
@@ -124,7 +121,6 @@ void StateMachine::handleCharging(AccumulatorData_t *bmsdata)
 
 void StateMachine::initFaulted()
 {
-	Serial.println("faulted");
 	segment.enableBalancing(false);
     compute.enableCharging(false);
     return;

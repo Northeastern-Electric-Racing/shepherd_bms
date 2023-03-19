@@ -60,9 +60,12 @@ const void printBMSStats(AccumulatorData_t *accData)
 	Serial.println(segment.isBalancing()); 
 
 	Serial.print("State: ");
-	Serial.println(stateMachine.currentState);
+	if (stateMachine.currentState == 0) Serial.println("BOOT");
+	else if (stateMachine.currentState == 1) Serial.println("READY");
+	else if (stateMachine.currentState == 2) Serial.println("CHARGING");
+	else if (stateMachine.currentState == 1) Serial.println("FAULTED");
 
-	Serial.println("Raw Cell Voltage:");
+	/*Serial.println("Raw Cell Voltage:");
 	for(uint8_t c = 0; c < NUM_CHIPS; c++)
 	{
 		for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
@@ -71,7 +74,7 @@ const void printBMSStats(AccumulatorData_t *accData)
 			Serial.print("\t");
 		}
 		Serial.println();
-	}
+	}*/
 
 	Serial.println("Open Cell Voltage:");
 	for(uint8_t c = 0; c < NUM_CHIPS; c++)
@@ -85,7 +88,7 @@ const void printBMSStats(AccumulatorData_t *accData)
 	}
 
 	Serial.println("Cell Temps:");
-	for(uint8_t c = 1; c < NUM_CHIPS; c+= 2)
+	for(uint8_t c = 0; c < NUM_CHIPS; c+= 2)
 	{
 		for(uint8_t cell = 17; cell < 28; cell++)
 		{
@@ -96,7 +99,7 @@ const void printBMSStats(AccumulatorData_t *accData)
 	}
 
 	Serial.println("Avg Cell Temps:");
-	for(uint8_t c = 1; c < NUM_CHIPS; c+= 2)
+	for(uint8_t c = 0; c < NUM_CHIPS; c+= 2)
 	{
 		for(uint8_t cell = 17; cell < 28; cell++)
 		{
