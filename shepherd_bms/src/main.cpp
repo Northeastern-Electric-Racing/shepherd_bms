@@ -88,7 +88,7 @@ const void printBMSStats(AccumulatorData_t *accData)
 	}
 
 	Serial.println("Cell Temps:");
-	for(uint8_t c = 0; c < NUM_CHIPS; c+= 2)
+	for(uint8_t c = 1; c < NUM_CHIPS; c+= 2)
 	{
 		for(uint8_t cell = 17; cell < 28; cell++)
 		{
@@ -99,7 +99,7 @@ const void printBMSStats(AccumulatorData_t *accData)
 	}
 
 	Serial.println("Avg Cell Temps:");
-	for(uint8_t c = 0; c < NUM_CHIPS; c+= 2)
+	for(uint8_t c = 1; c < NUM_CHIPS; c+= 2)
 	{
 		for(uint8_t cell = 17; cell < 28; cell++)
 		{
