@@ -368,3 +368,34 @@ void ComputeInterface::sendFaultStatus(BMSFault_t fault_status)
 
     sendMessageCAN1(0x09, 4, fault_status_msg.msg);
 }
+
+void ComputeInterface::broadcastCellData(AccumulatorData_t *acc_data)
+{
+    union 
+    {
+        uint8_t msg[7] = {0, 0, 0, 0, 0, 0, 0}; 
+        struct
+        {
+            uint8_t cell_id;
+            uint16_t cell_voltage;
+            uint16_t cell_resistance;
+            uint8_t cell_temp;
+            uint8_t cell_balancing;
+        }cfg;
+    }cellDataMsg;
+
+    // Iterating through each chip and cell and broadcasting data from each cell
+    for(int chip = 0; chip < NUM_CHIPS; chip++)
+    {
+        for(int cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+        {
+            // Shifting the cell i nibble to the right and the cell will fill in the second nibble
+            cellDataMsg.cfg.cell_id = (chip << 4) + cell;
+            cellDataMsg.cfg.cell_voltage = acc_data->chip_data[chip].voltage_reading[cell];
+            cellDataMsg.cfg.cell_resistance = uint16_t(acc_data->chip_data[chip].cell_resistance[cell]);
+            cellDataMsg.cfg.cell_temp = acc_data->chip_data[chip].cell_temp[cell];
+            cellDataMsg.cfg.cell_balancing = segment.isBalancing(chip, cell);
+            sendMessageCAN1(0x07, 7, cellDataMsg.msg);
+        }
+    }
+}
