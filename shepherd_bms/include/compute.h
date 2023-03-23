@@ -4,6 +4,7 @@
 #include "datastructs.h"
 #include "nerduino.h"
 #include "canMsgHandler.h"
+#include "stateMachine.h"
 
 #define CURRENT_SENSOR_PIN_L  A1
 #define CURRENT_SENSOR_PIN_H  A0
@@ -124,16 +125,14 @@ class ComputeInterface
       /**
       * @brief sends BMS status message 
       * 
-      * @param failsafe
-      * @param dtc1
-      * @param dtc2
-      * @param currentLimit
+      * @param bms_state
+      * @param fault_status
       * @param tempAvg
       * @param tempInternal
       * 
       * @return Returns a fault if we are not able to send
       */
-      void sendBMSStatusMessage(uint8_t failsafe, uint8_t dtc1, uint16_t dtc2, uint16_t currentLimit, int8_t tempAvg, int8_t tempInternal);
+      void sendBMSStatusMessage(int bms_state, BMSFault_t fault_status, int8_t avg_temp, int8_t internal_temp);
 
       /**
       * @brief sends shutdown control message

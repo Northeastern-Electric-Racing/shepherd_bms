@@ -157,7 +157,7 @@ void ComputeInterface::sendAccStatusMessage(uint16_t voltage, int16_t current, u
     sendMessageCAN1(0x01, 8, accStatusMsg.msg);
 }
 
-void ComputeInterface::sendBMSStatusMessage(uint8_t failsafe, uint8_t dtc1, uint16_t dtc2, uint16_t currentLimit, int8_t tempAvg, int8_t tempInternal)
+void ComputeInterface::sendBMSStatusMessage(int bms_state, BMSFault_t fault_status, int8_t avg_temp, int8_t internal_temp)
 {
     static union 
     {
@@ -165,24 +165,20 @@ void ComputeInterface::sendBMSStatusMessage(uint8_t failsafe, uint8_t dtc1, uint
 
         struct
         {
-            uint8_t fsStatus;
-            uint8_t dtcStatus1;
-            uint16_t dtcStatus2;
-            uint16_t currentLimit;
-            uint8_t tempAvg;
-            uint8_t tempInternal;
+           uint8_t state;
+           uint32_t fault;
+           uint8_t temp_avg;
+           uint8_t temp_internal;
         } cfg;   
-    } BMSStatusMsg;
-
-    BMSStatusMsg.cfg.fsStatus = failsafe;
-    BMSStatusMsg.cfg.dtcStatus1 = dtc1;
-    BMSStatusMsg.cfg.dtcStatus2 = __builtin_bswap16(dtc2);
-    BMSStatusMsg.cfg.currentLimit = __builtin_bswap16(currentLimit);
-    BMSStatusMsg.cfg.tempAvg = static_cast<uint8_t>(tempAvg);
-    BMSStatusMsg.cfg.tempInternal = static_cast<uint8_t>(tempInternal);
+    } bmsStatusMsg;
+ 
+    bmsStatusMsg.cfg.state = bms_state;
+    bmsStatusMsg.cfg.fault = fault_status;
+    bmsStatusMsg.cfg.temp_avg = static_cast<uint8_t>(avg_temp);
+    bmsStatusMsg.cfg.temp_internal = static_cast<uint8_t>(internal_temp);
 
     
-    sendMessageCAN1(0x02, 8, BMSStatusMsg.msg);
+    sendMessageCAN1(0x02, 8, bmsStatusMsg.msg);
 }
 
 void ComputeInterface::sendShutdownControlMessage(uint8_t mpeState)
