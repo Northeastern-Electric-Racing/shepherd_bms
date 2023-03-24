@@ -169,7 +169,7 @@ void StateMachine::handleFaulted(AccumulatorData_t *bmsdata)
 
 void StateMachine::handleState(AccumulatorData_t *bmsdata)
 {
-	Serial.println(previousFault);
+	
 	bmsdata->faultCode = faultCheck(bmsdata);
 
 	 if (bmsdata->faultCode != FAULTS_CLEAR)

@@ -18,8 +18,7 @@ class StateMachine
 {
     private:
 
-         AccumulatorData_t *prevAccData;
-
+        AccumulatorData_t *prevAccData;
         uint32_t bmsFault = FAULTS_CLEAR;
 
         uint16_t overVoltCount;
@@ -31,7 +30,7 @@ class StateMachine
         uint16_t highTempCount;
 
         bool enteredFaulted = false;
-        uint32_t previousFault = 0;
+       
 
         Timer chargeMessageTimer;
         static const uint16_t CHARGE_MESSAGE_WAIT = 250; //ms
@@ -124,6 +123,9 @@ class StateMachine
         void handleState(AccumulatorData_t *bmsdata);
 
         BMSState_t currentState;
+
+         uint32_t previousFault = 0;
+        
 };
 
  /**
