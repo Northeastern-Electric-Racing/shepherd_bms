@@ -30,7 +30,7 @@ const void printBMSStats(AccumulatorData_t *accData)
 	
 	if(!debug_statTimer.isTimerExpired()) return;
 
-	Serial.print("Current: ");
+	Serial.print("Prev Fault: ");
 	Serial.println(stateMachine.previousFault);
 	Serial.print("Current: ");
 	Serial.println((accData->packCurrent)/10);
