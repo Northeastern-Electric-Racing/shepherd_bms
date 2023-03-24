@@ -123,11 +123,18 @@ void StateMachine::initFaulted()
 {
 	segment.enableBalancing(false);
     compute.enableCharging(false);
+	enteredFaulted = true;
     return;
 }
 
 void StateMachine::handleFaulted(AccumulatorData_t *bmsdata)
 {
+	if (enteredFaulted)
+	{
+		enteredFaulted = false;
+		previousFault = faultCheck(bmsdata);
+	}
+
     if (bmsdata->faultCode == FAULTS_CLEAR)
     {
         compute.setFault(NOT_FAULTED);
@@ -162,6 +169,7 @@ void StateMachine::handleFaulted(AccumulatorData_t *bmsdata)
 
 void StateMachine::handleState(AccumulatorData_t *bmsdata)
 {
+	Serial.println(previousFault);
 	bmsdata->faultCode = faultCheck(bmsdata);
 
 	 if (bmsdata->faultCode != FAULTS_CLEAR)
@@ -219,7 +227,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
 	if ((accData->packCurrent) < 0 && abs((accData->packCurrent)) > ((accData->chargeLimit)*10))
 	{
 		overChgCurrCount++;
-		if (overChgCurrCount > 100) 
+		if (overChgCurrCount > 1000) 
 		{ // 1 seconds @ 100Hz rate
 			faultStatus |= CHARGE_LIMIT_ENFORCEMENT_FAULT;
 		}

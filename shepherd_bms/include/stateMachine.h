@@ -30,6 +30,9 @@ class StateMachine
         uint16_t lowCellCount;
         uint16_t highTempCount;
 
+        bool enteredFaulted = false;
+        uint32_t previousFault = 0;
+
         Timer chargeMessageTimer;
         static const uint16_t CHARGE_MESSAGE_WAIT = 250; //ms
 
