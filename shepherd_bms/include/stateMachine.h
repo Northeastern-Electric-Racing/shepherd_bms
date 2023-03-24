@@ -28,6 +28,7 @@ class StateMachine
         uint16_t chargeOverVolt;
         uint16_t overChgCurrCount;
         uint16_t lowCellCount;
+        uint16_t highTempCount;
 
         Timer chargeMessageTimer;
         static const uint16_t CHARGE_MESSAGE_WAIT = 250; //ms

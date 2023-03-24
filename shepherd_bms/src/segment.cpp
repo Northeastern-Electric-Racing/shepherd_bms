@@ -250,11 +250,11 @@ FaultStatus_t SegmentInterface::pullThermistors()
             segmentData[c].thermistorReading[therm + 15] = steinhartEst(rawTempVoltages[c][1] * (float(rawTempVoltages[c][2]) / 50000) + VOLT_TEMP_CALIB_OFFSET);
 
             // Directly update for a set time from start up due to therm voltages needing to settle
-            if (thermSettleTime < THERM_AVG * 10) 
-            {
+            //if (thermSettleTime < THERM_AVG * 10) 
+            //{
                 segmentData[c].thermistorValue[therm - 1] = segmentData[c].thermistorReading[therm - 1];
                 segmentData[c].thermistorValue[therm + 15] = segmentData[c].thermistorReading[therm + 15];
-                thermSettleTime++;
+            /*    thermSettleTime++;
             } else 
             {
                 // We need to investigate this. Very sloppy
@@ -283,7 +283,7 @@ FaultStatus_t SegmentInterface::pullThermistors()
                         segmentData[c].thermistorValue[therm + 15]--;
                     }
                 }
-            }
+            }*/
         }
     }
 	thermTimer.startTimer(THERM_WAIT_TIME); // Set timeout for reading therms

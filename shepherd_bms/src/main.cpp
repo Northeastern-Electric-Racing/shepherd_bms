@@ -88,7 +88,7 @@ const void printBMSStats(AccumulatorData_t *accData)
 	}
 
 	Serial.println("Cell Temps:");
-	for(uint8_t c = 1; c < NUM_CHIPS; c+= 2)
+	for(uint8_t c = 0; c < NUM_CHIPS; c++)
 	{
 		for(uint8_t cell = 17; cell < 28; cell++)
 		{
@@ -99,7 +99,7 @@ const void printBMSStats(AccumulatorData_t *accData)
 	}
 
 	Serial.println("Avg Cell Temps:");
-	for(uint8_t c = 1; c < NUM_CHIPS; c+= 2)
+	for(uint8_t c = 0; c < NUM_CHIPS; c++)
 	{
 		for(uint8_t cell = 17; cell < 28; cell++)
 		{
@@ -112,6 +112,7 @@ const void printBMSStats(AccumulatorData_t *accData)
 
 	debug_statTimer.startTimer(PRINT_STAT_WAIT);
 }
+
 
 #endif
 
@@ -132,10 +133,11 @@ void setup()
 void loop()
 {
 	
+
 	//Create a dynamically allocated structure
 	AccumulatorData_t *accData = new AccumulatorData_t;
 
-	accData->faultCode = FAULTS_CLEAR;
+	//accData->faultCode = FAULTS_CLEAR;
 
 	//Collect all the segment data needed to perform analysis
 	//Not state specific
@@ -154,3 +156,4 @@ void loop()
 	wdt.feed();
 	delay(10); // not sure if we need this in, it was in before
 }
+	

@@ -157,7 +157,7 @@ void ComputeInterface::sendAccStatusMessage(uint16_t voltage, int16_t current, u
     sendMessageCAN1(0x01, 8, accStatusMsg.msg);
 }
 
-void ComputeInterface::sendBMSStatusMessage(int bms_state, BMSFault_t fault_status, int8_t avg_temp, int8_t internal_temp)
+void ComputeInterface::sendBMSStatusMessage(int bms_state, uint32_t fault_status, int8_t avg_temp, int8_t internal_temp)
 {
     static union 
     {

@@ -177,8 +177,9 @@ void StateMachine::handleState(AccumulatorData_t *bmsdata)
 	broadcastCurrentLimit(bmsdata);
 
 	//send relevant CAN msgs
-	compute.sendAccStatusMessage(analyzer.bmsdata->packVoltage, analyzer.bmsdata->packCurrent, 0, 0, 0);
+	compute.sendAccStatusMessage(analyzer.bmsdata->packVoltage, analyzer.bmsdata->packCurrent, 0, bmsdata->soc, 0);
 	compute.sendCurrentsStatus(analyzer.bmsdata->dischargeLimit, analyzer.bmsdata->chargeLimit, analyzer.bmsdata->packCurrent);
+	compute.sendBMSStatusMessage(currentState, bmsdata->faultCode, bmsdata->avgTemp, 0);
 	
 	//todo send BMS status msg once this gets merged with that PR (and any other msgs we want)
 	
@@ -258,7 +259,14 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
 
 	// High Temp Fault
 	if (accData->maxTemp.val > MAX_CELL_TEMP) {
-		faultStatus |= PACK_TOO_HOT;
+		highTempCount++;
+		if (highTempCount > 100) { // 1 seconds @ 100Hz rate
+			faultStatus |= PACK_TOO_HOT;
+		}
+	} 
+	else 
+	{
+		highTempCount = 0;
 	}
 
 	// Extremely low cell voltage fault

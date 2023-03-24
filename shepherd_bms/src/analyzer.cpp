@@ -39,7 +39,7 @@ void Analyzer::calcCellTemps()
             for(uint8_t therm = 0; therm < RelevantThermMap[cell].size(); therm++)
             {
                 uint8_t thermNum = RelevantThermMap[cell][therm];
-                tempSum += bmsdata->chipData[c].thermistorValue[thermNum];
+                tempSum += bmsdata->chipData[c].thermistorReading[thermNum];
             }
         
             //Takes the average temperature of all the relevant thermistors
@@ -59,28 +59,28 @@ void Analyzer::calcPackTemps()
     bmsdata->maxTemp = {MIN_TEMP, 0, 0};
     bmsdata->minTemp = {MAX_TEMP, 0, 0};
     int totalTemp = 0;
-    for(uint8_t c = 1; c < NUM_CHIPS; c += 2)
+    for(uint8_t c = 0; c < NUM_CHIPS; c ++)
     {
         for(uint8_t therm = 17; therm < 28; therm++) 
         {
             // finds out the maximum cell temp and location
-            if (bmsdata->chipData[c].thermistorValue[therm] > bmsdata->maxTemp.val) 
+            if (bmsdata->chipData[c].thermistorReading[therm] > bmsdata->maxTemp.val) 
             {
-                bmsdata->maxTemp = {bmsdata->chipData[c].thermistorValue[therm], c, therm};
+                bmsdata->maxTemp = {bmsdata->chipData[c].thermistorReading[therm], c, therm};
             }
 
             // finds out the minimum cell temp and location
-            if (bmsdata->chipData[c].thermistorValue[therm] < bmsdata->minTemp.val) 
+            if (bmsdata->chipData[c].thermistorReading[therm] < bmsdata->minTemp.val) 
             {
-                bmsdata->minTemp = {bmsdata->chipData[c].thermistorValue[therm], c, therm};
+                bmsdata->minTemp = {bmsdata->chipData[c].thermistorReading[therm], c, therm};
             }
             
-            totalTemp += bmsdata->chipData[c].thermistorValue[therm];
+            totalTemp += bmsdata->chipData[c].thermistorReading[therm];
         }
     }
 
     // takes the average of all the cell temperatures
-    bmsdata->avgTemp = totalTemp / 44;
+    bmsdata->avgTemp = totalTemp / 88;
 }
 
 void Analyzer::calcPackVoltageStats() {
@@ -246,9 +246,9 @@ uint8_t Analyzer::calcFanPWM()
 void Analyzer::disableTherms()
 {
     int8_t tempRepl = 25; // Iniitalize to room temp (necessary to stabilize when the BMS first boots up/has null values)
-    if (!isFirstReading) tempRepl = prevbmsdata->avgTemp; // Set to actual average temp of the pack
+    //if (!isFirstReading) tempRepl = prevbmsdata->avgTemp; // Set to actual average temp of the pack
 
-    for(uint8_t c = 1; c < NUM_CHIPS; c+= 2)
+    for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
         for(uint8_t therm = 17; therm < 28; therm++)
         {
@@ -256,7 +256,7 @@ void Analyzer::disableTherms()
             if (THERM_DISABLE[(c - 1) / 2][therm - 17])
             {
                 // Nullify thermistor by setting to pack average
-                bmsdata->chipData[c].thermistorValue[therm] = tempRepl;
+                bmsdata->chipData[c].thermistorReading[therm] = tempRepl;
             }
         }
     }
