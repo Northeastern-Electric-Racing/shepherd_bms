@@ -14,6 +14,7 @@ typedef enum
     FAULTED_STATE,    //State when BMS has detected a catastrophic fault and we need to hault operations
     NUM_STATES
 }BMSState_t;
+
 class StateMachine
 {
     private:
@@ -30,14 +31,14 @@ class StateMachine
         uint16_t highTempCount;
 
         bool enteredFaulted = false;
-       
+
 
         Timer chargeMessageTimer;
         static const uint16_t CHARGE_MESSAGE_WAIT = 250; //ms
 
 
-        const bool validTransitionFromTo[NUM_STATES][NUM_STATES] = 
-        { 
+        const bool validTransitionFromTo[NUM_STATES][NUM_STATES] =
+        {
             //BOOT,     READY,      CHARGING,   FAULTED
             {true,      true,       false,      true}, // BOOT
             {false,     true,       true,       true}, // READY
@@ -48,7 +49,7 @@ class StateMachine
         typedef void (StateMachine::*HandlerFunction_t)(AccumulatorData_t *bmsdata);
         typedef void (StateMachine::*InitFunction_t)();
 
-        void requestTransition(BMSState_t nextState);
+        void requestTransition(BMSState_t next_state);
 
         void handleBoot(AccumulatorData_t *bmsdata);
 
@@ -74,7 +75,7 @@ class StateMachine
             &StateMachine::initFaulted
         };
 
-        const HandlerFunction_t handlerLUT[NUM_STATES] = 
+        const HandlerFunction_t handlerLUT[NUM_STATES] =
         {
             &StateMachine::handleBoot,
             &StateMachine::handleReady,
@@ -85,19 +86,19 @@ class StateMachine
 
         /**
         * @brief Returns if we want to balance cells during a particular frame
-        * 
-        * @param bmsdata 
-        * @return true 
-        * @return false 
+        *
+        * @param bmsdata
+        * @return true
+        * @return false
         */
         bool balancingCheck(AccumulatorData_t *bmsdata);
 
         /**
         * @brief Returns if we want to charge cells during a particular frame
-        * 
-        * @param bmsdata 
-        * @return true 
-        * @return false 
+        *
+        * @param bmsdata
+        * @return true
+        * @return false
         */
         bool chargingCheck(AccumulatorData_t *bmsdata);
 
@@ -105,15 +106,11 @@ class StateMachine
         /**
         * @brief Returns any new faults or current faults that have come up
         * @note Should be bitwise OR'ed with the current fault status
-        * 
-        * @param accData 
-        * @return uint32_t 
+        *
+        * @param accData
+        * @return uint32_t
         */
         uint32_t faultCheck(AccumulatorData_t *accData);
-
-
-
-
 
     public:
         StateMachine();
@@ -122,17 +119,16 @@ class StateMachine
 
         void handleState(AccumulatorData_t *bmsdata);
 
-        BMSState_t currentState;
+        BMSState_t current_state;
 
-         uint32_t previousFault = 0;
-        
+        uint32_t previousFault = 0;
 };
 
- /**
+        /**
         * @brief Algorithm behind determining which cells we want to balance
         * @note Directly interfaces with the segments
-        * 
-        * @param bms_data 
+        *
+        * @param bms_data
         */
         void balanceCells(AccumulatorData_t *bms_data);
 

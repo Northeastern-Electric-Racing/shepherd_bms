@@ -13,13 +13,11 @@
 #include "analyzer.h"
 #include "stateMachine.h"
 
-
 WDT_T4<WDT1> wdt;
 
 AccumulatorData_t *prevAccData = nullptr;
 
-StateMachine stateMachine; 
-
+StateMachine stateMachine;
 
 #ifdef DEBUG_STATS
 
@@ -27,39 +25,39 @@ const void printBMSStats(AccumulatorData_t *accData)
 {
 	static Timer debug_statTimer;
 	static const uint16_t PRINT_STAT_WAIT = 500; //ms
-	
+
 	if(!debug_statTimer.isTimerExpired()) return;
 
 	Serial.print("Prev Fault: ");
 	Serial.println(stateMachine.previousFault);
 	Serial.print("Current: ");
-	Serial.println((accData->packCurrent)/10);
+	Serial.println((accData->pack_current)/10);
 	Serial.print("Min, Max, Avg Temps: ");
-	Serial.print(accData->minTemp.val);
+	Serial.print(accData->min_temp.val);
 	Serial.print(",  ");
-	Serial.print(accData->maxTemp.val);
+	Serial.print(accData->max_temp.val);
 	Serial.print(",  ");
-	Serial.println(accData->avgTemp);
+	Serial.println(accData->avg_temp);
 	Serial.print("Min, Max, Avg, Delta Voltages: ");
-	Serial.print(accData->minVoltage.val);
+	Serial.print(accData->min_voltage.val);
 	Serial.print(",  ");
-	Serial.print(accData->maxVoltage.val);
+	Serial.print(accData->max_voltage.val);
 	Serial.print(",  ");
-	Serial.print(accData->avgVoltage);
+	Serial.print(accData->avg_voltage);
 	Serial.print(",  ");
-	Serial.println(accData->deltVoltage);
-	
+	Serial.println(accData->delt_voltage);
+
 	Serial.print("DCL: ");
-	Serial.println(accData->dischargeLimit);
+	Serial.println(accData->discharge_limit);
 
 	Serial.print("CCL: ");
-	Serial.println(accData->chargeLimit);
+	Serial.println(accData->charge_limit);
 
 	Serial.print("SoC: ");
 	Serial.println(accData->soc);
 
 	Serial.print("Is Balancing?: ");
-	Serial.println(segment.isBalancing()); 
+	Serial.println(segment.isBalancing());
 
 	Serial.print("State: ");
 	if (stateMachine.currentState == 0) Serial.println("BOOT");
@@ -83,7 +81,7 @@ const void printBMSStats(AccumulatorData_t *accData)
 	{
 		for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
 		{
-			Serial.print(accData->chipData[c].openCellVoltage[cell]);
+			Serial.print(accData->chip_data[c].open_cell_voltage[cell]);
 			Serial.print("\t");
 		}
 		Serial.println();
@@ -94,7 +92,7 @@ const void printBMSStats(AccumulatorData_t *accData)
 	{
 		for(uint8_t cell = 17; cell < 28; cell++)
 		{
-			Serial.print(accData->chipData[c].thermistorReading[cell]);
+			Serial.print(accData->chip_data[c].thermistor_reading[cell]);
 			Serial.print("\t");
 		}
 		Serial.println();
@@ -105,12 +103,12 @@ const void printBMSStats(AccumulatorData_t *accData)
 	{
 		for(uint8_t cell = 17; cell < 28; cell++)
 		{
-			Serial.print(accData->chipData[c].thermistorValue[cell]);
+			Serial.print(accData->chip_data[c].thermistor_value[cell]);
 			Serial.print("\t");
 		}
 		Serial.println();
 	}
-	
+
 
 	debug_statTimer.startTimer(PRINT_STAT_WAIT);
 }
@@ -126,16 +124,12 @@ void setup()
   config.timeout = 15;        /* in seconds, 0->128 */
   wdt.begin(config);
   NERduino.begin();
-  compute.setFault(NOT_FAULTED); 
+  compute.setFault(NOT_FAULTED);
   segment.init();
-  
-  
 }
 
 void loop()
 {
-	
-
 	//Create a dynamically allocated structure
 	AccumulatorData_t *accData = new AccumulatorData_t;
 
@@ -143,8 +137,8 @@ void loop()
 
 	//Collect all the segment data needed to perform analysis
 	//Not state specific
-	segment.retrieveSegmentData(accData->chipData);
-	accData->packCurrent = compute.getPackCurrent();
+	segment.retrieveSegmentData(accData->chip_data);
+	accData->pack_current = compute.getPackCurrent();
 
 	//Perform calculations on the data in the frame
 	analyzer.push(accData);
@@ -153,9 +147,8 @@ void loop()
 
 	#ifdef DEBUG_STATS
 	printBMSStats(analyzer.bmsdata);
-	#endif	
+	#endif
 
 	wdt.feed();
 	delay(10); // not sure if we need this in, it was in before
 }
-	
