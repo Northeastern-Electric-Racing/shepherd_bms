@@ -57,7 +57,7 @@ enum BMSFault_t
 
 /**
  * @brief Stores critical values for the pack, and where that critical value can be found
- * 
+ *
  */
 struct CriticalCellValue_t
 {

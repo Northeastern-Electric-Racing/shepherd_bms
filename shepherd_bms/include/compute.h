@@ -14,8 +14,6 @@
 #define CHARGE_DETECT         7
 #define CHARGER_BAUD          250000U
 #define MC_BAUD               1000000U
-
-
 #define MAX_ADC_RESOLUTION    1023 // 13 bit ADC
 
 class ComputeInterface
@@ -32,11 +30,11 @@ class ComputeInterface
 
       /**
       * @brief Determines state of the charger LEDs based on the battery charge percentage
-      * 
+      *
       * @param bms_data
-      * 
+      *
       * @return uint8_t Value to be used for setting LED bits for charger message
-      * 
+      *
       */
       uint8_t calcChargerLEDState(AccumulatorData_t *bms_data);
 
@@ -54,7 +52,7 @@ class ComputeInterface
 
       /**
       * @brief sends charger message
-      * 
+      *
       * @param voltage_to_set
       * @param currentToSet
       *
@@ -72,8 +70,8 @@ class ComputeInterface
 
       /**
       * @brief Handle any messages received from the charger
-      * 
-      * @param msg 
+      *
+      * @param msg
       */
       static void chargerCallback(const CAN_message_t &msg);
 
@@ -110,7 +108,7 @@ class ComputeInterface
 
       /**
       * @brief sends acc status message
-      * 
+      *
       * @param voltage
       * @param current
       * @param ah
@@ -122,20 +120,20 @@ class ComputeInterface
       void sendAccStatusMessage(uint16_t voltage, int16_t current, uint16_t ah, uint8_t soc, uint8_t health);
 
       /**
-      * @brief sends BMS status message 
-      * 
+      * @brief sends BMS status message
+      *
       * @param bms_state
       * @param fault_status
-      * @param avg_temp
-      * @param internal_temp
-      * 
+      * @param tempAvg
+      * @param tempInternal
+      *
       * @return Returns a fault if we are not able to send
       */
-      void sendBMSStatusMessage(BMSState_t bms_state, BMSFault_t fault_status, int8_t avg_temp, int8_t internal_temp);
+      void sendBMSStatusMessage(int bms_state, uint32_t fault_status, int8_t avg_temp, int8_t internal_temp);
 
       /**
       * @brief sends shutdown control message
-      * 
+      *
       * @param mpe_state
       *
       * @return Returns a fault if we are not able to send
@@ -144,20 +142,18 @@ class ComputeInterface
 
       /**
       * @brief sends cell data message
-      * 
-      * @param hv
-      * @param hv_id
-      * @param lv
-      * @param lv_id
-      * @param avg_volt
+      *
+      * @param high_voltage
+      * @param low_voltage
+      * @param avg_voltage
       *
       * @return Returns a fault if we are not able to send
       */
-      void sendCellDataMessage(uint16_t hv, uint8_t hv_id, uint16_t lv, uint8_t lv_id, uint16_t avg_volt);
+      void sendCellDataMessage(CriticalCellValue_t high_voltage, CriticalCellValue_t low_voltage, uint16_t avg_voltage);
 
       /**
       * @brief sends cell voltage message
-      * 
+      *
       * @param cell_id
       * @param instant_volt
       * @param internal_res
@@ -170,25 +166,21 @@ class ComputeInterface
 
       /**
        * @brief sends out the calculated values of currents
-       * 
-       * @param discharge 
-       * @param charge 
-       * @param current 
+       *
+       * @param discharge
+       * @param charge
+       * @param current
        */
       void sendCurrentsStatus(uint16_t discharge, uint16_t charge, uint16_t current);
-   
+
         /**
        * @brief sends cell temperature message
-       * 
-       * 
-       * 
+       *
+       *
+       *
        * @return Returns a fault if we are not able to send
       */
-      void sendCellTemp(uint16_t m_cell_temp, uint8_t m_cell_id, uint16_t min_cell_temp, uint8_t min_cell_id, uint16_t avg_temp);
-      
-    
-
-      
+      void sendCellTemp(CriticalCellValue_t max_cell_temp, CriticalCellValue_t min_cell_temp, uint16_t avg_temp);
 };
 
 extern ComputeInterface compute;
