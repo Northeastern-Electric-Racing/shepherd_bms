@@ -13,14 +13,14 @@ ComputeInterface::ComputeInterface()
 
 ComputeInterface::~ComputeInterface(){}
 
-void ComputeInterface::enableCharging(bool enableCharging)
+void ComputeInterface::enableCharging(bool enable_charging)
 {
-    isChargingEnabled = enableCharging;
+    is_charging_enabled_ = enable_charging;
 }
 
-FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, AccumulatorData_t *bms_data)
+FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltage_to_set, AccumulatorData_t *bms_data)
 {
-    static union
+    union
     {
         uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0xFF, 0xFF};
 
@@ -34,9 +34,9 @@ FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, Accum
         } cfg;
     } chargerMsg;
 
-    uint16_t currentToSet = bms_data->chargeLimit;
+    uint16_t current_to_set = bms_data->charge_limit;
 
-    if (!isChargingEnabled)
+    if (!is_charging_enabled_)
     {
         chargerMsg.cfg.chargerControl = 0b101;
         sendMessageCAN2(CANMSG_CHARGER, 8, chargerMsg.msg);
@@ -46,19 +46,18 @@ FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltageToSet, Accum
 
     // equations taken from TSM2500 CAN protocol datasheet
     chargerMsg.cfg.chargerControl = 0xFC;
-    chargerMsg.cfg.chargerVoltage = voltageToSet * 10;
-    if (currentToSet > 10) 
+    chargerMsg.cfg.chargerVoltage = voltage_to_set * 10;
+    if (current_to_set > 10)
     {
-        currentToSet = 10;
+        current_to_set = 10;
     }
-    chargerMsg.cfg.chargerCurrent = currentToSet * 10 + 3200;
+    chargerMsg.cfg.chargerCurrent = current_to_set * 10 + 3200;
     chargerMsg.cfg.chargerLEDs = calcChargerLEDState(bms_data);
     chargerMsg.cfg.reserved2_3 = 0xFFFF;
 
     uint8_t msg[8] = {chargerMsg.cfg.chargerControl, static_cast<uint8_t>(chargerMsg.cfg.chargerVoltage), chargerMsg.cfg.chargerVoltage >> 8, static_cast<uint8_t>(chargerMsg.cfg.chargerCurrent), chargerMsg.cfg.chargerCurrent >> 8, chargerMsg.cfg.chargerLEDs, 0xFF, 0xFF};
 
-    //todo put charger ID somewhere else
-    sendMessageCAN2(0x18E54024, 8, msg);
+    sendMessageCAN2(CANMSG_CHARGER, 8, msg);
 
     //return isCharging() ? NOT_FAULTED : FAULTED; //return a fault if we DON'T detect a voltage after we begin charging
     return NOT_FAULTED;
@@ -74,47 +73,47 @@ void ComputeInterface::chargerCallback(const CAN_message_t &msg)
     return;
 }
 
-void ComputeInterface::setFanSpeed(uint8_t newFanSpeed)
+void ComputeInterface::setFanSpeed(uint8_t new_fan_speed)
 {
-    fanSpeed = newFanSpeed;
-    NERduino.setAMCDutyCycle(newFanSpeed);
+    fan_speed_ = new_fan_speed;
+    NERduino.setAMCDutyCycle(new_fan_speed);
 }
 
-void ComputeInterface::setFault(FaultStatus_t faultState)
+void ComputeInterface::setFault(FaultStatus_t fault_state)
 {
-    digitalWrite(FAULT_PIN, !faultState);
+    digitalWrite(FAULT_PIN, !fault_state);
     if (FAULTED) digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
 }
 
 int16_t ComputeInterface::getPackCurrent()
 {
-    static const float current_lowChannelMax = 75.0; //Amps
-    static const float current_lowChannelMin = -75.0; //Amps
-    static const float current_supplyVoltage = 5.038;
-    static const float current_ADCResolution = 5.0 / MAX_ADC_RESOLUTION;
+    static const float CURRENT_LOWCHANNEL_MAX = 75.0; //Amps
+    static const float CURRENT_LOWCHANNEL_MIN = -75.0; //Amps
+    static const float CURRENT_SUPPLY_VOLTAGE = 5.038;
+    static const float CURRENT_ADC_RESOLUTION = 5.0 / MAX_ADC_RESOLUTION;
 
-    static const float current_lowChannelOffset = 2.530; // Calibrated with current = 0A
-    static const float current_highChannelOffset = 2.57; // Calibrated with current = 0A
+    static const float CURRENT_LOWCHANNEL_OFFSET = 2.530; // Calibrated with current = 0A
+    static const float CURRENT_HIGHCHANNEL_OFFSET = 2.57; // Calibrated with current = 0A
 
-    static const float highChannelGain = 1 / 0.0040;
-    static const float lowChannelGain = 1 / 0.0267;
+    static const float HIGHCHANNEL_GAIN = 1 / 0.0040;
+    static const float LOWCHANNEL_GAIN = 1 / 0.0267;
 
 
-    int16_t highCurrent = 10 * (5 / current_supplyVoltage) * (analogRead(CURRENT_SENSOR_PIN_H) * current_ADCResolution - current_highChannelOffset) * highChannelGain; // Channel has a large range with low resolution
-    int16_t lowCurrent = 10 * (5 / current_supplyVoltage) * (analogRead(CURRENT_SENSOR_PIN_L) * current_ADCResolution - current_lowChannelOffset) * lowChannelGain; // Channel has a small range with high resolution
+    int16_t high_current = 10 * (5 / CURRENT_SUPPLY_VOLTAGE) * (analogRead(CURRENT_SENSOR_PIN_H) * CURRENT_ADC_RESOLUTION - CURRENT_HIGHCHANNEL_OFFSET) * HIGHCHANNEL_GAIN; // Channel has a large range with low resolution
+    int16_t low_current = 10 * (5 / CURRENT_SUPPLY_VOLTAGE) * (analogRead(CURRENT_SENSOR_PIN_L) * CURRENT_ADC_RESOLUTION - CURRENT_LOWCHANNEL_OFFSET) * LOWCHANNEL_GAIN; // Channel has a small range with high resolution
 
     // If the current is scoped within the range of the low channel, use the low channel
-    if(lowCurrent < current_lowChannelMax - 5.0 || lowCurrent > current_lowChannelMin + 5.0)
+    if(low_current < CURRENT_LOWCHANNEL_MAX - 5.0 || low_current > CURRENT_LOWCHANNEL_MIN + 5.0)
     {
-        return lowCurrent;
+        return low_current;
     }
 
-    return highCurrent;
+    return high_current;
 }
 
-void ComputeInterface::sendMCMsg(uint16_t userMaxCharge, uint16_t userMaxDischarge)
+void ComputeInterface::sendMCMsg(uint16_t user_max_charge, uint16_t user_max_discharge)
 {
-    static union 
+    union
     {
         uint8_t msg[4] = {0,0,0,0};
 
@@ -126,21 +125,21 @@ void ComputeInterface::sendMCMsg(uint16_t userMaxCharge, uint16_t userMaxDischar
         }config;
     }mcMsg;
 
-    mcMsg.config.maxCharge = userMaxCharge;
-    mcMsg.config.maxDischarge = userMaxDischarge;
-    sendMessageCAN1(0x202, 4, mcMsg.msg);
+    mcMsg.config.maxCharge = user_max_charge;
+    mcMsg.config.maxDischarge = user_max_discharge;
+    sendMessageCAN1(CANMSG_BMSCURRENTLIMITS, 4, mcMsg.msg);
 }
 
-void ComputeInterface::sendAccStatusMessage(uint16_t voltage, int16_t current, uint16_t AH, uint8_t SoC, uint8_t health)
+void ComputeInterface::sendAccStatusMessage(uint16_t voltage, int16_t current, uint16_t ah, uint8_t soc, uint8_t health)
 {
-    static union 
+    union
     {
         uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
         struct
         {
             uint16_t packVolt;
-            uint16_t packCurrent;
+            uint16_t pack_current;
             uint16_t packAH;
             uint8_t packSoC;
             uint8_t packHealth;
@@ -148,64 +147,59 @@ void ComputeInterface::sendAccStatusMessage(uint16_t voltage, int16_t current, u
     } accStatusMsg;
 
     accStatusMsg.cfg.packVolt = __builtin_bswap16(voltage);
-    accStatusMsg.cfg.packCurrent = __builtin_bswap16(static_cast<uint16_t>(current)); // convert with 2s complement
-    accStatusMsg.cfg.packAH = __builtin_bswap16(AH);
-    accStatusMsg.cfg.packSoC = SoC;
+    accStatusMsg.cfg.pack_current = __builtin_bswap16(static_cast<uint16_t>(current)); // convert with 2s complement
+    accStatusMsg.cfg.packAH = __builtin_bswap16(ah);
+    accStatusMsg.cfg.packSoC = soc;
     accStatusMsg.cfg.packHealth = health;
 
-    //todo put ID somewhere else
-    sendMessageCAN1(0x01, 8, accStatusMsg.msg);
+    sendMessageCAN1(CANMSG_BMSACCSTATUS, 8, accStatusMsg.msg);
 }
 
-void ComputeInterface::sendBMSStatusMessage(uint8_t failsafe, uint8_t dtc1, uint16_t dtc2, uint16_t currentLimit, int8_t tempAvg, int8_t tempInternal)
+void ComputeInterface::sendBMSStatusMessage(int bms_state, uint32_t fault_status, int8_t avg_temp, int8_t internal_temp)
 {
-    static union 
+    union
     {
         uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
         struct
         {
-            uint8_t fsStatus;
-            uint8_t dtcStatus1;
-            uint16_t dtcStatus2;
-            uint16_t currentLimit;
-            uint8_t tempAvg;
-            uint8_t tempInternal;
-        } cfg;   
-    } BMSStatusMsg;
+            uint8_t state;
+            uint32_t fault;
+            uint8_t temp_avg;
+            uint8_t temp_internal;
+        } cfg;
+    } bmsStatusMsg;
 
-    BMSStatusMsg.cfg.fsStatus = failsafe;
-    BMSStatusMsg.cfg.dtcStatus1 = dtc1;
-    BMSStatusMsg.cfg.dtcStatus2 = __builtin_bswap16(dtc2);
-    BMSStatusMsg.cfg.currentLimit = __builtin_bswap16(currentLimit);
-    BMSStatusMsg.cfg.tempAvg = static_cast<uint8_t>(tempAvg);
-    BMSStatusMsg.cfg.tempInternal = static_cast<uint8_t>(tempInternal);
+    bmsStatusMsg.cfg.state = bms_state;
+    bmsStatusMsg.cfg.fault = fault_status;
+    bmsStatusMsg.cfg.temp_avg = static_cast<uint8_t>(avg_temp);
+    bmsStatusMsg.cfg.temp_internal = static_cast<uint8_t>(internal_temp);
 
-    
-    sendMessageCAN1(0x02, 8, BMSStatusMsg.msg);
+
+    sendMessageCAN1(CANMSG_BMSDTCSTATUS, 8, bmsStatusMsg.msg);
 }
 
-void ComputeInterface::sendShutdownControlMessage(uint8_t mpeState)
+void ComputeInterface::sendShutdownControlMessage(uint8_t mpe_state)
 {
-    static union 
+    union
     {
         uint8_t msg[1] = {0};
 
         struct
         {
             uint8_t mpeState;
-            
-        } cfg;   
+
+        } cfg;
     } shutdownControlMsg;
 
-    shutdownControlMsg.cfg.mpeState = mpeState;
-    
+    shutdownControlMsg.cfg.mpeState = mpe_state;
+
     sendMessageCAN1(0x03, 1, shutdownControlMsg.msg);
 }
 
-void ComputeInterface::sendCellDataMessage(uint16_t hv, uint8_t hvID, uint16_t lv, uint8_t lvID, uint16_t voltAvg)
+void ComputeInterface::sendCellDataMessage(CriticalCellValue_t high_voltage, CriticalCellValue_t low_voltage, uint16_t avg_voltage)
 {
-    static union 
+    union
     {
         uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -216,21 +210,21 @@ void ComputeInterface::sendCellDataMessage(uint16_t hv, uint8_t hvID, uint16_t l
             uint16_t lowCellVoltage;
             uint8_t lowCellID;
             uint16_t voltAvg;
-        } cfg;   
+        } cfg;
     } cellDataMsg;
 
-    cellDataMsg.cfg.highCellVoltage = __builtin_bswap16(hv);
-    cellDataMsg.cfg.highCellID = hvID;
-    cellDataMsg.cfg.lowCellVoltage = __builtin_bswap16(lv);
-    cellDataMsg.cfg.lowCellID = lvID;
-    cellDataMsg.cfg.voltAvg = __builtin_bswap16(voltAvg);
+    cellDataMsg.cfg.highCellVoltage = high_voltage.val;
+    cellDataMsg.cfg.highCellID = (high_voltage.chipIndex << 4) | high_voltage.cellNum;
+    cellDataMsg.cfg.lowCellVoltage = low_voltage.val;
+    cellDataMsg.cfg.lowCellID = (low_voltage.chipIndex << 4) | low_voltage.cellNum;
+    cellDataMsg.cfg.voltAvg = avg_voltage;
 
-    sendMessageCAN1(0x04, 8, cellDataMsg.msg);
+    sendMessageCAN1(CANMSG_BMSCELLDATA, 8, cellDataMsg.msg);
 }
 
-void ComputeInterface::sendCellVoltageMessage(uint8_t cellID, uint16_t instantVoltage, uint16_t internalResistance, uint8_t shunted, uint16_t openVoltage)
+void ComputeInterface::sendCellVoltageMessage(uint8_t cell_id, uint16_t instant_voltage, uint16_t internal_Res, uint8_t shunted, uint16_t open_voltage)
 {
-    static union 
+    union
     {
         uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -241,21 +235,21 @@ void ComputeInterface::sendCellVoltageMessage(uint8_t cellID, uint16_t instantVo
             uint16_t internalResistance;
             uint8_t shunted;
             uint16_t openVoltage;
-        } cfg;   
+        } cfg;
     } cellVoltageMsg;
 
-    cellVoltageMsg.cfg.cellID = cellID;
-    cellVoltageMsg.cfg.instantVoltage = __builtin_bswap16(instantVoltage);
-    cellVoltageMsg.cfg.internalResistance = __builtin_bswap16(internalResistance);
+    cellVoltageMsg.cfg.cellID = cell_id;
+    cellVoltageMsg.cfg.instantVoltage = __builtin_bswap16(instant_voltage);
+    cellVoltageMsg.cfg.internalResistance = __builtin_bswap16(internal_Res);
     cellVoltageMsg.cfg.shunted = shunted;
-    cellVoltageMsg.cfg.openVoltage = __builtin_bswap16(openVoltage);
+    cellVoltageMsg.cfg.openVoltage = __builtin_bswap16(open_voltage);
 
     sendMessageCAN1(0x07, 8, cellVoltageMsg.msg);
 }
 
 void ComputeInterface::sendCurrentsStatus(uint16_t discharge, uint16_t charge, uint16_t current)
 {
-    static union 
+    union
     {
         uint8_t msg[6] = {0, 0, 0, 0, 0, 0};
 
@@ -264,21 +258,14 @@ void ComputeInterface::sendCurrentsStatus(uint16_t discharge, uint16_t charge, u
             uint16_t DCL;
             uint16_t CCL;
             uint16_t packCurr;
-        } cfg;   
+        } cfg;
     } currentsStatusMsg;
-    
+
     currentsStatusMsg.cfg.DCL = discharge;
     currentsStatusMsg.cfg.CCL = charge;
     currentsStatusMsg.cfg.packCurr = current;
 
-    sendMessageCAN1(0x06, 8, currentsStatusMsg.msg);
-}
-
-void ComputeInterface::sendChargingStatus(bool chargingStatus)
-{
-    uint8_t chargingArray[1] = {chargingStatus};
-
-    sendMessageCAN1(0x05, 1, chargingArray);
+    sendMessageCAN1(CANMSG_BMSCURRENTS, 8, currentsStatusMsg.msg);
 }
 
 void ComputeInterface::MCCallback(const CAN_message_t &msg)
@@ -286,6 +273,30 @@ void ComputeInterface::MCCallback(const CAN_message_t &msg)
     return;
 }
 
+void ComputeInterface::sendCellTemp(CriticalCellValue_t max_cell_temp, CriticalCellValue_t min_cell_temp, uint16_t avg_temp)
+{
+    union
+    {
+        uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+        struct
+        {
+            uint16_t maxCellTemp;
+            uint8_t maxCellID;
+            uint16_t minCellTemp;
+            uint8_t minCellID;
+            uint16_t averageTemp;
+        } cfg;
+    } cellTempMsg;
+
+    cellTempMsg.cfg.maxCellTemp = max_cell_temp.val;
+    cellTempMsg.cfg.maxCellID = (max_cell_temp.chipIndex << 4) | (max_cell_temp.cellNum);
+    cellTempMsg.cfg.minCellTemp = min_cell_temp.val;
+    cellTempMsg.cfg.minCellID = (min_cell_temp.chipIndex << 4) | (min_cell_temp.cellNum);
+    cellTempMsg.cfg.averageTemp = avg_temp;
+
+    sendMessageCAN1(0x08, 8, cellTempMsg.msg);
+}
 uint8_t ComputeInterface::calcChargerLEDState(AccumulatorData_t *bms_data)
 {
   enum LED_state
@@ -299,27 +310,27 @@ uint8_t ComputeInterface::calcChargerLEDState(AccumulatorData_t *bms_data)
     RED_GREEN_BLINKING = 0x06
   };
 
-  if((bms_data->soc < 80) && (bms_data->packCurrent > .5 * 10))
+  if((bms_data->soc < 80) && (bms_data->pack_current > .5 * 10))
   {
     return RED_BLINKING;
   }
-  else if((bms_data->soc < 80) && (bms_data->packCurrent <= .5 * 10))
+  else if((bms_data->soc < 80) && (bms_data->pack_current <= .5 * 10))
   {
     return RED_CONSTANT;
   }
-  else if((bms_data->soc >= 80 && bms_data->soc < 95) && (bms_data->packCurrent > .5 * 10))
+  else if((bms_data->soc >= 80 && bms_data->soc < 95) && (bms_data->pack_current > .5 * 10))
   {
     return YELLOW_BLINKING;
   }
-  else if((bms_data->soc >= 80 && bms_data->soc < 95) && (bms_data->packCurrent <= .5 * 10))
+  else if((bms_data->soc >= 80 && bms_data->soc < 95) && (bms_data->pack_current <= .5 * 10))
   {
     return YELLOW_CONSTANT;
   }
-  else if((bms_data->soc >= 95) && (bms_data->packCurrent > .5 * 10))
+  else if((bms_data->soc >= 95) && (bms_data->pack_current > .5 * 10))
   {
     return GREEN_BLINKING;
   }
-  else if((bms_data->soc >= 95) && (bms_data->packCurrent <= .5 * 10))
+  else if((bms_data->soc >= 95) && (bms_data->pack_current <= .5 * 10))
   {
     return GREEN_BLINKING;
   }
@@ -328,21 +339,4 @@ uint8_t ComputeInterface::calcChargerLEDState(AccumulatorData_t *bms_data)
     return RED_GREEN_BLINKING;
   }
 
-}
-
-void ComputeInterface::sendFaultStatus(BMSFault_t fault_status)
-{
-    union
-    {
-        uint8_t msg[4] = {0, 0, 0, 0};
-
-        struct 
-        {
-            uint32_t faults;
-        } cfg;
-    } fault_status_msg;
-
-    fault_status_msg.cfg.faults = fault_status;
-
-    sendMessageCAN1(0x09, 4, fault_status_msg.msg);
 }
