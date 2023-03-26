@@ -213,11 +213,11 @@ void Analyzer::calcContCCL()
 
     if (TEMP_TO_CCL[min_res_index] < TEMP_TO_CCL[max_res_index])
     {
-        bmsdata->charge_limit = TEMP_TO_CCL[min_res_index];
+        bmsdata->cont_CCL = TEMP_TO_CCL[min_res_index];
     }
     else
     {
-        bmsdata->charge_limit = TEMP_TO_CCL[max_res_index];
+        bmsdata->cont_CCL = TEMP_TO_CCL[max_res_index];
     }
 }
 

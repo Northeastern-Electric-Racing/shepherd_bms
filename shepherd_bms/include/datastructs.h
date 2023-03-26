@@ -86,6 +86,7 @@ struct AccumulatorData_t
     uint16_t discharge_limit;
     uint16_t charge_limit;
     uint16_t cont_DCL;
+    uint16_t cont_CCL;
     uint8_t soc;
 
     /**
