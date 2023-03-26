@@ -60,10 +60,10 @@ const void printBMSStats(AccumulatorData_t *accData)
 	Serial.println(segment.isBalancing());
 
 	Serial.print("State: ");
-	if (stateMachine.currentState == 0) Serial.println("BOOT");
-	else if (stateMachine.currentState == 1) Serial.println("READY");
-	else if (stateMachine.currentState == 2) Serial.println("CHARGING");
-	else if (stateMachine.currentState == 1) Serial.println("FAULTED");
+	if (stateMachine.current_state == 0) Serial.println("BOOT");
+	else if (stateMachine.current_state == 1) Serial.println("READY");
+	else if (stateMachine.current_state == 2) Serial.println("CHARGING");
+	else if (stateMachine.current_state == 1) Serial.println("FAULTED");
 
 	/*Serial.println("Raw Cell Voltage:");
 	for(uint8_t c = 0; c < NUM_CHIPS; c++)
