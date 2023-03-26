@@ -15,6 +15,19 @@ typedef enum
     NUM_STATES
 }BMSState_t;
 
+typedef enum
+	{
+		BEFORE_TIMER_START,
+		DURING_FAULT_EVAL
+	}FaultEvalState;
+
+//timers and fault states for each fault
+struct faultEval
+{
+	FaultEvalState faultEvalState = BEFORE_TIMER_START;
+	Timer faultTimer;
+};
+
 class StateMachine
 {
     private:
@@ -133,5 +146,7 @@ class StateMachine
         void balanceCells(AccumulatorData_t *bms_data);
 
         void broadcastCurrentLimit(AccumulatorData_t *bmsdata);
+
+
 
 #endif
