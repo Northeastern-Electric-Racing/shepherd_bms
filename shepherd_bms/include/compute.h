@@ -143,15 +143,13 @@ class ComputeInterface
       /**
       * @brief sends cell data message
       *
-      * @param hv
-      * @param hv_id
-      * @param lv
-      * @param lv_id
-      * @param avg_volt
+      * @param high_voltage
+      * @param low_voltage
+      * @param avg_voltage
       *
       * @return Returns a fault if we are not able to send
       */
-      void sendCellDataMessage(uint16_t hv, uint8_t hv_id, uint16_t lv, uint8_t lv_id, uint16_t avg_volt);
+      void sendCellDataMessage(CriticalCellValue_t high_voltage, CriticalCellValue_t low_voltage, uint16_t avg_voltage);
 
       /**
       * @brief sends cell voltage message
@@ -182,7 +180,7 @@ class ComputeInterface
        *
        * @return Returns a fault if we are not able to send
       */
-      void sendCellTemp(uint16_t m_cell_temp, uint8_t m_cell_id, uint16_t min_cell_temp, uint8_t min_cell_id, uint16_t avg_temp);
+      void sendCellTemp(CriticalCellValue_t max_cell_temp, CriticalCellValue_t min_cell_temp, uint16_t avg_temp);
 };
 
 extern ComputeInterface compute;

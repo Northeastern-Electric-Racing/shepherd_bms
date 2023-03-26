@@ -185,11 +185,12 @@ void StateMachine::handleState(AccumulatorData_t *bmsdata)
 	broadcastCurrentLimit(bmsdata);
 
 	//send relevant CAN msgs
-	compute.sendAccStatusMessage(analyzer.bmsdata->pack_voltage, analyzer.bmsdata->pack_current, 0, bmsdata->soc, 0);
+	compute.sendAccStatusMessage(analyzer.bmsdata->pack_voltage, analyzer.bmsdata->pack_current, 0, analyzer.bmsdata->soc, 0);
 	compute.sendCurrentsStatus(analyzer.bmsdata->discharge_limit, analyzer.bmsdata->charge_limit, analyzer.bmsdata->pack_current);
 	compute.sendBMSStatusMessage(current_state, bmsdata->fault_code, bmsdata->avg_temp, 0);
+	compute.sendCellTemp(analyzer.bmsdata->max_temp, analyzer.bmsdata->min_temp, analyzer.bmsdata->avg_temp);
+	compute.sendCellDataMessage(analyzer.bmsdata->max_voltage, analyzer.bmsdata->min_voltage, analyzer.bmsdata->avg_voltage);
 
-	//todo send BMS status msg once this gets merged with that PR (and any other msgs we want)
 
 }
 

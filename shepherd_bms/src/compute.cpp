@@ -197,7 +197,7 @@ void ComputeInterface::sendShutdownControlMessage(uint8_t mpe_state)
     sendMessageCAN1(0x03, 1, shutdownControlMsg.msg);
 }
 
-void ComputeInterface::sendCellDataMessage(uint16_t hv, uint8_t hv_id, uint16_t lv, uint8_t lv_id, uint16_t avg_volt)
+void ComputeInterface::sendCellDataMessage(CriticalCellValue_t high_voltage, CriticalCellValue_t low_voltage, uint16_t avg_voltage)
 {
     union
     {
@@ -213,11 +213,11 @@ void ComputeInterface::sendCellDataMessage(uint16_t hv, uint8_t hv_id, uint16_t 
         } cfg;
     } cellDataMsg;
 
-    cellDataMsg.cfg.highCellVoltage = __builtin_bswap16(hv);
-    cellDataMsg.cfg.highCellID = hv_id;
-    cellDataMsg.cfg.lowCellVoltage = __builtin_bswap16(lv);
-    cellDataMsg.cfg.lowCellID = lv_id;
-    cellDataMsg.cfg.voltAvg = __builtin_bswap16(avg_volt);
+    cellDataMsg.cfg.highCellVoltage = high_voltage.val;
+    cellDataMsg.cfg.highCellID = (high_voltage.chipIndex << 4) | high_voltage.cellNum;
+    cellDataMsg.cfg.lowCellVoltage = low_voltage.val;
+    cellDataMsg.cfg.lowCellID = (low_voltage.chipIndex << 4) | low_voltage.cellNum;
+    cellDataMsg.cfg.voltAvg = avg_voltage;
 
     sendMessageCAN1(CANMSG_BMSCELLDATA, 8, cellDataMsg.msg);
 }
@@ -273,7 +273,7 @@ void ComputeInterface::MCCallback(const CAN_message_t &msg)
     return;
 }
 
-void ComputeInterface::sendCellTemp(uint16_t m_cell_temp, uint8_t m_cell_id, uint16_t min_cell_temp, uint8_t min_cell_id, uint16_t avg_temp)
+void ComputeInterface::sendCellTemp(CriticalCellValue_t max_cell_temp, CriticalCellValue_t min_cell_temp, uint16_t avg_temp)
 {
     union
     {
@@ -289,10 +289,10 @@ void ComputeInterface::sendCellTemp(uint16_t m_cell_temp, uint8_t m_cell_id, uin
         } cfg;
     } cellTempMsg;
 
-    cellTempMsg.cfg.maxCellTemp = m_cell_temp;
-    cellTempMsg.cfg.maxCellID = m_cell_id;
-    cellTempMsg.cfg.minCellTemp = min_cell_temp;
-    cellTempMsg.cfg.minCellID = min_cell_id;
+    cellTempMsg.cfg.maxCellTemp = max_cell_temp.val;
+    cellTempMsg.cfg.maxCellID = (max_cell_temp.chipIndex << 4) | (max_cell_temp.cellNum);
+    cellTempMsg.cfg.minCellTemp = min_cell_temp.val;
+    cellTempMsg.cfg.minCellID = (min_cell_temp.chipIndex << 4) | (min_cell_temp.cellNum);
     cellTempMsg.cfg.averageTemp = avg_temp;
 
     sendMessageCAN1(0x08, 8, cellTempMsg.msg);
