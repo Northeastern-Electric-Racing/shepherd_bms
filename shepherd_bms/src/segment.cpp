@@ -13,7 +13,7 @@ void SegmentInterface::init()
     LTC6804_initialize();
 
     //pullChipConfigurations();
-    
+
     for (int c = 0; c < NUM_CHIPS; c++)
     {
     local_config[c][0] = 0xF8;
@@ -44,7 +44,7 @@ void SegmentInterface::retrieveSegmentData(ChipData_t databuf[NUM_CHIPS])
     segment_data = nullptr;
 }
 
-void SegmentInterface::configureDischarge(uint8_t chip, uint16_t cells) 
+void SegmentInterface::configureDischarge(uint8_t chip, uint16_t cells)
 {
   // chipConfigurations[chip][4] == chipConfigurations[Literally what chip you want][register]
   // 4 and 5 are registers to discharge chips
@@ -79,13 +79,13 @@ void SegmentInterface::enableBalancing(bool balance_enable)
 }
 
 /**
- * @todo Revisit after testing 
+ * @todo Revisit after testing
  */
 void SegmentInterface::enableBalancing(uint8_t chip_num, uint8_t cell_num, bool balance_enable)
 {
     pullChipConfigurations();
 
-	if(balance_enable) 
+	if(balance_enable)
 		discharge_commands[chip_num] |= (1 << cell_num);
 	else
 		discharge_commands[chip_num] &= ~(1 << cell_num);
@@ -101,9 +101,9 @@ void SegmentInterface::configureBalancing(bool discharge_config[NUM_CHIPS][NUM_C
     {
         for(int cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
         {
-            if(discharge_config[c][cell]) 
+            if(discharge_config[c][cell])
 				discharge_commands[c] |= 1 << cell;
-			else 
+			else
 				discharge_commands[c] &= ~(1 << cell);
         }
 
@@ -210,7 +210,7 @@ FaultStatus_t SegmentInterface::pullVoltages()
             segment_data[i].voltage_reading[j] = segment_voltages[i][j];
         }
     }
-    
+
     /**
      * Start the timer between readings if successful
      */
@@ -239,7 +239,7 @@ FaultStatus_t SegmentInterface::pullThermistors()
         // Sets multiplexors to select thermistors
         SelectTherm(therm);
         SelectTherm(therm + 16);
-		
+
 		pushChipConfigurations();
         LTC6804_adax(); // Run ADC for AUX (GPIOs and refs)
         LTC6804_rdaux(0, NUM_CHIPS, raw_temp_voltages); // Fetch ADC results from AUX registers
@@ -251,28 +251,28 @@ FaultStatus_t SegmentInterface::pullThermistors()
             segment_data[c].thermistor_reading[therm + 15] = steinhartEst(raw_temp_voltages[c][1] * (float(raw_temp_voltages[c][2]) / 50000) + VOLT_TEMP_CALIB_OFFSET);
 
             // Directly update for a set time from start up due to therm voltages needing to settle
-            if (therm_settle_time_ < THERM_AVG * 10) 
-            {
+            //if (therm_settle_time_ < THERM_AVG * 10)
+            //{
                 segment_data[c].thermistor_value[therm - 1] = segment_data[c].thermistor_reading[therm - 1];
                 segment_data[c].thermistor_value[therm + 15] = segment_data[c].thermistor_reading[therm + 15];
-                therm_settle_time_++;
-            } else 
+            /*    therm_settle_time_++;
+            } else
             {
                 // We need to investigate this. Very sloppy
                 // Discard if reading is 33C
-                if (segment_data[c].thermistor_reading[therm - 1] != 33) 
+                if (segment_data[c].thermistor_reading[therm - 1] != 33)
                 {
                     // If measured value is larger than current "averaged" value, increment value
-                    if (segment_data[c].thermistor_reading[therm - 1] > segment_data[c].thermistor_value[therm - 1]) 
+                    if (segment_data[c].thermistor_reading[therm - 1] > segment_data[c].thermistor_value[therm - 1])
                     {
                     segment_data[c].thermistor_value[therm - 1]++;
                     // If measured value is smaller than current "averaged" value, decrement value
-                    } else if (segment_data[c].thermistor_reading[therm - 1] < segment_data[c].thermistor_value[therm - 1]) 
+                    } else if (segment_data[c].thermistor_reading[therm - 1] < segment_data[c].thermistor_value[therm - 1])
                     {
                         segment_data[c].thermistor_value[therm - 1]--;
                     }
                 }
-                
+
                 // See comments above. Identical but for the upper 16 therms
                 if (segment_data[c].thermistor_reading[therm + 15] != 33)
                 {
@@ -284,14 +284,14 @@ FaultStatus_t SegmentInterface::pullThermistors()
                         segment_data[c].thermistor_value[therm + 15]--;
                     }
                 }
-            }
+            }*/
         }
     }
 	therm_timer.startTimer(THERM_WAIT_TIME); // Set timeout for reading therms
 	return NOT_FAULTED; // Read successfully
 }
 
-void SegmentInterface::SelectTherm(uint8_t therm) 
+void SegmentInterface::SelectTherm(uint8_t therm)
 {
 	// Exit if out of range values
 	if (therm < 0 || therm > 32) {

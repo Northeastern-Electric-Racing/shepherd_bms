@@ -8,7 +8,6 @@
 
 #define THERM_WAIT_TIME     500 //ms
 #define VOLTAGE_WAIT_TIME   250 //ms
-
 #define THERM_AVG           15 // Number of values to average
 
 /**
@@ -26,16 +25,16 @@ class SegmentInterface
 
         uint16_t therm_settle_time_ = 0;
 
-        const uint32_t VOLT_TEMP_CONV[91] = 
+        const uint32_t VOLT_TEMP_CONV[91] =
         {
             44260, 43970, 43670, 43450, 43030, 42690, 42340, 41980, 41620, 41240,
             40890, 40460, 40040, 39580, 39130, 38660, 38210, 37710, 37210, 36190,
-            35670, 35160, 34620, 34080, 33550, 32990, 32390, 31880, 31270, 30690, 
+            35670, 35160, 34620, 34080, 33550, 32990, 32390, 31880, 31270, 30690,
             30160, 29590, 28990, 28450, 27880, 27270, 26740, 26080, 25610, 25000,
-            24440, 23880, 23330, 22780, 22240, 21700, 21180, 20660, 20150, 19640, 
-            19140, 18650, 18170, 17700, 17230, 16780, 16330, 15890, 15470, 15030, 
+            24440, 23880, 23330, 22780, 22240, 21700, 21180, 20660, 20150, 19640,
+            19140, 18650, 18170, 17700, 17230, 16780, 16330, 15890, 15470, 15030,
             14640, 14230, 13850, 13450, 13070, 12710, 11490, 11170, 10850, 10550,
-            10250, 9960, 9670, 9400, 9130, 8870, 8620, 8370, 8130, 7900, 
+            10250, 9960, 9670, 9400, 9130, 8870, 8620, 8370, 8130, 7900,
             0
         };
 
@@ -73,56 +72,56 @@ class SegmentInterface
         ~SegmentInterface();
         /**
          * @brief Initializes the segments
-         * 
+         *
          */
         void init();
 
         /**
          * @brief Pulls all cell data from the segments and returns all cell data
-         * 
+         *
          * @todo make sure that retrieving cell data doesn't block code too much
-         * 
+         *
          * @return int*
          */
         void retrieveSegmentData(ChipData_t databuf[NUM_CHIPS]);
 
         /**
          * @brief Enables/disables balancing for all cells
-         * 
+         *
          * @param balance_enable
          */
         void enableBalancing(bool balance_enable);
 
         /**
          * @brief Enables/disables balancing for a specific cell
-         * 
-         * @param chip_num 
-         * @param cell_num 
-         * @param balance_enable 
+         *
+         * @param chip_num
+         * @param cell_num
+         * @param balance_enable
          */
         void enableBalancing(uint8_t chip_num, uint8_t cell_num, bool balance_enable);
 
         /**
          * @brief Sets each cell to whatever state is passed in the boolean config area
-         * 
-         * @param discharge_config 
+         *
+         * @param discharge_config
          */
         void configureBalancing(bool discharge_config[NUM_CHIPS][NUM_CELLS_PER_CHIP]);
 
         /**
          * @brief Returns if a specific cell is balancing
-         * 
-         * @param chip_num 
-         * @return true 
-         * @return false 
+         *
+         * @param chip_num
+         * @return true
+         * @return false
          */
         bool isBalancing(uint8_t chip_num, uint8_t cell_num);
 
         /**
          * @brief Returns if any cells are balancing
-         * 
-         * @return true 
-         * @return false 
+         *
+         * @return true
+         * @return false
          */
         bool isBalancing();
 };

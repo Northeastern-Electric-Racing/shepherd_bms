@@ -47,7 +47,7 @@ FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltage_to_set, Acc
     // equations taken from TSM2500 CAN protocol datasheet
     chargerMsg.cfg.chargerControl = 0xFC;
     chargerMsg.cfg.chargerVoltage = voltage_to_set * 10;
-    if (current_to_set > 10) 
+    if (current_to_set > 10)
     {
         current_to_set = 10;
     }
@@ -113,7 +113,7 @@ int16_t ComputeInterface::getPackCurrent()
 
 void ComputeInterface::sendMCMsg(uint16_t user_max_charge, uint16_t user_max_discharge)
 {
-    union 
+    union
     {
         uint8_t msg[4] = {0,0,0,0};
 
@@ -132,7 +132,7 @@ void ComputeInterface::sendMCMsg(uint16_t user_max_charge, uint16_t user_max_dis
 
 void ComputeInterface::sendAccStatusMessage(uint16_t voltage, int16_t current, uint16_t ah, uint8_t soc, uint8_t health)
 {
-    union 
+    union
     {
         uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -155,9 +155,9 @@ void ComputeInterface::sendAccStatusMessage(uint16_t voltage, int16_t current, u
     sendMessageCAN1(CANMSG_BMSACCSTATUS, 8, accStatusMsg.msg);
 }
 
-void ComputeInterface::sendBMSStatusMessage(BMSState_t bms_state, BMSFault_t fault_status, int8_t avg_temp, int8_t internal_temp)
+void ComputeInterface::sendBMSStatusMessage(int bms_state, uint32_t fault_status, int8_t avg_temp, int8_t internal_temp)
 {
-    union 
+    union
     {
         uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -167,7 +167,7 @@ void ComputeInterface::sendBMSStatusMessage(BMSState_t bms_state, BMSFault_t fau
             uint32_t fault;
             uint8_t temp_avg;
             uint8_t temp_internal;
-        } cfg;   
+        } cfg;
     } bmsStatusMsg;
 
     bmsStatusMsg.cfg.state = bms_state;
@@ -175,31 +175,31 @@ void ComputeInterface::sendBMSStatusMessage(BMSState_t bms_state, BMSFault_t fau
     bmsStatusMsg.cfg.temp_avg = static_cast<uint8_t>(avg_temp);
     bmsStatusMsg.cfg.temp_internal = static_cast<uint8_t>(internal_temp);
 
-    
+
     sendMessageCAN1(CANMSG_BMSDTCSTATUS, 8, bmsStatusMsg.msg);
 }
 
 void ComputeInterface::sendShutdownControlMessage(uint8_t mpe_state)
 {
-    union 
+    union
     {
         uint8_t msg[1] = {0};
 
         struct
         {
             uint8_t mpeState;
-            
-        } cfg;   
+
+        } cfg;
     } shutdownControlMsg;
 
     shutdownControlMsg.cfg.mpeState = mpe_state;
-    
+
     sendMessageCAN1(0x03, 1, shutdownControlMsg.msg);
 }
 
-void ComputeInterface::sendCellDataMessage(uint16_t hv, uint8_t hv_id, uint16_t lv, uint8_t lv_id, uint16_t avg_volt)
+void ComputeInterface::sendCellDataMessage(CriticalCellValue_t high_voltage, CriticalCellValue_t low_voltage, uint16_t avg_voltage)
 {
-    union 
+    union
     {
         uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -210,21 +210,21 @@ void ComputeInterface::sendCellDataMessage(uint16_t hv, uint8_t hv_id, uint16_t 
             uint16_t lowCellVoltage;
             uint8_t lowCellID;
             uint16_t voltAvg;
-        } cfg;   
+        } cfg;
     } cellDataMsg;
 
-    cellDataMsg.cfg.highCellVoltage = __builtin_bswap16(hv);
-    cellDataMsg.cfg.highCellID = hv_id;
-    cellDataMsg.cfg.lowCellVoltage = __builtin_bswap16(lv);
-    cellDataMsg.cfg.lowCellID = lv_id;
-    cellDataMsg.cfg.voltAvg = __builtin_bswap16(avg_volt);
+    cellDataMsg.cfg.highCellVoltage = high_voltage.val;
+    cellDataMsg.cfg.highCellID = (high_voltage.chipIndex << 4) | high_voltage.cellNum;
+    cellDataMsg.cfg.lowCellVoltage = low_voltage.val;
+    cellDataMsg.cfg.lowCellID = (low_voltage.chipIndex << 4) | low_voltage.cellNum;
+    cellDataMsg.cfg.voltAvg = avg_voltage;
 
     sendMessageCAN1(CANMSG_BMSCELLDATA, 8, cellDataMsg.msg);
 }
 
 void ComputeInterface::sendCellVoltageMessage(uint8_t cell_id, uint16_t instant_voltage, uint16_t internal_Res, uint8_t shunted, uint16_t open_voltage)
 {
-    union 
+    union
     {
         uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -235,7 +235,7 @@ void ComputeInterface::sendCellVoltageMessage(uint8_t cell_id, uint16_t instant_
             uint16_t internalResistance;
             uint8_t shunted;
             uint16_t openVoltage;
-        } cfg;   
+        } cfg;
     } cellVoltageMsg;
 
     cellVoltageMsg.cfg.cellID = cell_id;
@@ -249,7 +249,7 @@ void ComputeInterface::sendCellVoltageMessage(uint8_t cell_id, uint16_t instant_
 
 void ComputeInterface::sendCurrentsStatus(uint16_t discharge, uint16_t charge, uint16_t current)
 {
-    union 
+    union
     {
         uint8_t msg[6] = {0, 0, 0, 0, 0, 0};
 
@@ -258,9 +258,9 @@ void ComputeInterface::sendCurrentsStatus(uint16_t discharge, uint16_t charge, u
             uint16_t DCL;
             uint16_t CCL;
             uint16_t packCurr;
-        } cfg;   
+        } cfg;
     } currentsStatusMsg;
-    
+
     currentsStatusMsg.cfg.DCL = discharge;
     currentsStatusMsg.cfg.CCL = charge;
     currentsStatusMsg.cfg.packCurr = current;
@@ -273,13 +273,13 @@ void ComputeInterface::MCCallback(const CAN_message_t &msg)
     return;
 }
 
-void ComputeInterface::sendCellTemp(uint16_t m_cell_temp, uint8_t m_cell_id, uint16_t min_cell_temp, uint8_t min_cell_id, uint16_t avg_temp)
+void ComputeInterface::sendCellTemp(CriticalCellValue_t max_cell_temp, CriticalCellValue_t min_cell_temp, uint16_t avg_temp)
 {
     union
     {
         uint8_t msg[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
-        struct 
+        struct
         {
             uint16_t maxCellTemp;
             uint8_t maxCellID;
@@ -288,11 +288,11 @@ void ComputeInterface::sendCellTemp(uint16_t m_cell_temp, uint8_t m_cell_id, uin
             uint16_t averageTemp;
         } cfg;
     } cellTempMsg;
-    
-    cellTempMsg.cfg.maxCellTemp = m_cell_temp;
-    cellTempMsg.cfg.maxCellID = m_cell_id;
-    cellTempMsg.cfg.minCellTemp = min_cell_temp;
-    cellTempMsg.cfg.minCellID = min_cell_id;
+
+    cellTempMsg.cfg.maxCellTemp = max_cell_temp.val;
+    cellTempMsg.cfg.maxCellID = (max_cell_temp.chipIndex << 4) | (max_cell_temp.cellNum);
+    cellTempMsg.cfg.minCellTemp = min_cell_temp.val;
+    cellTempMsg.cfg.minCellID = (min_cell_temp.chipIndex << 4) | (min_cell_temp.cellNum);
     cellTempMsg.cfg.averageTemp = avg_temp;
 
     sendMessageCAN1(0x08, 8, cellTempMsg.msg);
