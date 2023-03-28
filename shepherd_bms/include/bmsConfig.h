@@ -36,11 +36,11 @@
 #define OCV_AVG             3
 
 //Fault times
-#define OVER_CURR_TIME      10 //todo adjust these based on counter values
+#define OVER_CURR_TIME      10 //todo adjust these based on testing and/or counter values
 #define OVER_CHG_CURR_TIME  10
 #define UNDER_VOLT_TIME     10
 #define OVER_VOLT_TIME      10
 #define LOW_CELL_TIME       10
-#define HIGH_TEMP_TIME      10 
+#define HIGH_TEMP_TIME      60000 
 
 #endif
