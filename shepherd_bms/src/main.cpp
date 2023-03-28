@@ -65,8 +65,6 @@ const void printBMSStats(AccumulatorData_t *accData)
 	else if (stateMachine.current_state == 2) Serial.println("CHARGING");
 	else if (stateMachine.current_state == 1) Serial.println("FAULTED");
 
-	Serial.print("Continuous CCL: ")
-	Serial.println(accData->contCCL)
 
 	/*Serial.println("Raw Cell Voltage:");
 	for(uint8_t c = 0; c < NUM_CHIPS; c++)

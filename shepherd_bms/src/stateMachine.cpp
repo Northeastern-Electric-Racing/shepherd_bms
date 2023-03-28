@@ -361,12 +361,12 @@ void broadcastCurrentLimit(AccumulatorData_t *bmsdata)
 	//Currently boosting
 	if(BoostState == BOOSTING || BoostState == BOOST_STANDBY)
 	{
-		compute.sendMCMsg(bmsdata->charge_limit, min(bmsdata->discharge_limit, bmsdata->cont_DCL * CONTDCL_MULTIPLIER));
+		compute.sendMCMsg(min(bmsdata->charge_limit, bmsdata->cont_CCL), min(bmsdata->discharge_limit, bmsdata->cont_DCL * CONTDCL_MULTIPLIER));
 	}
 	//Currently recharging boost
 	else
 	{
-		compute.sendMCMsg(bmsdata->charge_limit, min(bmsdata->cont_DCL, bmsdata->discharge_limit));
+		compute.sendMCMsg(min(bmsdata->charge_limit, bmsdata->cont_CCL), min(bmsdata->cont_DCL, bmsdata->discharge_limit));
 	}
 }
 
