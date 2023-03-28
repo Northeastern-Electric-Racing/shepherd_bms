@@ -20,6 +20,39 @@ AccumulatorData_t *prevAccData = nullptr;
 StateMachine stateMachine;
 
 #ifdef DEBUG_STATS
+int pack_res_arr[10][NUM_CHIPS][NUM_CELLS_PER_CHIP];
+int ind = 0;
+void storePackResistances(AccumulatorData_t *accData, int (&packResArr)[10][NUM_CHIPS][NUM_CELLS_PER_CHIP], int &index)
+{
+	if((accData->pack_current > 100) && (index < 10))
+	{
+		for(int chip = 0; chip < NUM_CHIPS; chip++)
+		{
+			for(int cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+			{
+				packResArr[index][chip][cell] = accData->chip_data[chip].cell_resistance[cell];
+			}
+		}
+		index++;
+	}
+}
+
+void printPackResistances(int (&packResArr)[10][NUM_CHIPS][NUM_CELLS_PER_CHIP])
+{
+	for(int i = 0; i < 10; i++)
+	{
+		for(int chip = 0; chip < NUM_CHIPS; chip++)
+		{
+			for(int cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+			{
+				Serial.print(packResArr[i][chip][cell]);
+				Serial.print("	");
+			}
+			Serial.println("\n");
+		}
+		Serial.println("\n \n \n");
+	}
+}
 
 const void printBMSStats(AccumulatorData_t *accData)
 {
@@ -147,6 +180,12 @@ void loop()
 
 	#ifdef DEBUG_STATS
 	printBMSStats(analyzer.bmsdata);
+	storePackResistances(accData, pack_res_arr, ind);
+	if(ind == 10)
+	{
+		printPackResistances(pack_res_arr);
+		ind = 0;
+	}
 	#endif
 
 	wdt.feed();
