@@ -88,6 +88,8 @@ struct AccumulatorData_t
     uint16_t cont_DCL;
     uint8_t soc;
 
+    uint8_t segTemps[NUM_SEGMENTS];
+
     /**
      * @brief Note that this is a 32 bit integer, so there are 32 max possible fault codes
      */
