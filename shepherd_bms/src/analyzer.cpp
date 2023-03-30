@@ -59,7 +59,7 @@ void Analyzer::calcPackTemps()
     bmsdata->max_temp = {MIN_TEMP, 0, 0};
     bmsdata->min_temp = {MAX_TEMP, 0, 0};
     int total_temp = 0;
-    for(uint8_t c = 1; c < NUM_CHIPS; c++)
+    for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
         for(uint8_t therm = 17; therm < 28; therm++)
         {
@@ -246,14 +246,14 @@ uint8_t Analyzer::calcFanPWM()
 void Analyzer::disableTherms()
 {
     int8_t temp_rep_1 = 25; // Iniitalize to room temp (necessary to stabilize when the BMS first boots up/has null values)
-    //if (!is_first_reading_) temp_rep_1 = prevbmsdata->avg_temp; // Set to actual average temp of the pack
-
+    if (!is_first_reading_) temp_rep_1 = prevbmsdata->avg_temp; // Set to actual average temp of the pack
+    int8_t std = calcThermSTD();
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
         for(uint8_t therm = 17; therm < 28; therm++)
         {
             // If 2D LUT shows therm should be disable
-            if (THERM_DISABLE[(c - 1) / 2][therm - 17])
+            if (THERM_DISABLE[(c - 1) / 2][therm - 17] | (abs(bmsdata->chip_data[c].thermistor_value[therm] - temp_rep_1) < (1.5 * std)))
             {
                 // Nullify thermistor by setting to pack average
                 bmsdata->chip_data[c].thermistor_value[therm] = temp_rep_1;
@@ -274,4 +274,19 @@ void Analyzer::calcStateOfCharge()
         float distance_from_higher = (bmsdata->min_voltage.val) - ((index / 10) + 2.9);
         bmsdata->soc = ((distance_from_higher*STATE_OF_CHARGE_CURVE[index+1]) + ((1-distance_from_higher)*STATE_OF_CHARGE_CURVE[index]));
     }
+}
+
+uint8_t Analyzer::calcThermSTD()
+{
+    uint16_t sum_diff_sqrd = 0;
+    for(uint8_t chip = 0; chip < NUM_CHIPS; chip++)
+    {
+        for(uint8_t therm = 17; therm < 28; therm++)
+        {
+            sum_diff_sqrd += pow(abs(bmsdata->chip_data[chip].thermistor_value[therm] - bmsdata->avg_temp), 2);
+        }
+    }
+
+    uint8_t standard_dev = sqrt(sum_diff_sqrd / 88);
+    return standard_dev;
 }
