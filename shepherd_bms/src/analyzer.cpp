@@ -81,6 +81,7 @@ void Analyzer::calcPackTemps()
         }
         if (c % 2 == 0) {
             bmsdata->segTemps[c/2] = total_seg_temp / 22;
+            total_seg_temp = 0;
         }
     }
 
