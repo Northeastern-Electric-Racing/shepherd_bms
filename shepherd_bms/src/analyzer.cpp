@@ -253,7 +253,7 @@ void Analyzer::disableTherms()
         for(uint8_t therm = 17; therm < 28; therm++)
         {
             // If 2D LUT shows therm should be disable
-            if (THERM_DISABLE[(c - 1) / 2][therm - 17] | (abs(bmsdata->chip_data[c].thermistor_value[therm] - temp_rep_1) < (1.5 * std)))
+            if (THERM_DISABLE[(c - 1) / 2][therm - 17] || (abs(bmsdata->chip_data[c].thermistor_value[therm] - temp_rep_1) > (1.5 * std)))
             {
                 // Nullify thermistor by setting to pack average
                 bmsdata->chip_data[c].thermistor_value[therm] = temp_rep_1;
@@ -283,7 +283,7 @@ uint8_t Analyzer::calcThermSTD()
     {
         for(uint8_t therm = 17; therm < 28; therm++)
         {
-            sum_diff_sqrd += pow(abs(bmsdata->chip_data[chip].thermistor_value[therm] - bmsdata->avg_temp), 2);
+            sum_diff_sqrd += abs(bmsdata->chip_data[chip].thermistor_value[therm] - bmsdata->avg_temp) * abs(bmsdata->chip_data[chip].thermistor_value[therm] - bmsdata->avg_temp);
         }
     }
 
