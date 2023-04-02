@@ -154,6 +154,8 @@ class Analyzer
 
         uint8_t calcThermSTD();
 
+        void disableFuckyTherms();
+
     public:
         Analyzer();
 
