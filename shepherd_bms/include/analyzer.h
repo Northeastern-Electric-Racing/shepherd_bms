@@ -2,7 +2,6 @@
 #define ANALYZER_H
 
 #include <nerduino.h>
-#include <cmath>
 #include "datastructs.h"
 #include "segment.h"
 
