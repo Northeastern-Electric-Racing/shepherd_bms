@@ -15,7 +15,7 @@ void Analyzer::push(AccumulatorData_t *data)
     bmsdata = data;
 
     disableTherms();
-    disableFuckyTherms();
+    disableBadTherms();
     calcCellTemps();
 	calcPackTemps();
 	calcPackVoltageStats();
@@ -275,14 +275,15 @@ void Analyzer::calcStateOfCharge()
     }
 }
 
-uint8_t Analyzer::calcThermSTD()
+uint8_t Analyzer::calcThermStandardDev()
 {
     uint16_t sum_diff_sqrd = 0;
     for(uint8_t chip = 0; chip < NUM_CHIPS; chip++)
     {
         for(uint8_t therm = 17; therm < 28; therm++)
         {
-            sum_diff_sqrd += abs(bmsdata->chip_data[chip].thermistor_value[therm] - bmsdata->avg_temp) * abs(bmsdata->chip_data[chip].thermistor_value[therm] - bmsdata->avg_temp);
+            uint16_t sum_diff =  abs(bmsdata->chip_data[chip].thermistor_value[therm] - bmsdata->avg_temp);
+            sum_diff_sqrd += sum_diff * sum_diff;
         }
     }
 
@@ -294,28 +295,23 @@ uint8_t Analyzer::calcThermSTD()
     return standard_dev;
 }
 
-void Analyzer::disableFuckyTherms()
+void Analyzer::disableBadTherms()
 {
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
         for(uint8_t therm = 17; therm < 28; therm++)
         {
-            // If 2D LUT shows therm should be disable
-            if (THERM_DISABLE[(c - 1) / 2][therm - 17])
-            {
-                // Nullify thermistor by setting to pack average
-                bmsdata->chip_data[c].thermistor_value[therm] = bmsdata->chip_data[c].thermistor_reading[therm];
-            }
-
+            // Set the therms to the actual reading    
+            bmsdata->chip_data[c].thermistor_value[therm] = bmsdata->chip_data[c].thermistor_reading[therm];
         }
     }
-    uint8_t std = calcThermSTD();
+    uint8_t standard_dev = calcThermStandardDev();
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
         for(uint8_t therm = 17; therm < 28; therm++)
         {
-            // If 2D LUT shows therm should be disable
-            if (abs(bmsdata->chip_data[c].thermistor_value[therm] - bmsdata->avg_temp) > (3 * std))
+            // If difference between thermistor and average is more than MAX_STANDARD_DEV set the therm to pack average
+            if (abs(bmsdata->chip_data[c].thermistor_value[therm] - bmsdata->avg_temp) > (MAX_STANDARD_DEV * standard_dev))
             {
                 // Nullify thermistor by setting to pack average
                 bmsdata->chip_data[c].thermistor_value[therm] = prevbmsdata->chip_data[c].thermistor_value[therm];

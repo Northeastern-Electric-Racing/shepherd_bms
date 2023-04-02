@@ -152,9 +152,9 @@ class Analyzer
 
         void calcStateOfCharge();
 
-        uint8_t calcThermSTD();
+        uint8_t calcThermStandardDev();
 
-        void disableFuckyTherms();
+        void disableBadTherms();
 
     public:
         Analyzer();
