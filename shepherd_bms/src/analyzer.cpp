@@ -15,7 +15,7 @@ void Analyzer::push(AccumulatorData_t *data)
     bmsdata = data;
 
     disableTherms();
-
+    disableFuckyTherms();
     calcCellTemps();
 	calcPackTemps();
 	calcPackVoltageStats();
