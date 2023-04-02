@@ -35,4 +35,6 @@
 
 #define OCV_AVG             3
 
+#define MAX_STANDARD_DEV    3
+
 #endif
