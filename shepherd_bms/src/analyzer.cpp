@@ -246,14 +246,13 @@ uint8_t Analyzer::calcFanPWM()
 void Analyzer::disableTherms()
 {
     int8_t temp_rep_1 = 25; // Iniitalize to room temp (necessary to stabilize when the BMS first boots up/has null values)
-    if (!is_first_reading_) temp_rep_1 = prevbmsdata->avg_temp; // Set to actual average temp of the pack
-    int8_t std = calcThermSTD();
+    if (!is_first_reading_) temp_rep_1 = prevbmsdata->avg_temp; // Set to actual average temp of the pace
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
         for(uint8_t therm = 17; therm < 28; therm++)
         {
             // If 2D LUT shows therm should be disable
-            if (THERM_DISABLE[(c - 1) / 2][therm - 17] || (abs(bmsdata->chip_data[c].thermistor_value[therm] - temp_rep_1) > (1.5 * std)))
+            if (THERM_DISABLE[(c - 1) / 2][therm - 17])
             {
                 // Nullify thermistor by setting to pack average
                 bmsdata->chip_data[c].thermistor_value[therm] = temp_rep_1;
@@ -288,5 +287,40 @@ uint8_t Analyzer::calcThermSTD()
     }
 
     uint8_t standard_dev = sqrt(sum_diff_sqrd / 88);
+    if(standard_dev < 8)
+    {
+        standard_dev = 8;
+    }
     return standard_dev;
+}
+
+void Analyzer::disableFuckyTherms()
+{
+    for(uint8_t c = 0; c < NUM_CHIPS; c++)
+    {
+        for(uint8_t therm = 17; therm < 28; therm++)
+        {
+            // If 2D LUT shows therm should be disable
+            if (THERM_DISABLE[(c - 1) / 2][therm - 17])
+            {
+                // Nullify thermistor by setting to pack average
+                bmsdata->chip_data[c].thermistor_value[therm] = bmsdata->chip_data[c].thermistor_reading[therm];
+            }
+
+        }
+    }
+    uint8_t std = calcThermSTD();
+    for(uint8_t c = 0; c < NUM_CHIPS; c++)
+    {
+        for(uint8_t therm = 17; therm < 28; therm++)
+        {
+            // If 2D LUT shows therm should be disable
+            if (abs(bmsdata->chip_data[c].thermistor_value[therm] - bmsdata->avg_temp) > (3 * std))
+            {
+                // Nullify thermistor by setting to pack average
+                bmsdata->chip_data[c].thermistor_value[therm] = prevbmsdata->chip_data[c].thermistor_value[therm];
+            }
+
+        }
+    }
 }
