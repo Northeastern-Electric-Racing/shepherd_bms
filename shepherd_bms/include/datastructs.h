@@ -107,6 +107,9 @@ struct AccumulatorData_t
     CriticalCellValue_t min_voltage;
     uint16_t avg_voltage;
     uint16_t delt_voltage;
+
+    // Time since start
+    uint32_t timestamp;
 };
 
 #endif

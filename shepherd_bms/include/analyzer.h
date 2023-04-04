@@ -130,6 +130,8 @@ class Analyzer
             {0,0,0,0,0,0,0,0,0,0,0}
         };
 
+        uint16_t currentIntegral;
+
         void calcPackVoltageStats();
 
         void calcCellResistances();

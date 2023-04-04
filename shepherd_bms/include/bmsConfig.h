@@ -37,4 +37,6 @@
 
 #define MAX_STANDARD_DEV    3
 
+#define MAX_CHARGE          7000 // To do: change this to a legitimate value in amp hours
+
 #endif

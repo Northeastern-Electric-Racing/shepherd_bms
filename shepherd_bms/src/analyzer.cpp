@@ -8,12 +8,20 @@ Analyzer::~Analyzer(){}
 
 void Analyzer::push(AccumulatorData_t *data)
 {
+    uint32_t curr_time;
     if(prevbmsdata != nullptr)
+    {
         delete prevbmsdata;
+        curr_time = 0;
+        currentIntegral = 0;
+    }
+    else
+        curr_time = millis();
 
     prevbmsdata = bmsdata;
     bmsdata = data;
-
+    bmsdata->timestamp = curr_time;
+    
     disableTherms();
     disableBadTherms();
     calcCellTemps();
@@ -263,16 +271,13 @@ void Analyzer::disableTherms()
 
 void Analyzer::calcStateOfCharge()
 {
-    int index = (((bmsdata->min_voltage.val) - MIN_VOLT) / .1);
+    // Sampling period for reimann sum used in SOC calculation
+    uint32_t sample_period = (bmsdata->timestamp) - (prevbmsdata->timestamp);
 
-    // .1 = 1.3V range / 13 datapoints on curve
-    if (index >= 13)
-        bmsdata->soc = 100;
-    else
-    {
-        float distance_from_higher = (bmsdata->min_voltage.val) - ((index / 10) + 2.9);
-        bmsdata->soc = ((distance_from_higher*STATE_OF_CHARGE_CURVE[index+1]) + ((1-distance_from_higher)*STATE_OF_CHARGE_CURVE[index]));
-    }
+    // Multipying current by 1000 to account for units of sample period
+    currentIntegral += (1 / MAX_CHARGE) * ((bmsdata->pack_current  * 1000) / sample_period);
+
+    bmsdata->soc = 1 - currentIntegral;
 }
 
 uint8_t Analyzer::calcThermStandardDev()
