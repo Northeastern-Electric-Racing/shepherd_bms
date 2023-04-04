@@ -277,7 +277,7 @@ void Analyzer::calcStateOfCharge()
     // Multipying current by 1000 to account for units of sample period
     currentIntegral += (1 / MAX_CHARGE) * ((bmsdata->pack_current  * 1000) / sample_period);
 
-    bmsdata->soc = 1 - currentIntegral;
+    bmsdata->soc = 100 - currentIntegral;
 }
 
 uint8_t Analyzer::calcThermStandardDev()
