@@ -119,6 +119,8 @@ class StateMachine
 
         void handleState(AccumulatorData_t *bmsdata);
 
+        bool isBalancing;
+
         BMSState_t current_state;
 
         uint32_t previousFault = 0;

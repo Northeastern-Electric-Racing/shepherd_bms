@@ -61,6 +61,7 @@ void StateMachine::handleReady(AccumulatorData_t *bmsdata)
 
 void StateMachine::initCharging()
 {
+	isBalancing = false;
     return;
 }
 
@@ -319,12 +320,31 @@ bool StateMachine::chargingCheck(AccumulatorData_t *bmsdata)
 
 bool StateMachine::balancingCheck(AccumulatorData_t *bmsdata)
 {
+	static Timer balanceTimer;
+
 	if (!compute.isCharging()) return false;
 	if (bmsdata->max_temp.val > MAX_CELL_TEMP_BAL) return false;
 	if (bmsdata->max_voltage.val <= (BAL_MIN_V * 10000)) return false;
 	if(bmsdata->delt_voltage <= (MAX_DELTA_V * 10000)) return false;
+	//if these all return true, then we should balance
 
-	return true;
+	if (balanceTimer.isTimerExpired() && isBalancing == false) //if timer is done/off and not balancing, balance and start timer
+	{
+		isBalancing = true;
+		balanceTimer.startTimer(BALANCE_TIME);	//start balancing for 5 min
+	}
+	if (balanceTimer.isTimerExpired() && isBalancing == true)	//if timer is done/off and we're balancing, pause balancing & start 1 min timer
+	{
+		isBalancing = false;
+		balanceTimer.startTimer(BALANCE_TIMEOUT);	//pause balancing for 1 min
+		return false;
+	}
+	if (!balanceTimer.isTimerExpired() && isBalancing == false)   //if timer isn't expired, 
+	{
+		return false;
+	}
+
+	return true;	//enable balancing
 }
 
 void broadcastCurrentLimit(AccumulatorData_t *bmsdata)
@@ -379,7 +399,7 @@ void balanceCells(AccumulatorData_t *bms_data)
     {
 		for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
 		{
-			uint16_t delta = bms_data->chip_data[chip].voltage_reading[cell] - (uint16_t)bms_data-> min_voltage.val;
+			uint16_t delta = bms_data->chip_data[chip].open_cell_voltage[cell] - (uint16_t)bms_data-> min_voltage.val;
 			if(delta > MAX_DELTA_V * 10000)
 				balanceConfig[chip][cell] = true;
 			else

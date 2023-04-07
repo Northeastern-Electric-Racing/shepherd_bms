@@ -4,6 +4,7 @@
 #include <nerduino.h>
 #include "datastructs.h"
 #include "segment.h"
+#include "stateMachine.h"
 
 //We want to make sure we aren't doing useless analysis on the same set of data since we are backfilling segment data
 #define ANALYSIS_INTERVAL VOLTAGE_WAIT_TIME

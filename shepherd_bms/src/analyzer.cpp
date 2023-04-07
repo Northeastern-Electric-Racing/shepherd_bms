@@ -194,6 +194,7 @@ void Analyzer::calcContCCL()
 
 void Analyzer::calcOpenCellVoltage()
 {
+    StateMachine StateMachine;
     // if there is no previous data point, set inital open cell voltage to current reading
     if (is_first_reading_)
     {
@@ -206,7 +207,7 @@ void Analyzer::calcOpenCellVoltage()
         }
     }
     // If we are within the current threshold for open voltage measurments
-     else if (bmsdata->pack_current < (OCV_CURR_THRESH * 10) && bmsdata->pack_current > (-OCV_CURR_THRESH * 10))
+    else if (bmsdata->pack_current < (OCV_CURR_THRESH * 10) && bmsdata->pack_current > (-OCV_CURR_THRESH * 10) && StateMachine.isBalancing == false)
     {
         for (uint8_t chip = 0; chip < NUM_CHIPS; chip++)
         {
