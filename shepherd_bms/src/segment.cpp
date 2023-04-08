@@ -34,7 +34,7 @@ void SegmentInterface::retrieveSegmentData(ChipData_t databuf[NUM_CHIPS])
      * Pull voltages and thermistors and indiacte if there was a problem during retrieval
      */
     voltage_error = pullVoltages();
-    pullThermistors();
+    therm_error = pullThermistors();
 
     /**
      * Save the contents of the reading so that we can use it to fill in missing data
@@ -244,47 +244,21 @@ FaultStatus_t SegmentInterface::pullThermistors()
         LTC6804_adax(); // Run ADC for AUX (GPIOs and refs)
         LTC6804_rdaux(0, NUM_CHIPS, raw_temp_voltages); // Fetch ADC results from AUX registers
 
-        for (int c = 0; c < NUM_CHIPS; c++)
+        for (uint8_t c = 0; c < NUM_CHIPS; c++)
 		{
             // Get current temperature LUT. Voltage is adjusted to account for 5V reg fluctuations (index 2 is a reading of the ADC 5V ref)
             segment_data[c].thermistor_reading[therm - 1] = steinhartEst(raw_temp_voltages[c][0] * (float(raw_temp_voltages[c][2]) / 50000) + VOLT_TEMP_CALIB_OFFSET);
             segment_data[c].thermistor_reading[therm + 15] = steinhartEst(raw_temp_voltages[c][1] * (float(raw_temp_voltages[c][2]) / 50000) + VOLT_TEMP_CALIB_OFFSET);
 
             // Directly update for a set time from start up due to therm voltages needing to settle
-            //if (therm_settle_time_ < THERM_AVG * 10)
-            //{
-                segment_data[c].thermistor_value[therm - 1] = segment_data[c].thermistor_reading[therm - 1];
-                segment_data[c].thermistor_value[therm + 15] = segment_data[c].thermistor_reading[therm + 15];
-            /*    therm_settle_time_++;
-            } else
-            {
-                // We need to investigate this. Very sloppy
-                // Discard if reading is 33C
-                if (segment_data[c].thermistor_reading[therm - 1] != 33)
-                {
-                    // If measured value is larger than current "averaged" value, increment value
-                    if (segment_data[c].thermistor_reading[therm - 1] > segment_data[c].thermistor_value[therm - 1])
-                    {
-                    segment_data[c].thermistor_value[therm - 1]++;
-                    // If measured value is smaller than current "averaged" value, decrement value
-                    } else if (segment_data[c].thermistor_reading[therm - 1] < segment_data[c].thermistor_value[therm - 1])
-                    {
-                        segment_data[c].thermistor_value[therm - 1]--;
-                    }
-                }
+            segment_data[c].thermistor_value[therm - 1] = segment_data[c].thermistor_reading[therm - 1];
+            segment_data[c].thermistor_value[therm + 15] = segment_data[c].thermistor_reading[therm + 15];
 
-                // See comments above. Identical but for the upper 16 therms
-                if (segment_data[c].thermistor_reading[therm + 15] != 33)
-                {
-                    if (segment_data[c].thermistor_reading[therm + 15] > segment_data[c].thermistor_value[therm + 15])
-                    {
-                    segment_data[c].thermistor_value[therm + 15]++;
-                    } else if (segment_data[c].thermistor_reading[therm + 15] < segment_data[c].thermistor_value[therm + 15])
-                    {
-                        segment_data[c].thermistor_value[therm + 15]--;
-                    }
-                }
-            }*/
+            if (raw_temp_voltages[c][0] == LTC_BAD_READ || raw_temp_voltages[c][1] == LTC_BAD_READ)
+            {
+                memcpy(segment_data[c].thermistor_reading, previous_data[c].thermistor_reading, sizeof(segment_data[c].thermistor_reading));
+                memcpy(segment_data[c].thermistor_value, previous_data[c].thermistor_value, sizeof(segment_data[c].thermistor_value));
+            }
         }
     }
 	therm_timer.startTimer(THERM_WAIT_TIME); // Set timeout for reading therms
