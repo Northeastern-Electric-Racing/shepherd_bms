@@ -50,7 +50,8 @@ Copyright 2013 Linear Technology Corp. (LTC)
 #ifndef LTC68041_H
 #define LTC68041_H
 
-#define LTC_MAX_RETRIES 5
+#define LTC_MAX_RETRIES 10
+#define LTC_BAD_READ 0xFEEEEEEE
 
 #include <nerduino.h>
 
