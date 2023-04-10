@@ -158,6 +158,10 @@ class Analyzer
 
         void varianceThermCheck();
 
+        uint8_t calcThermStandardDev();
+
+        void standardDevThermCheck();
+
     public:
         Analyzer();
 

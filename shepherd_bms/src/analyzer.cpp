@@ -19,6 +19,7 @@ void Analyzer::push(AccumulatorData_t *data)
     highCurrThermCheck(); // = prev if curr > 50 
     diffCurrThermCheck(); // = prev if curr - prevcurr > 10 
     varianceThermCheck();// = prev if val > 5 deg difference and not in healthy range
+    //standardDevThermCheck(); // = prev if std dev > 3
 
     calcCellTemps();
 	calcPackTemps();
@@ -328,5 +329,51 @@ void Analyzer::varianceThermCheck()
         }
     }
 
+}
+
+uint8_t Analyzer::calcThermStandardDev()
+{
+    uint16_t sum_diff_sqrd = 0;
+    for(uint8_t chip = 0; chip < NUM_CHIPS; chip++)
+    {
+        for(uint8_t therm = 17; therm < 28; therm++)
+        {
+            uint16_t sum_diff =  abs(bmsdata->chip_data[chip].thermistor_value[therm] - bmsdata->avg_temp);
+            sum_diff_sqrd += sum_diff * sum_diff;
+        }
+    }
+
+    uint8_t standard_dev = sqrt(sum_diff_sqrd / 88);
+    if(standard_dev < 8)
+    {
+        standard_dev = 8;
+    }
+    return standard_dev;
+}
+
+void Analyzer::standardDevThermCheck()
+{
+    for(uint8_t c = 0; c < NUM_CHIPS; c++)
+    {
+        for(uint8_t therm = 17; therm < 28; therm++)
+        {
+            // Set the therms to the actual reading    
+            bmsdata->chip_data[c].thermistor_value[therm] = bmsdata->chip_data[c].thermistor_reading[therm];
+        }
+    }
+    uint8_t standard_dev = calcThermStandardDev();
+    for(uint8_t c = 0; c < NUM_CHIPS; c++)
+    {
+        for(uint8_t therm = 17; therm < 28; therm++)
+        {
+            // If difference between thermistor and average is more than MAX_STANDARD_DEV set the therm to pack average
+            if (abs(bmsdata->chip_data[c].thermistor_value[therm] - bmsdata->avg_temp) > (MAX_STANDARD_DEV * standard_dev))
+            {
+                // Nullify thermistor by setting to pack average
+                bmsdata->chip_data[c].thermistor_value[therm] = prevbmsdata->chip_data[c].thermistor_value[therm];
+            }
+
+        }
+    }
 }
 
