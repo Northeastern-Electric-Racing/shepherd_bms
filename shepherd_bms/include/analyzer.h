@@ -152,6 +152,12 @@ class Analyzer
 
         void calcStateOfCharge();
 
+        void highCurrThermCheck();
+
+        void diffCurrThermCheck();
+
+        void varianceThermCheck();
+
     public:
         Analyzer();
 

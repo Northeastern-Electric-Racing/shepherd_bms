@@ -16,6 +16,10 @@ void Analyzer::push(AccumulatorData_t *data)
 
     disableTherms();
 
+    highCurrThermCheck(); // = prev if curr > 50 
+    diffCurrThermCheck(); // = prev if curr - prevcurr > 10 
+    varianceThermCheck();// = prev if val > 5 deg difference and not in healthy range
+
     calcCellTemps();
 	calcPackTemps();
 	calcPackVoltageStats();
@@ -275,3 +279,54 @@ void Analyzer::calcStateOfCharge()
         bmsdata->soc = ((distance_from_higher*STATE_OF_CHARGE_CURVE[index+1]) + ((1-distance_from_higher)*STATE_OF_CHARGE_CURVE[index]));
     }
 }
+
+void Analyzer::highCurrThermCheck()
+{
+    if (bmsdata->pack_current > 500) {
+    
+        for(uint8_t c = 0; c < NUM_CHIPS; c++)
+        {
+            for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+            {
+                bmsdata->chip_data[c].thermistor_reading[cell] = prevbmsdata->chip_data[c].thermistor_reading[cell];
+                bmsdata->chip_data[c].thermistor_value[cell] = prevbmsdata->chip_data[c].thermistor_value[cell];
+            }
+        }
+    }
+}
+
+void Analyzer::diffCurrThermCheck()
+{
+    if (abs(bmsdata->pack_current - prevbmsdata->pack_current) > 100) {
+        for(uint8_t c = 0; c < NUM_CHIPS; c++)
+        {
+            for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+            {
+                bmsdata->chip_data[c].thermistor_reading[cell] = prevbmsdata->chip_data[c].thermistor_reading[cell];
+                bmsdata->chip_data[c].thermistor_value[cell] = prevbmsdata->chip_data[c].thermistor_value[cell];
+            }
+        }
+    }
+}
+
+
+void Analyzer::varianceThermCheck()
+{
+    for(uint8_t c = 0; c < NUM_CHIPS; c++)
+    {
+        for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+        {
+            if (abs(bmsdata->chip_data[c].thermistor_reading[cell] - prevbmsdata->chip_data[c].thermistor_reading[cell]) > 5 
+                && (bmsdata->chip_data[c].thermistor_reading[cell] < 10
+                || bmsdata->chip_data[c].thermistor_reading[cell] > 45))
+            {
+                bmsdata->chip_data[c].thermistor_reading[cell] = prevbmsdata->chip_data[c].thermistor_reading[cell];
+                bmsdata->chip_data[c].thermistor_value[cell] = prevbmsdata->chip_data[c].thermistor_value[cell];
+            }
+
+                
+        }
+    }
+
+}
+
