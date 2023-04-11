@@ -25,9 +25,9 @@ void Analyzer::push(AccumulatorData_t *data)
 
     highCurrThermCheck(); // = prev if curr > 50 
     //diffCurrThermCheck(); // = prev if curr - prevcurr > 10 
-    varianceThermCheck();// = prev if val > 5 deg difference     
+   //varianceThermCheck();// = prev if val > 5 deg difference     
     //standardDevThermCheck(); // = prev if std dev > 3
-    averagingThermCheck(); // matt shitty incrementing
+    //averagingThermCheck(); // matt shitty incrementing
 
     calcCellTemps();
 	calcPackTemps();
