@@ -20,14 +20,14 @@ void Analyzer::push(AccumulatorData_t *data)
         is_first_reading_ = false;
         return;
     }
-    
+
     disableTherms();
 
     highCurrThermCheck(); // = prev if curr > 50 
     //diffCurrThermCheck(); // = prev if curr - prevcurr > 10 
-    varianceThermCheck();// = prev if val > 5 deg difference     
+    //varianceThermCheck();// = prev if val > 5 deg difference     
     //standardDevThermCheck(); // = prev if std dev > 3
-    averagingThermCheck(); // matt shitty incrementing
+    //averagingThermCheck(); // matt shitty incrementing
 
     calcCellTemps();
 	calcPackTemps();
@@ -289,6 +289,9 @@ void Analyzer::calcStateOfCharge()
 
 void Analyzer::highCurrThermCheck()
 {
+    if (prevbmsdata == nullptr)
+        return;
+
     if (bmsdata->pack_current > 500) {
     
         for(uint8_t c = 0; c < NUM_CHIPS; c++)
@@ -304,6 +307,9 @@ void Analyzer::highCurrThermCheck()
 
 void Analyzer::diffCurrThermCheck()
 {
+    if (prevbmsdata == nullptr)
+        return;
+
     if (abs(bmsdata->pack_current - prevbmsdata->pack_current) > 100) {
         for(uint8_t c = 0; c < NUM_CHIPS; c++)
         {
@@ -319,6 +325,9 @@ void Analyzer::diffCurrThermCheck()
 
 void Analyzer::varianceThermCheck()
 {
+    if (prevbmsdata == nullptr)
+        return;
+
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
         for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
@@ -359,14 +368,9 @@ uint8_t Analyzer::calcThermStandardDev()
 
 void Analyzer::standardDevThermCheck()
 {
-    for(uint8_t c = 0; c < NUM_CHIPS; c++)
-    {
-        for(uint8_t therm = 17; therm < 28; therm++)
-        {
-            // Set the therms to the actual reading    
-            bmsdata->chip_data[c].thermistor_value[therm] = bmsdata->chip_data[c].thermistor_reading[therm];
-        }
-    }
+    if (prevbmsdata == nullptr)
+        return;
+
     uint8_t standard_dev = calcThermStandardDev();
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
@@ -385,11 +389,10 @@ void Analyzer::standardDevThermCheck()
 
 void Analyzer::averagingThermCheck()
 {
-
-for (int therm = 1; therm <= 16; therm++)
-{
-    for (int c = 0; c < NUM_CHIPS; c++)
+    for (int therm = 1; therm <= 16; therm++)
     {
+        for (int c = 0; c < NUM_CHIPS; c++)
+        {
  // Directly update for a set time from start up due to therm voltages needing to settle
             if (therm_avg_counter < THERM_AVG * 10) 
             {
