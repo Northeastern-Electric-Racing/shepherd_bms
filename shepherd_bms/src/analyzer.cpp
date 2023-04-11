@@ -10,23 +10,18 @@ Analyzer::~Analyzer(){}
 
 void Analyzer::push(AccumulatorData_t *data)
 {
-    bmsdata = data;
-
     if(prevbmsdata != nullptr)
         delete prevbmsdata;
-    else // if NULL
-    {
-        prevbmsdata = bmsdata;
-        is_first_reading_ = false;
-        return;
-    }
-    
+
+    prevbmsdata = bmsdata;
+    bmsdata = data;
+
     disableTherms();
 
     highCurrThermCheck(); // = prev if curr > 50 
-    //diffCurrThermCheck(); // = prev if curr - prevcurr > 10 
-   //varianceThermCheck();// = prev if val > 5 deg difference     
-    //standardDevThermCheck(); // = prev if std dev > 3
+    diffCurrThermCheck(); // = prev if curr - prevcurr > 10 
+    varianceThermCheck();// = prev if val > 5 deg difference     
+    standardDevThermCheck(); // = prev if std dev > 3
     //averagingThermCheck(); // matt shitty incrementing
 
     calcCellTemps();
@@ -38,6 +33,8 @@ void Analyzer::push(AccumulatorData_t *data)
 	calcContDCL();
 	calcContCCL();
 	calcStateOfCharge();
+
+    is_first_reading_ = false;
 }
 
 void Analyzer::calcCellTemps()
@@ -275,20 +272,23 @@ void Analyzer::disableTherms()
 
 void Analyzer::calcStateOfCharge()
 {
-    int index = (((bmsdata->min_voltage.val) - MIN_VOLT) / .1);
+    int index = (((float(bmsdata->min_voltage.val)/10000) - MIN_VOLT) / .1);
 
     // .1 = 1.3V range / 13 datapoints on curve
     if (index >= 13)
         bmsdata->soc = 100;
     else
     {
-        float distance_from_higher = (bmsdata->min_voltage.val) - ((index / 10) + 2.9);
+        float distance_from_higher = (float(bmsdata->min_voltage.val)/10000) - ((index / 10) + 2.9);
         bmsdata->soc = ((distance_from_higher*STATE_OF_CHARGE_CURVE[index+1]) + ((1-distance_from_higher)*STATE_OF_CHARGE_CURVE[index]));
     }
 }
 
 void Analyzer::highCurrThermCheck()
 {
+    if (prevbmsdata == nullptr)
+        return;
+
     if (bmsdata->pack_current > 500) {
     
         for(uint8_t c = 0; c < NUM_CHIPS; c++)
@@ -304,6 +304,9 @@ void Analyzer::highCurrThermCheck()
 
 void Analyzer::diffCurrThermCheck()
 {
+    if (prevbmsdata == nullptr)
+        return;
+
     if (abs(bmsdata->pack_current - prevbmsdata->pack_current) > 100) {
         for(uint8_t c = 0; c < NUM_CHIPS; c++)
         {
@@ -319,6 +322,9 @@ void Analyzer::diffCurrThermCheck()
 
 void Analyzer::varianceThermCheck()
 {
+    if (prevbmsdata == nullptr)
+        return;
+
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
         for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
@@ -359,14 +365,9 @@ uint8_t Analyzer::calcThermStandardDev()
 
 void Analyzer::standardDevThermCheck()
 {
-    for(uint8_t c = 0; c < NUM_CHIPS; c++)
-    {
-        for(uint8_t therm = 17; therm < 28; therm++)
-        {
-            // Set the therms to the actual reading    
-            bmsdata->chip_data[c].thermistor_value[therm] = bmsdata->chip_data[c].thermistor_reading[therm];
-        }
-    }
+    if (prevbmsdata == nullptr)
+        return;
+
     uint8_t standard_dev = calcThermStandardDev();
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
@@ -385,11 +386,10 @@ void Analyzer::standardDevThermCheck()
 
 void Analyzer::averagingThermCheck()
 {
-
-for (int therm = 1; therm <= 16; therm++)
-{
-    for (int c = 0; c < NUM_CHIPS; c++)
+    for (int therm = 1; therm <= 16; therm++)
     {
+        for (int c = 0; c < NUM_CHIPS; c++)
+        {
  // Directly update for a set time from start up due to therm voltages needing to settle
             if (therm_avg_counter < THERM_AVG * 10) 
             {
