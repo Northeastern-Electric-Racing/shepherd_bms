@@ -1,5 +1,12 @@
 #include "stateMachine.h"
 
+faultEval overCurr;
+faultEval overChgCurr;
+faultEval underVolt;
+faultEval overVolt;
+faultEval lowCell;
+faultEval highTemp;
+
 
 StateMachine::StateMachine()
 {
@@ -212,85 +219,118 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
 	uint32_t faultStatus = 0;
 
 	// Over current fault for discharge
-	if ((accData->pack_current) > ((accData->discharge_limit)*10))
-	{
-		overCurrCount++;
-		if (overCurrCount > 10)
-		{ // 0.10 seconds @ 100Hz rate
-			faultStatus |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
-		}
-	} else
-	{
-		overCurrCount = 0;
-	}
+	if (overCurr.faultEvalState == BEFORE_TIMER_START && (accData->pack_current) > ((accData->discharge_limit)*10))
+    {
+        overCurr.faultTimer.startTimer(OVER_CURR_TIME);
+        overCurr.faultEvalState = DURING_FAULT_EVAL;
+    }
+    else if (overCurr.faultEvalState == DURING_FAULT_EVAL)
+    {
+        if (overCurr.faultTimer.isTimerExpired())
+        {
+            faultStatus |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
+        }
+        else if (!((accData->pack_current) > ((accData->discharge_limit)*10)))
+        {
+            overCurr.faultTimer.cancelTimer();
+            overCurr.faultEvalState = BEFORE_TIMER_START;
+        }
+    }
 
 	// Over current fault for charge
-	if ((accData->pack_current) < 0 && abs((accData->pack_current)) > ((accData->charge_limit)*10))
-	{
-		overChgCurrCount++;
-		if (overChgCurrCount > 1000)
-		{ // 1 seconds @ 100Hz rate
-			faultStatus |= CHARGE_LIMIT_ENFORCEMENT_FAULT;
-		}
-	}
-	else
-	{
-		overChgCurrCount = 0;
-	}
+	if (overChgCurr.faultEvalState == BEFORE_TIMER_START && ((accData->pack_current) < 0 && abs((accData->pack_current)) > ((accData->charge_limit)*10)))
+    {
+        overChgCurr.faultTimer.startTimer(OVER_CHG_CURR_TIME);
+        overChgCurr.faultEvalState = DURING_FAULT_EVAL;
+    }
+    else if (overChgCurr.faultEvalState == DURING_FAULT_EVAL)
+    {
+        if (overChgCurr.faultTimer.isTimerExpired())
+        {
+            faultStatus |= CHARGE_LIMIT_ENFORCEMENT_FAULT;
+        }
+        else if (!((accData->pack_current) < 0 && abs((accData->pack_current)) > ((accData->charge_limit)*10)))
+        {
+            overChgCurr.faultTimer.cancelTimer();
+            overChgCurr.faultEvalState = BEFORE_TIMER_START;
+        }
+    }
 
 	// Low cell voltage fault
-	if (accData->min_voltage.val < MIN_VOLT * 10000)
-	{
-
-		underVoltCount++;
-		if (underVoltCount > 900)
-		{ // 9 seconds @ 100Hz rate
-			faultStatus |= CELL_VOLTAGE_TOO_LOW;
-		}
-	}
-	else
-	{
-		underVoltCount = 0;
-	}
+	if (underVolt.faultEvalState == BEFORE_TIMER_START && accData->min_voltage.val < MIN_VOLT * 10000)
+    {
+        underVolt.faultTimer.startTimer(UNDER_VOLT_TIME );
+        underVolt.faultEvalState = DURING_FAULT_EVAL;
+    }
+    else if (underVolt.faultEvalState == DURING_FAULT_EVAL)
+    {
+        if (underVolt.faultTimer.isTimerExpired())
+        {
+            faultStatus |= CELL_VOLTAGE_TOO_LOW;
+        }
+        else if (!(accData->min_voltage.val < MIN_VOLT * 10000))
+        {
+            underVolt.faultTimer.cancelTimer();
+            underVolt.faultEvalState = BEFORE_TIMER_START;
+        }
+    }
 
 	// High cell voltage fault
-	if (((accData->max_voltage.val > MAX_VOLT * 10000) && digitalRead(CHARGE_DETECT) == HIGH) || (accData->max_voltage.val > MAX_CHARGE_VOLT * 10000))
-	{ // Needs to be reimplemented with a flag for every cell in case multiple go over
-		overVoltCount++;
-		if (overVoltCount > 900) { // 9 seconds @ 100Hz rate
-			faultStatus |= CELL_VOLTAGE_TOO_HIGH;
-		}
-	}
-	else
-	{
-		overVoltCount = 0;
-	}
+	 if (overVolt.faultEvalState == BEFORE_TIMER_START && (((accData->max_voltage.val > MAX_VOLT * 10000) && digitalRead(CHARGE_DETECT) == HIGH) || (accData->max_voltage.val > MAX_CHARGE_VOLT * 10000)))
+    {
+        overVolt.faultTimer.startTimer(OVER_VOLT_TIME);
+        overVolt.faultEvalState = DURING_FAULT_EVAL;
+    }
+    else if (overVolt.faultEvalState == DURING_FAULT_EVAL)
+    {
+        if (overVolt.faultTimer.isTimerExpired())
+        {
+            faultStatus |= CELL_VOLTAGE_TOO_HIGH;
+        }
+        else if (!((accData->max_voltage.val > MAX_VOLT * 10000) && digitalRead(CHARGE_DETECT) == HIGH) || (accData->max_voltage.val > MAX_CHARGE_VOLT * 10000))
+        {
+            overVolt.faultTimer.cancelTimer();
+            overVolt.faultEvalState = BEFORE_TIMER_START;
+        }
+    }
 
 	// High Temp Fault
-	if (accData->max_temp.val > MAX_CELL_TEMP) {
-		highTempCount++;
-		if (highTempCount > 100) { // 1 seconds @ 100Hz rate
-			faultStatus |= PACK_TOO_HOT;
-		}
-	}
-	else
-	{
-		highTempCount = 0;
-	}
+  if (highTemp.faultEvalState == BEFORE_TIMER_START && (accData->max_temp.val > MAX_CELL_TEMP))
+    {
+        highTemp.faultTimer.startTimer(HIGH_TEMP_TIME);
+        highTemp.faultEvalState = DURING_FAULT_EVAL;
+    }
+    else if (highTemp.faultEvalState == DURING_FAULT_EVAL)
+    {
+        if (highTemp.faultTimer.isTimerExpired())
+        {
+            faultStatus |= PACK_TOO_HOT;
+        }
+        else if (!(accData->max_temp.val > MAX_CELL_TEMP))
+        {
+            highTemp.faultTimer.cancelTimer();
+            highTemp.faultEvalState = BEFORE_TIMER_START;
+        }
+    }
 
 	// Extremely low cell voltage fault
-	if (accData->min_voltage.val < 900)
-	{ // 90mV
-		lowCellCount++;
-		if (lowCellCount > 100) { // 1 seconds @ 100Hz rate
-			faultStatus |= LOW_CELL_VOLTAGE;
-		}
-	}
-	else
-	{
-		lowCellCount = 0;
-	}
-
+	  if (lowCell.faultEvalState == BEFORE_TIMER_START && (accData->min_voltage.val < 900))
+    {
+        lowCell.faultTimer.startTimer(LOW_CELL_TIME);
+        lowCell.faultEvalState = DURING_FAULT_EVAL;
+    }
+    else if (lowCell.faultEvalState == DURING_FAULT_EVAL)
+    {
+        if (lowCell.faultTimer.isTimerExpired())
+        {
+            faultStatus |= LOW_CELL_VOLTAGE;
+        }
+        else if (!(accData->min_voltage.val < 900))
+        {
+            lowCell.faultTimer.cancelTimer();
+            lowCell.faultEvalState = BEFORE_TIMER_START;
+        }
+    }
 	return faultStatus;
 }
 

@@ -6,6 +6,8 @@
 #include "compute.h"
 #include "analyzer.h"
 
+
+
 typedef enum
 {
     BOOT_STATE,       //State when BMS first starts up, used to initialize everything that needs configuring
@@ -14,6 +16,19 @@ typedef enum
     FAULTED_STATE,    //State when BMS has detected a catastrophic fault and we need to hault operations
     NUM_STATES
 }BMSState_t;
+
+typedef enum
+	{
+		BEFORE_TIMER_START,
+		DURING_FAULT_EVAL
+	}FaultEvalState;
+
+//timers and fault states for each fault
+struct faultEval
+{
+	FaultEvalState faultEvalState = BEFORE_TIMER_START;
+	Timer faultTimer;
+};
 
 class StateMachine
 {

@@ -8,6 +8,8 @@
 //We want to make sure we aren't doing useless analysis on the same set of data since we are backfilling segment data
 #define ANALYSIS_INTERVAL VOLTAGE_WAIT_TIME
 
+
+
 //#define MAX_SIZE_OF_HIST_QUEUE  300000U //bytes
 
 /**
@@ -161,6 +163,8 @@ class Analyzer
         uint8_t calcThermStandardDev();
 
         void standardDevThermCheck();
+
+        void averagingThermCheck();
 
     public:
         Analyzer();

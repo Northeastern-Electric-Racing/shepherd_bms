@@ -2,6 +2,8 @@
 
 Analyzer analyzer;
 
+uint8_t therm_avg_counter = 0;
+
 Analyzer::Analyzer(){}
 
 Analyzer::~Analyzer(){}
@@ -17,9 +19,10 @@ void Analyzer::push(AccumulatorData_t *data)
     disableTherms();
 
     highCurrThermCheck(); // = prev if curr > 50 
-    diffCurrThermCheck(); // = prev if curr - prevcurr > 10 
-    varianceThermCheck();// = prev if val > 5 deg difference and not in healthy range
+    //diffCurrThermCheck(); // = prev if curr - prevcurr > 10 
+    varianceThermCheck();// = prev if val > 5 deg difference     
     //standardDevThermCheck(); // = prev if std dev > 3
+    averagingThermCheck(); // matt shitty incrementing
 
     calcCellTemps();
 	calcPackTemps();
@@ -373,6 +376,52 @@ void Analyzer::standardDevThermCheck()
                 bmsdata->chip_data[c].thermistor_value[therm] = prevbmsdata->chip_data[c].thermistor_value[therm];
             }
 
+        }
+    }
+}
+
+void Analyzer::averagingThermCheck()
+{
+
+for (int therm = 1; therm <= 16; therm++)
+{
+    for (int c = 0; c < NUM_CHIPS; c++)
+    {
+ // Directly update for a set time from start up due to therm voltages needing to settle
+            if (therm_avg_counter < THERM_AVG * 10) 
+            {
+                bmsdata->chip_data[c].thermistor_value[therm - 1] = bmsdata->chip_data[c].thermistor_reading[therm - 1];
+                bmsdata->chip_data[c].thermistor_value[therm + 15] = bmsdata->chip_data[c].thermistor_reading[therm + 15];
+                therm_avg_counter++;
+            } else 
+            {
+                // We need to investigate this. Very sloppy
+                // Discard if reading is 33C
+                if (bmsdata->chip_data[c].thermistor_reading[therm - 1] != 33) 
+                {
+                    // If measured value is larger than current "averaged" value, increment value
+                    if (bmsdata->chip_data[c].thermistor_reading[therm - 1] > bmsdata->chip_data[c].thermistor_value[therm - 1]) 
+                    {
+                    bmsdata->chip_data[c].thermistor_value[therm - 1]++;
+                    // If measured value is smaller than current "averaged" value, decrement value
+                    } else if (bmsdata->chip_data[c].thermistor_reading[therm - 1] < bmsdata->chip_data[c].thermistor_value[therm - 1]) 
+                    {
+                        bmsdata->chip_data[c].thermistor_value[therm - 1]--;
+                    }
+                }
+                
+                // See comments above. Identical but for the upper 16 therms
+                if (bmsdata->chip_data[c].thermistor_reading[therm + 15] != 33)
+                {
+                    if (bmsdata->chip_data[c].thermistor_reading[therm + 15] > bmsdata->chip_data[c].thermistor_value[therm + 15])
+                    {
+                        bmsdata->chip_data[c].thermistor_value[therm + 15]++;
+                    } else if (bmsdata->chip_data[c].thermistor_reading[therm + 15] < bmsdata->chip_data[c].thermistor_value[therm + 15])
+                    {
+                        bmsdata->chip_data[c].thermistor_value[therm + 15]--;
+                    }
+                }
+            }
         }
     }
 }
