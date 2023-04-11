@@ -22,7 +22,7 @@ void Analyzer::push(AccumulatorData_t *data)
     diffCurrThermCheck(); // = prev if curr - prevcurr > 10 
     varianceThermCheck();// = prev if val > 5 deg difference     
     standardDevThermCheck(); // = prev if std dev > 3
-    averagingThermCheck(); // matt shitty incrementing
+    //averagingThermCheck(); // matt shitty incrementing
 
     calcCellTemps();
 	calcPackTemps();
@@ -272,14 +272,14 @@ void Analyzer::disableTherms()
 
 void Analyzer::calcStateOfCharge()
 {
-    int index = (((bmsdata->min_voltage.val) - MIN_VOLT) / .1);
+    int index = (((float(bmsdata->min_voltage.val)/10000) - MIN_VOLT) / .1);
 
     // .1 = 1.3V range / 13 datapoints on curve
     if (index >= 13)
         bmsdata->soc = 100;
     else
     {
-        float distance_from_higher = (bmsdata->min_voltage.val) - ((index / 10) + 2.9);
+        float distance_from_higher = (float(bmsdata->min_voltage.val)/10000) - ((index / 10) + 2.9);
         bmsdata->soc = ((distance_from_higher*STATE_OF_CHARGE_CURVE[index+1]) + ((1-distance_from_higher)*STATE_OF_CHARGE_CURVE[index]));
     }
 }
