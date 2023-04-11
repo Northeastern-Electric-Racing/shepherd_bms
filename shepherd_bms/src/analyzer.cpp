@@ -10,12 +10,17 @@ Analyzer::~Analyzer(){}
 
 void Analyzer::push(AccumulatorData_t *data)
 {
-    if(prevbmsdata != nullptr)
-        delete prevbmsdata;
-
-    prevbmsdata = bmsdata;
     bmsdata = data;
 
+    if(prevbmsdata != nullptr)
+        delete prevbmsdata;
+    else // if NULL
+    {
+        prevbmsdata = bmsdata;
+        is_first_reading_ = false;
+        return;
+    }
+    
     disableTherms();
 
     highCurrThermCheck(); // = prev if curr > 50 
@@ -33,8 +38,6 @@ void Analyzer::push(AccumulatorData_t *data)
 	calcContDCL();
 	calcContCCL();
 	calcStateOfCharge();
-
-    is_first_reading_ = false;
 }
 
 void Analyzer::calcCellTemps()
