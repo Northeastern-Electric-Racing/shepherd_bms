@@ -10,24 +10,19 @@ Analyzer::~Analyzer(){}
 
 void Analyzer::push(AccumulatorData_t *data)
 {
-    bmsdata = data;
-
     if(prevbmsdata != nullptr)
         delete prevbmsdata;
-    else // if NULL
-    {
-        prevbmsdata = bmsdata;
-        is_first_reading_ = false;
-        return;
-    }
+
+    prevbmsdata = bmsdata;
+    bmsdata = data;
 
     disableTherms();
 
     highCurrThermCheck(); // = prev if curr > 50 
-    //diffCurrThermCheck(); // = prev if curr - prevcurr > 10 
-    //varianceThermCheck();// = prev if val > 5 deg difference     
-    //standardDevThermCheck(); // = prev if std dev > 3
-    //averagingThermCheck(); // matt shitty incrementing
+    diffCurrThermCheck(); // = prev if curr - prevcurr > 10 
+    varianceThermCheck();// = prev if val > 5 deg difference     
+    standardDevThermCheck(); // = prev if std dev > 3
+    averagingThermCheck(); // matt shitty incrementing
 
     calcCellTemps();
 	calcPackTemps();
@@ -38,6 +33,8 @@ void Analyzer::push(AccumulatorData_t *data)
 	calcContDCL();
 	calcContCCL();
 	calcStateOfCharge();
+
+    is_first_reading_ = false;
 }
 
 void Analyzer::calcCellTemps()
