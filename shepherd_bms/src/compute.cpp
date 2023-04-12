@@ -103,11 +103,6 @@ int16_t ComputeInterface::getPackCurrent()
     int16_t low_current = 10 * (5 / CURRENT_SUPPLY_VOLTAGE) * (analogRead(CURRENT_SENSOR_PIN_L) * CURRENT_ADC_RESOLUTION - CURRENT_LOWCHANNEL_OFFSET) * LOWCHANNEL_GAIN; // Channel has a small range with high resolution
 
 
-    Serial.print("High Current: ");
-    Serial.println(high_current);
-    Serial.print("Low Current: ");
-    Serial.println(low_current);
-
     // If the current is scoped within the range of the low channel, use the low channel
     if(low_current < CURRENT_LOWCHANNEL_MAX - 5.0 || low_current > CURRENT_LOWCHANNEL_MIN + 5.0)
     {
