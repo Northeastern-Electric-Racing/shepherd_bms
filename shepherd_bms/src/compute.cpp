@@ -92,8 +92,8 @@ int16_t ComputeInterface::getPackCurrent()
     static const float CURRENT_SUPPLY_VOLTAGE = 5.038;
     static const float CURRENT_ADC_RESOLUTION = 5.0 / MAX_ADC_RESOLUTION;
 
-    static const float CURRENT_LOWCHANNEL_OFFSET = 2.530; // Calibrated with current = 0A
-    static const float CURRENT_HIGHCHANNEL_OFFSET = 2.57; // Calibrated with current = 0A
+    static const float CURRENT_LOWCHANNEL_OFFSET = 2.513; // Calibrated with current = 0A
+    static const float CURRENT_HIGHCHANNEL_OFFSET = 2.508; // Calibrated with current = 0A
 
     static const float HIGHCHANNEL_GAIN = 1 / 0.0040;
     static const float LOWCHANNEL_GAIN = 1 / 0.0267;
@@ -101,6 +101,12 @@ int16_t ComputeInterface::getPackCurrent()
 
     int16_t high_current = 10 * (5 / CURRENT_SUPPLY_VOLTAGE) * (analogRead(CURRENT_SENSOR_PIN_H) * CURRENT_ADC_RESOLUTION - CURRENT_HIGHCHANNEL_OFFSET) * HIGHCHANNEL_GAIN; // Channel has a large range with low resolution
     int16_t low_current = 10 * (5 / CURRENT_SUPPLY_VOLTAGE) * (analogRead(CURRENT_SENSOR_PIN_L) * CURRENT_ADC_RESOLUTION - CURRENT_LOWCHANNEL_OFFSET) * LOWCHANNEL_GAIN; // Channel has a small range with high resolution
+
+
+    Serial.print("High Current: ");
+    Serial.println(high_current);
+    Serial.print("Low Current: ");
+    Serial.println(low_current);
 
     // If the current is scoped within the range of the low channel, use the low channel
     if(low_current < CURRENT_LOWCHANNEL_MAX - 5.0 || low_current > CURRENT_LOWCHANNEL_MIN + 5.0)
