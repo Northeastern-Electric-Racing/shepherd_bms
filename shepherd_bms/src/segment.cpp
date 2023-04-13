@@ -364,7 +364,7 @@ void SegmentInterface::SelectTherm(uint8_t therm)
 	}
 }
 
-uint8_t SegmentInterface::steinhartEst(uint16_t V)
+int8_t SegmentInterface::steinhartEst(uint16_t V)
 {
   int i = 0;
   while (V < VOLT_TEMP_CONV[i]) i++;

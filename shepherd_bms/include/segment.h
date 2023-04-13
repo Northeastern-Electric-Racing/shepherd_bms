@@ -58,7 +58,7 @@ class SegmentInterface
 
         FaultStatus_t pullVoltages();
 
-        uint8_t steinhartEst(uint16_t V);
+        int8_t steinhartEst(uint16_t V);
 
         void serializeI2CMsg(uint8_t data_to_write[][3], uint8_t comm_output[][6]);
 
