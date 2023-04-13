@@ -59,6 +59,7 @@ void Analyzer::calcPackTemps()
     bmsdata->max_temp = {MIN_TEMP, 0, 0};
     bmsdata->min_temp = {MAX_TEMP, 0, 0};
     int total_temp = 0;
+    int total_seg_temp = 0;
     for(uint8_t c = 1; c < NUM_CHIPS; c++)
     {
         for(uint8_t therm = 17; therm < 28; therm++)
@@ -76,6 +77,11 @@ void Analyzer::calcPackTemps()
             }
 
             total_temp += bmsdata->chip_data[c].thermistor_value[therm];
+            total_seg_temp += bmsdata->chip_data[c].thermistor_value[therm];
+        }
+        if (c % 2 == 0) {
+            bmsdata->segment_average_temps[c/2] = total_seg_temp / 22;
+            total_seg_temp = 0;
         }
     }
 
