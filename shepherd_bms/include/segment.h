@@ -124,6 +124,17 @@ class SegmentInterface
          * @return false
          */
         bool isBalancing();
+
+        void averagingThermCheck();
+
+        void standardDevThermCheck();
+
+        int8_t calcThermStandardDev(int16_t avg_temp);
+
+        int16_t calcAverage();
+
+        void varianceThermCheck();
+
 };
 
 extern SegmentInterface segment;
