@@ -1,6 +1,8 @@
 #include "segment.h"
 
 SegmentInterface segment;
+uint8_t therm_avg_counter = 0;
+
 
 SegmentInterface::SegmentInterface(){}
 
@@ -407,4 +409,123 @@ void SegmentInterface::serializeI2CMsg(uint8_t data_to_write[][3], uint8_t comm_
         comm_output[chip][4] = 0x00 | (data_to_write[chip][2] >> 4); // BLANK + high side of B2
         comm_output[chip][5] = (data_to_write[chip][2] << 4) | 0x09; // low side of B2 + STOP & NACK
     }
+}
+
+void SegmentInterface::averagingThermCheck()
+{
+    for (int therm = 1; therm <= 16; therm++)
+    {
+        for (int c = 0; c < NUM_CHIPS; c++)
+        {
+ // Directly update for a set time from start up due to therm voltages needing to settle
+            if (therm_avg_counter < THERM_AVG * 10) 
+            {
+                segment_data[c].thermistor_value[therm - 1] = segment_data[c].thermistor_reading[therm - 1];
+                segment_data[c].thermistor_value[therm + 15] = segment_data[c].thermistor_reading[therm + 15];
+                therm_avg_counter++;
+            } else 
+            {
+                // We need to investigate this. Very sloppy
+                // Discard if reading is 33C
+                if (segment_data[c].thermistor_reading[therm - 1] != 33) 
+                {
+                    // If measured value is larger than current "averaged" value, increment value
+                    if (segment_data[c].thermistor_reading[therm - 1] > segment_data[c].thermistor_value[therm - 1]) 
+                    {
+                    segment_data[c].thermistor_value[therm - 1]++;
+                    // If measured value is smaller than current "averaged" value, decrement value
+                    } else if (segment_data[c].thermistor_reading[therm - 1] < segment_data[c].thermistor_value[therm - 1]) 
+                    {
+                        segment_data[c].thermistor_value[therm - 1]--;
+                    }
+                }
+                
+                // See comments above. Identical but for the upper 16 therms
+                if (segment_data[c].thermistor_reading[therm + 15] != 33)
+                {
+                    if (segment_data[c].thermistor_reading[therm + 15] > segment_data[c].thermistor_value[therm + 15])
+                    {
+                        segment_data[c].thermistor_value[therm + 15]++;
+                    } else if (segment_data[c].thermistor_reading[therm + 15] < segment_data[c].thermistor_value[therm + 15])
+                    {
+                        segment_data[c].thermistor_value[therm + 15]--;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void SegmentInterface::standardDevThermCheck()
+{
+    if (previous_data == nullptr)
+        return;
+    int16_t avg_temp = calcAverage();
+    uint8_t standard_dev = calcThermStandardDev(avg_temp);
+    for(uint8_t c = 0; c < NUM_CHIPS; c++)
+    {
+        for(uint8_t therm = 17; therm < 28; therm++)
+        {
+            // If difference between thermistor and average is more than MAX_STANDARD_DEV set the therm to pack average
+            if (abs(segment_data[c].thermistor_value[therm] - avg_temp) > (MAX_STANDARD_DEV * standard_dev))
+            {
+                // Nullify thermistor by setting to pack average
+                segment_data[c].thermistor_value[therm] = previous_data[c].thermistor_value[therm];
+            }
+
+        }
+    }
+}
+
+int8_t SegmentInterface::calcThermStandardDev(int16_t avg_temp)
+{
+    uint16_t sum_diff_sqrd = 0;
+    for(uint8_t chip = 0; chip < NUM_CHIPS; chip++)
+    {
+        for(uint8_t therm = 17; therm < 28; therm++)
+        {
+            uint16_t sum_diff =  abs(segment_data[chip].thermistor_value[therm] - avg_temp);
+            sum_diff_sqrd += sum_diff * sum_diff;
+        }
+    }
+
+    uint8_t standard_dev = sqrt(sum_diff_sqrd / 88);
+    if(standard_dev < 8)
+    {
+        standard_dev = 8;
+    }
+    return standard_dev;
+}
+
+int16_t SegmentInterface::calcAverage()
+{
+    int16_t avg = 0;
+    for(int chip = 0; chip < NUM_CHIPS; chip++)
+    {
+        for(int therm = 17; therm < 28; therm++)
+        {
+            avg += segment_data[chip].thermistor_value[therm];
+        }
+    }
+
+    avg = avg / (NUM_CHIPS * 11);
+    return avg;
+}
+
+void SegmentInterface::varianceThermCheck()
+{
+    for(uint8_t c = 0; c < NUM_CHIPS; c++)
+    {
+        for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+        {
+            if (//previous_data.thermistor_reading[cell]) > 5 
+                (segment_data[c].thermistor_reading[cell] < 10
+                || segment_data[c].thermistor_reading[cell] > 45))
+            {
+                segment_data[c].thermistor_reading[cell] = 25;//previous_data[c].thermistor_reading[cell];
+                segment_data[c].thermistor_value[cell] = 25;//previous_data[c].thermistor_value[cell];
+            }
+        }
+    }
+
 }

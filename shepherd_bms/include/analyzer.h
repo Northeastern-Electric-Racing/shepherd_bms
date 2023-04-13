@@ -158,13 +158,7 @@ class Analyzer
 
         void diffCurrThermCheck();
 
-        void varianceThermCheck();
 
-        uint8_t calcThermStandardDev();
-
-        void standardDevThermCheck();
-
-        void averagingThermCheck();
 
     public:
         Analyzer();
