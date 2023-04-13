@@ -190,7 +190,7 @@ void StateMachine::handleState(AccumulatorData_t *bmsdata)
 	compute.sendBMSStatusMessage(current_state, bmsdata->fault_code, bmsdata->avg_temp, 0);
 	compute.sendCellTemp(analyzer.bmsdata->max_temp, analyzer.bmsdata->min_temp, analyzer.bmsdata->avg_temp);
 	compute.sendCellDataMessage(analyzer.bmsdata->max_voltage, analyzer.bmsdata->min_voltage, analyzer.bmsdata->avg_voltage);
-
+	compute.sendSegmentTemps(analyzer.bmsdata->segment_average_temps);
 
 }
 
