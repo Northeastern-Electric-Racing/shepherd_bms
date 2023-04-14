@@ -92,8 +92,8 @@ int16_t ComputeInterface::getPackCurrent()
     static const float CURRENT_SUPPLY_VOLTAGE = 5.038;
     static const float CURRENT_ADC_RESOLUTION = 5.0 / MAX_ADC_RESOLUTION;
 
-    static const float CURRENT_LOWCHANNEL_OFFSET = 2.513; // Calibrated with current = 0A
-    static const float CURRENT_HIGHCHANNEL_OFFSET = 2.508; // Calibrated with current = 0A
+    static const float CURRENT_LOWCHANNEL_OFFSET = 2.585; // Calibrated with current = 0A
+    static const float CURRENT_HIGHCHANNEL_OFFSET = 2.585; // Calibrated with current = 0A
 
     static const float HIGHCHANNEL_GAIN = 1 / 0.0040; // Calibrated with  current = 5A, 10A, 20A
     static const float LOWCHANNEL_GAIN = 1 / 0.0267;
