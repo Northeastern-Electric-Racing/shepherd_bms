@@ -220,8 +220,8 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
 	if ((accData->pack_current) > ((accData->discharge_limit)*10))
 	{
 		overCurrCount++;
-		if (overCurrCount > 10)
-		{ // 0.10 seconds @ 100Hz rate
+		if (overCurrCount > 100)
+		{ // 1.0 seconds @ 100Hz rate
 			faultStatus |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
 		}
 	} else
@@ -248,8 +248,8 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
 	{
 
 		underVoltCount++;
-		if (underVoltCount > 900)
-		{ // 9 seconds @ 100Hz rate
+		if (underVoltCount > 2000) // 20 seconds @ 100Hz rate
+		{
 			faultStatus |= CELL_VOLTAGE_TOO_LOW;
 		}
 	}
@@ -262,7 +262,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
 	if (((accData->max_voltage.val > MAX_VOLT * 10000) && digitalRead(CHARGE_DETECT) == HIGH) || (accData->max_voltage.val > MAX_CHARGE_VOLT * 10000))
 	{ // Needs to be reimplemented with a flag for every cell in case multiple go over
 		overVoltCount++;
-		if (overVoltCount > 900) { // 9 seconds @ 100Hz rate
+		if (overVoltCount > 2000) { // 20 seconds @ 100Hz rate
 			faultStatus |= CELL_VOLTAGE_TOO_HIGH;
 		}
 	}
@@ -274,7 +274,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
 	// High Temp Fault
 	if (accData->max_temp.val > MAX_CELL_TEMP) {
 		highTempCount++;
-		if (highTempCount > 100) { // 1 seconds @ 100Hz rate
+		if (highTempCount > 2000) { // 20 seconds @ 100Hz rate
 			faultStatus |= PACK_TOO_HOT;
 		}
 	}
@@ -287,7 +287,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
 	if (accData->min_voltage.val < 900)
 	{ // 90mV
 		lowCellCount++;
-		if (lowCellCount > 100) { // 1 seconds @ 100Hz rate
+		if (lowCellCount > 2000) { // 20 seconds @ 100Hz rate
 			faultStatus |= LOW_CELL_VOLTAGE;
 		}
 	}
