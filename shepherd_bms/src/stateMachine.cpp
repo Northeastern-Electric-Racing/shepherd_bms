@@ -59,9 +59,8 @@ void StateMachine::handleReady(AccumulatorData_t *bmsdata)
 	}
 }
 
-void StateMachine::initCharging(AccumulatorData_t *bmsdata)
+void StateMachine::initCharging()
 {
-	bmsdata->isBalancing = false;
     return;
 }
 

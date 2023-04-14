@@ -63,7 +63,7 @@ class StateMachine
 
         void initReady();
 
-        void initCharging(AccumulatorData_t *bmsdata);
+        void initCharging();
 
         void initFaulted();
 
