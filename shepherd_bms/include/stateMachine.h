@@ -63,7 +63,7 @@ class StateMachine
 
         void initReady();
 
-        void initCharging();
+        void initCharging(AccumulatorData_t *bmsdata);
 
         void initFaulted();
 
@@ -118,8 +118,6 @@ class StateMachine
         virtual ~StateMachine();
 
         void handleState(AccumulatorData_t *bmsdata);
-
-        bool isBalancing;
 
         BMSState_t current_state;
 

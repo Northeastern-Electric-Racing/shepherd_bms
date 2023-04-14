@@ -59,9 +59,9 @@ void StateMachine::handleReady(AccumulatorData_t *bmsdata)
 	}
 }
 
-void StateMachine::initCharging()
+void StateMachine::initCharging(AccumulatorData_t *bmsdata)
 {
-	isBalancing = false;
+	bmsdata->isBalancing = false;
     return;
 }
 
@@ -322,29 +322,32 @@ bool StateMachine::balancingCheck(AccumulatorData_t *bmsdata)
 {
 	static Timer balanceTimer;
 
-	if (!compute.isCharging()) return false;
-	if (bmsdata->max_temp.val > MAX_CELL_TEMP_BAL) return false;
-	if (bmsdata->max_voltage.val <= (BAL_MIN_V * 10000)) return false;
-	if(bmsdata->delt_voltage <= (MAX_DELTA_V * 10000)) return false;
+	if (!compute.isCharging()) bmsdata->isBalancing = false;
+	if (bmsdata->max_temp.val > MAX_CELL_TEMP_BAL) bmsdata->isBalancing = false;
+	if (bmsdata->max_voltage.val <= (BAL_MIN_V * 10000)) bmsdata->isBalancing = false;
+	if(bmsdata->delt_voltage <= (MAX_DELTA_V * 10000)) bmsdata->isBalancing = false;
 	//if these all return true, then we should balance
 
-	if (balanceTimer.isTimerExpired() && isBalancing == false) //if timer is done/off and not balancing, balance and start timer
+	if (balanceTimer.isTimerExpired() && bmsdata->isBalancing == false) //if timer is done/off and not balancing, balance and start timer
 	{
-		isBalancing = true;
+		bmsdata->isBalancing = true;
 		balanceTimer.startTimer(BALANCE_TIME);	//start balancing for 5 min
 	}
-	if (balanceTimer.isTimerExpired() && isBalancing == true)	//if timer is done/off and we're balancing, pause balancing & start 1 min timer
+	else if (balanceTimer.isTimerExpired() && bmsdata->isBalancing == true)	//if timer is done/off and we're balancing, pause balancing & start 1 min timer
 	{
-		isBalancing = false;
+		bmsdata->isBalancing = false;
 		balanceTimer.startTimer(BALANCE_TIMEOUT);	//pause balancing for 1 min
-		return false;
 	}
-	if (!balanceTimer.isTimerExpired() && isBalancing == false)   //if timer isn't expired, 
+	else if (!balanceTimer.isTimerExpired() && bmsdata->isBalancing == false)   //if timer isn't expired, 
 	{
-		return false;
+		bmsdata->isBalancing = false;
+	}
+	else																//if everything else is false, set balancing to true
+	{
+		bmsdata->isBalancing = true;
 	}
 
-	return true;	//enable balancing
+	return bmsdata->isBalancing;
 }
 
 void broadcastCurrentLimit(AccumulatorData_t *bmsdata)
