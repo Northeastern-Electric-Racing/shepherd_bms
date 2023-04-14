@@ -16,7 +16,7 @@ void Analyzer::push(AccumulatorData_t *data)
 
     disableTherms();
 
-    //highCurrThermCheck(); // = prev if curr > 50 
+    highCurrThermCheck(); // = prev if curr > 50 
     //diffCurrThermCheck(); // = prev if curr - prevcurr > 10 
     //varianceThermCheck();// = prev if val > 5 deg difference     
     //standardDevThermCheck(); // = prev if std dev > 3

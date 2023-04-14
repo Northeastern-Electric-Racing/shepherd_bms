@@ -24,7 +24,7 @@ StateMachine stateMachine;
 const void printBMSStats(AccumulatorData_t *accData)
 {
 	static Timer debug_statTimer;
-	static const uint16_t PRINT_STAT_WAIT = 500; //ms
+	static const uint16_t PRINT_STAT_WAIT = 100; //ms
 
 	if(!debug_statTimer.isTimerExpired()) return;
 
@@ -150,5 +150,5 @@ void loop()
 	#endif
 
 	wdt.feed();
-	delay(10); // not sure if we need this in, it was in before
+	//delay(10); // not sure if we need this in, it was in before
 }

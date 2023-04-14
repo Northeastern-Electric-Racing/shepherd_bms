@@ -264,6 +264,10 @@ FaultStatus_t SegmentInterface::pullThermistors()
         }
     }
 	therm_timer.startTimer(THERM_WAIT_TIME); // Set timeout for reading therms
+    varianceThermCheck();
+    //standardDevThermCheck();
+    //averagingThermCheck();
+    
 	return NOT_FAULTED; // Read successfully
 }
 
@@ -516,14 +520,13 @@ void SegmentInterface::varianceThermCheck()
 {
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
-        for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+        for(uint8_t therm = 17; therm < 28; therm++)
         {
-            if (//previous_data.thermistor_reading[cell]) > 5 
-                (segment_data[c].thermistor_reading[cell] < 10
-                || segment_data[c].thermistor_reading[cell] > 45))
+            if (abs(segment_data[c].thermistor_reading[therm] - previous_data[c].thermistor_reading[therm]) > 5 &&
+                (segment_data[c].thermistor_reading[therm] < 10 || segment_data[c].thermistor_reading[therm] > 45))
             {
-                segment_data[c].thermistor_reading[cell] = 25;//previous_data[c].thermistor_reading[cell];
-                segment_data[c].thermistor_value[cell] = 25;//previous_data[c].thermistor_value[cell];
+                segment_data[c].thermistor_reading[therm] = previous_data[c].thermistor_reading[therm];
+                segment_data[c].thermistor_value[therm] = previous_data[c].thermistor_value[therm];
             }
         }
     }
