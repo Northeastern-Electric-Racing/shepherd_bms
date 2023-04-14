@@ -45,6 +45,8 @@ class StateMachine
         uint16_t lowCellCount;
         uint16_t highTempCount;
 
+        Timer canMsgTimer;
+
         bool enteredFaulted = false;
 
 

@@ -19,6 +19,7 @@ class SegmentInterface
 
         Timer therm_timer;
         Timer voltage_reading_timer;
+        Timer variance_timer;
 
         FaultStatus_t voltage_error = NOT_FAULTED;
         FaultStatus_t therm_error = NOT_FAULTED;

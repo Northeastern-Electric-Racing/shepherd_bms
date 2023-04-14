@@ -518,17 +518,26 @@ int16_t SegmentInterface::calcAverage()
 
 void SegmentInterface::varianceThermCheck()
 {
-    for(uint8_t c = 0; c < NUM_CHIPS; c++)
+    if (previous_data == nullptr)
     {
-        for(uint8_t therm = 17; therm < 28; therm++)
-        {
-            if (abs(segment_data[c].thermistor_reading[therm] - previous_data[c].thermistor_reading[therm]) > 5 &&
-                (segment_data[c].thermistor_reading[therm] < 10 || segment_data[c].thermistor_reading[therm] > 45))
-            {
-                segment_data[c].thermistor_reading[therm] = previous_data[c].thermistor_reading[therm];
-                segment_data[c].thermistor_value[therm] = previous_data[c].thermistor_value[therm];
-            }
-        }
+        variance_timer.startTimer(1000);
+        return;
     }
 
+    if (variance_timer.isTimerExpired())
+    {
+        for(uint8_t c = 0; c < NUM_CHIPS; c++)
+        {
+            for(uint8_t therm = 17; therm < 28; therm++)
+            {
+                if (abs(segment_data[c].thermistor_reading[therm] - previous_data[c].thermistor_reading[therm]) > 5 &&
+                    (segment_data[c].thermistor_reading[therm] < 10 || segment_data[c].thermistor_reading[therm] > 45))
+                {
+                    segment_data[c].thermistor_reading[therm] = previous_data[c].thermistor_reading[therm];
+                    segment_data[c].thermistor_value[therm] = previous_data[c].thermistor_value[therm];
+                }
+            }
+        }
+
+    }
 }

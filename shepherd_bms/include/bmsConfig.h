@@ -45,4 +45,6 @@
 #define LOW_CELL_TIME       1000
 #define HIGH_TEMP_TIME      60000 
 
+#define CAN_MESSAGE_WAIT    10 
+
 #endif
