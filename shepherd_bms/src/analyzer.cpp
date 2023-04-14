@@ -212,7 +212,7 @@ void Analyzer::calcOpenCellVoltage()
         }
     }
     // If we are within the current threshold for open voltage measurments
-     else if (bmsdata->pack_current < (OCV_CURR_THRESH * 10) && bmsdata->pack_current > (-OCV_CURR_THRESH * 10))
+    else if (bmsdata->pack_current < (OCV_CURR_THRESH * 10) && bmsdata->pack_current > (-OCV_CURR_THRESH * 10) && bmsdata->isBalancing == false)
     {
         for (uint8_t chip = 0; chip < NUM_CHIPS; chip++)
         {

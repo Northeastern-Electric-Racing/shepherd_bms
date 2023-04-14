@@ -95,6 +95,9 @@ struct AccumulatorData_t
      */
     uint32_t fault_code;
 
+    /*Balancing check variable*/
+    bool isBalancing = false;
+
     /*Max, min, and avg thermistor readings*/
     CriticalCellValue_t max_temp;
     CriticalCellValue_t min_temp;
