@@ -107,6 +107,9 @@ struct AccumulatorData_t
     CriticalCellValue_t min_voltage;
     uint16_t avg_voltage;
     uint16_t delt_voltage;
+
+    uint16_t boost_setting;
+
 };
 
 #endif

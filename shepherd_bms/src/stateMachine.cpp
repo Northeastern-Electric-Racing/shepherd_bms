@@ -189,6 +189,7 @@ void StateMachine::handleState(AccumulatorData_t *bmsdata)
 	//send relevant CAN msgs
 	if (canMsgTimer.isTimerExpired())
 	{
+		compute.sendMCMsg(bmsdata->charge_limit, bmsdata->boost_setting);
 		compute.sendAccStatusMessage(analyzer.bmsdata->pack_voltage, analyzer.bmsdata->pack_current, 0, analyzer.bmsdata->soc, 0);
 		compute.sendCurrentsStatus(analyzer.bmsdata->discharge_limit, analyzer.bmsdata->charge_limit, analyzer.bmsdata->pack_current);
 		compute.sendBMSStatusMessage(current_state, bmsdata->fault_code, bmsdata->avg_temp, 0);
@@ -365,12 +366,12 @@ void broadcastCurrentLimit(AccumulatorData_t *bmsdata)
 	//Currently boosting
 	if(BoostState == BOOSTING || BoostState == BOOST_STANDBY)
 	{
-		compute.sendMCMsg(bmsdata->charge_limit, min(bmsdata->discharge_limit, bmsdata->cont_DCL * CONTDCL_MULTIPLIER));
+		bmsdata->boost_setting = min(bmsdata->discharge_limit, bmsdata->cont_DCL * CONTDCL_MULTIPLIER);
 	}
 	//Currently recharging boost
 	else
 	{
-		compute.sendMCMsg(bmsdata->charge_limit, min(bmsdata->cont_DCL, bmsdata->discharge_limit));
+		bmsdata->boost_setting = min(bmsdata->cont_DCL, bmsdata->discharge_limit);
 	}
 }
 
