@@ -93,7 +93,7 @@ int16_t ComputeInterface::getPackCurrent()
     static const float CURRENT_ADC_RESOLUTION = 5.0 / MAX_ADC_RESOLUTION;
 
     static const float CURRENT_LOWCHANNEL_OFFSET = 2.585; // Calibrated with current = 0A
-    static const float CURRENT_HIGHCHANNEL_OFFSET = 2.585; // Calibrated with current = 0A
+    static const float CURRENT_HIGHCHANNEL_OFFSET = 2.590; // Calibrated with current = 0A
 
     static const float HIGHCHANNEL_GAIN = 1 / 0.0040; // Calibrated with  current = 5A, 10A, 20A
     static const float LOWCHANNEL_GAIN = 1 / 0.0267;
@@ -102,14 +102,13 @@ int16_t ComputeInterface::getPackCurrent()
     int16_t high_current = 10 * (5 / CURRENT_SUPPLY_VOLTAGE) * (analogRead(CURRENT_SENSOR_PIN_H) * CURRENT_ADC_RESOLUTION - CURRENT_HIGHCHANNEL_OFFSET) * HIGHCHANNEL_GAIN; // Channel has a large range with low resolution
     int16_t low_current = 10 * (5 / CURRENT_SUPPLY_VOLTAGE) * (analogRead(CURRENT_SENSOR_PIN_L) * CURRENT_ADC_RESOLUTION - CURRENT_LOWCHANNEL_OFFSET) * LOWCHANNEL_GAIN; // Channel has a small range with high resolution
 
-
     // If the current is scoped within the range of the low channel, use the low channel
     if(low_current < CURRENT_LOWCHANNEL_MAX - 5.0 || low_current > CURRENT_LOWCHANNEL_MIN + 5.0)
     {
-        return low_current;
+        return -low_current;
     }
 
-    return high_current;
+    return -high_current;
 }
 
 void ComputeInterface::sendMCMsg(uint16_t user_max_charge, uint16_t user_max_discharge)

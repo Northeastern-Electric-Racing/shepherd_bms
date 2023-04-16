@@ -218,7 +218,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
 	uint32_t faultStatus = 0;
 
 	// Over current fault for discharge
-	if ((accData->pack_current) > ((accData->discharge_limit)*10))
+	if ((accData->pack_current) > ((accData->discharge_limit)*10) + CURR_ERR_MARG)
 	{
 		overCurrCount++;
 		if (overCurrCount > 100)
@@ -231,7 +231,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
 	}
 
 	// Over current fault for charge
-	if ((accData->pack_current) < 0 && abs((accData->pack_current)) > ((accData->charge_limit)*10))
+	if ((accData->pack_current) < 0 && abs((accData->pack_current)) > ((accData->charge_limit)*10) + CURR_ERR_MARG)
 	{
 		overChgCurrCount++;
 		if (overChgCurrCount > 1000)
