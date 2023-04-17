@@ -21,6 +21,7 @@ class Analyzer
     private:
 
         Timer analysisTimer;
+        Timer ocvTimer;
 
         bool is_first_reading_ = true;
 

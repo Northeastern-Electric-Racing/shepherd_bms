@@ -210,33 +210,42 @@ void Analyzer::calcOpenCellVoltage()
                 bmsdata->chip_data[chip].open_cell_voltage[cell] = bmsdata->chip_data[chip].voltage_reading[cell];
             }
         }
+        return;
     }
     // If we are within the current threshold for open voltage measurments
-     else if (bmsdata->pack_current < (OCV_CURR_THRESH * 10) && bmsdata->pack_current > (-OCV_CURR_THRESH * 10))
+    else if (bmsdata->pack_current < (OCV_CURR_THRESH * 10) && bmsdata->pack_current > (-OCV_CURR_THRESH * 10))
     {
-        for (uint8_t chip = 0; chip < NUM_CHIPS; chip++)
-        {
-            for (uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+        if (ocvTimer.isTimerExpired()) {
+            for (uint8_t chip = 0; chip < NUM_CHIPS; chip++)
             {
-                // Sets open cell voltage to a moving average of OCV_AVG values
-                bmsdata->chip_data[chip].open_cell_voltage[cell] = (uint32_t(bmsdata->chip_data[chip].voltage_reading[cell]) + (uint32_t(prevbmsdata->chip_data[chip].open_cell_voltage[cell])  * (OCV_AVG - 1))) / OCV_AVG;
-                if (bmsdata->chip_data[chip].open_cell_voltage[cell] > MAX_VOLT * 10000) {
-                    bmsdata->chip_data[chip].open_cell_voltage[cell] = MAX_VOLT * 10000;
-                } else if (bmsdata->chip_data[chip].open_cell_voltage[cell] < MIN_VOLT * 10000) {
-                    bmsdata->chip_data[chip].open_cell_voltage[cell] = MIN_VOLT * 10000;
+                for (uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+                {
+                    // Sets open cell voltage to a moving average of OCV_AVG values
+                    bmsdata->chip_data[chip].open_cell_voltage[cell] = (uint32_t(bmsdata->chip_data[chip].voltage_reading[cell]) + (uint32_t(prevbmsdata->chip_data[chip].open_cell_voltage[cell])  * (OCV_AVG - 1))) / OCV_AVG;
+
+                    if (bmsdata->chip_data[chip].open_cell_voltage[cell] > MAX_VOLT * 10000) 
+                    {
+                        bmsdata->chip_data[chip].open_cell_voltage[cell] = MAX_VOLT * 10000;
+                    } 
+                    else if (bmsdata->chip_data[chip].open_cell_voltage[cell] < MIN_VOLT * 10000) 
+                    {
+                        bmsdata->chip_data[chip].open_cell_voltage[cell] = MIN_VOLT * 10000;
+                    }
                 }
             }
+            return;
         }
     }
-    else
+    else 
     {
-        for (uint8_t chip = 0; chip < NUM_CHIPS; chip++)
+        ocvTimer.startTimer(500);
+    }
+    for (uint8_t chip = 0; chip < NUM_CHIPS; chip++)
+    {
+        for (uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
         {
-            for (uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
-            {
-                // Set OCV to the previous/existing OCV
-                bmsdata->chip_data[chip].open_cell_voltage[cell] = prevbmsdata->chip_data[chip].open_cell_voltage[cell];
-            }
+            // Set OCV to the previous/existing OCV
+            bmsdata->chip_data[chip].open_cell_voltage[cell] = prevbmsdata->chip_data[chip].open_cell_voltage[cell];
         }
     }
 }
