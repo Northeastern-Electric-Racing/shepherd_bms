@@ -95,7 +95,7 @@ void Analyzer::calcPackVoltageStats() {
     uint32_t total_volt = 0;
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
-        for(uint8_t cell = 0; cell < 9; cell++)
+        for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
         {
             // fings out the maximum cell voltage and location
             if (bmsdata->chip_data[c].voltage_reading[cell] > bmsdata->max_voltage.val)
@@ -104,7 +104,7 @@ void Analyzer::calcPackVoltageStats() {
             }
 
             //finds out the minimum cell voltage and location
-            else if (bmsdata->chip_data[c].voltage_reading[cell] < bmsdata->min_voltage.val)
+            if (bmsdata->chip_data[c].voltage_reading[cell] < bmsdata->min_voltage.val)
             {
                 bmsdata->min_voltage = {bmsdata->chip_data[c].voltage_reading[cell], c, cell};
             }
