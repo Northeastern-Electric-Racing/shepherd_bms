@@ -221,7 +221,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
 	if ((accData->pack_current) > ((accData->discharge_limit)*10) + CURR_ERR_MARG)
 	{
 		overCurrCount++;
-		if (overCurrCount > 100)
+		if (overCurrCount > 500)
 		{ // 1.0 seconds @ 100Hz rate
 			faultStatus |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
 		}
@@ -249,7 +249,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
 	{
 
 		underVoltCount++;
-		if (underVoltCount > 2000) // 20 seconds @ 100Hz rate
+		if (underVoltCount > 20000) // 20 seconds @ 1000Hz rate
 		{
 			faultStatus |= CELL_VOLTAGE_TOO_LOW;
 		}
