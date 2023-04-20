@@ -79,9 +79,9 @@ class Analyzer
          * @note values are unitless percentages that represent % charge
          *
          */
-        const uint8_t STATE_OF_CHARGE_CURVE[13] =
+        const uint8_t STATE_OF_CHARGE_CURVE[18] =
         {
-            0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 100
+            0, 0, 0, 0, 0, 0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 100
         };
 
         /**

@@ -286,8 +286,8 @@ void Analyzer::calcStateOfCharge()
 {
     int index = (((float(bmsdata->min_voltage.val)/10000) - MIN_VOLT) / .1);
 
-    // .1 = 1.3V range / 13 datapoints on curve
-    if (index >= 13)
+    // .1 = 1.8V range / 18 datapoints on curve
+    if (index >= 18)
         bmsdata->soc = 100;
     else
     {
