@@ -304,7 +304,9 @@ bool StateMachine::chargingCheck(AccumulatorData_t *bmsdata)
 	static Timer chargeTimeout;
 
 	if(!chargeTimeout.isTimerExpired()) return false;
-	if(!compute.isCharging()) return false;
+	// Serial.println("Timer expired");
+	// if(!compute.isCharging()) return false;
+	// Serial.println("Timer expired");
 	if(bmsdata->max_voltage.val >= (MAX_CHARGE_VOLT * 10000))
 	{
 		chargeOverVolt++;

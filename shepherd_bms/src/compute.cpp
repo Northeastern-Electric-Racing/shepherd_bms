@@ -7,6 +7,7 @@ ComputeInterface::ComputeInterface()
     pinMode(CURRENT_SENSOR_PIN_H, INPUT);
     pinMode(CURRENT_SENSOR_PIN_L, INPUT);
     pinMode(FAULT_PIN, OUTPUT);
+    pinMode(CHARGE_DETECT, INPUT);
     initializeCAN(CANLINE_2, CHARGER_BAUD, &(this->chargerCallback));
     initializeCAN(CANLINE_1, MC_BAUD, &(this->MCCallback));
 }
