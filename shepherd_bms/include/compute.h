@@ -8,10 +8,9 @@
 
 #define CURRENT_SENSOR_PIN_L  A1
 #define CURRENT_SENSOR_PIN_H  A0
-#define FAULT_PIN             RELAY_PIN
-#define CHARGE_VOLTAGE_PIN    3
-#define CHARGE_SAFETY_RELAY   6
-#define CHARGE_DETECT         7
+#define FAULT_PIN             2
+#define CHARGE_SAFETY_RELAY   4
+#define CHARGE_DETECT         5
 #define CHARGER_BAUD          250000U
 #define MC_BAUD               1000000U
 #define MAX_ADC_RESOLUTION    1023 // 13 bit ADC

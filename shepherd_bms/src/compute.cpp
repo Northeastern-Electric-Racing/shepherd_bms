@@ -65,7 +65,7 @@ FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltage_to_set, Acc
 
 bool ComputeInterface::isCharging() // This is useless kinda, especially if we move to DCDC
 {
-    return digitalRead(CHARGE_VOLTAGE_PIN);
+    return digitalRead(CHARGE_DETECT); // NEEDS to be Changed so isCharging and detectCharger are different!!!
 }
 
 void ComputeInterface::chargerCallback(const CAN_message_t &msg)
