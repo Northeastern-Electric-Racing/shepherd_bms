@@ -211,7 +211,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
 	uint32_t faultStatus = 0;
 
 	// Over current fault for discharge
-	   if (overCurr.faultEvalState == BEFORE_TIMER_START && (accData->pack_current) > ((accData->discharge_limit)*10))
+	if (overCurr.faultEvalState == BEFORE_TIMER_START && (accData->pack_current) > ((accData->discharge_limit)*10))
     {
         overCurr.faultTimer.startTimer(OVER_CURR_TIME);
         overCurr.faultEvalState = DURING_FAULT_EVAL;
@@ -222,7 +222,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
         {
             faultStatus |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
         }
-        else if (!((accData->pack_current) > ((accData->discharge_limit)*10)))
+        if (!((accData->pack_current) > ((accData->discharge_limit)*10)))
         {
             overCurr.faultTimer.cancelTimer();
             overCurr.faultEvalState = BEFORE_TIMER_START;
@@ -241,7 +241,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
         {
             faultStatus |= CHARGE_LIMIT_ENFORCEMENT_FAULT;
         }
-        else if (!((accData->pack_current) < 0 && abs((accData->pack_current)) > ((accData->charge_limit)*10)))
+        if (!((accData->pack_current) < 0 && abs((accData->pack_current)) > ((accData->charge_limit)*10)))
         {
             overChgCurr.faultTimer.cancelTimer();
             overChgCurr.faultEvalState = BEFORE_TIMER_START;
@@ -260,7 +260,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
         {
             faultStatus |= CELL_VOLTAGE_TOO_LOW;
         }
-        else if (!(accData->min_voltage.val < MIN_VOLT * 10000))
+        if (!(accData->min_voltage.val < MIN_VOLT * 10000))
         {
             underVolt.faultTimer.cancelTimer();
             underVolt.faultEvalState = BEFORE_TIMER_START;
@@ -268,7 +268,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
     }
 
 	// High cell voltage fault
-	 if (overVolt.faultEvalState == BEFORE_TIMER_START && (((accData->max_voltage.val > MAX_VOLT * 10000) && digitalRead(CHARGE_DETECT) == HIGH) || (accData->max_voltage.val > MAX_CHARGE_VOLT * 10000)))
+	if (overVolt.faultEvalState == BEFORE_TIMER_START && (((accData->max_voltage.val > MAX_VOLT * 10000) && digitalRead(CHARGE_DETECT) == HIGH) || (accData->max_voltage.val > MAX_CHARGE_VOLT * 10000)))
     {
         overVolt.faultTimer.startTimer(OVER_VOLT_TIME);
         overVolt.faultEvalState = DURING_FAULT_EVAL;
@@ -279,7 +279,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
         {
             faultStatus |= CELL_VOLTAGE_TOO_HIGH;
         }
-        else if (!((accData->max_voltage.val > MAX_VOLT * 10000) && digitalRead(CHARGE_DETECT) == HIGH) || (accData->max_voltage.val > MAX_CHARGE_VOLT * 10000))
+        if (!((accData->max_voltage.val > MAX_VOLT * 10000) && digitalRead(CHARGE_DETECT) == HIGH) || (accData->max_voltage.val > MAX_CHARGE_VOLT * 10000))
         {
             overVolt.faultTimer.cancelTimer();
             overVolt.faultEvalState = BEFORE_TIMER_START;
@@ -287,7 +287,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
     }
 
 	// High Temp Fault
-  if (highTemp.faultEvalState == BEFORE_TIMER_START && (accData->max_temp.val > MAX_CELL_TEMP))
+	if (highTemp.faultEvalState == BEFORE_TIMER_START && (accData->max_temp.val > MAX_CELL_TEMP))
     {
         highTemp.faultTimer.startTimer(HIGH_TEMP_TIME);
         highTemp.faultEvalState = DURING_FAULT_EVAL;
@@ -298,7 +298,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
         {
             faultStatus |= PACK_TOO_HOT;
         }
-        else if (!(accData->max_temp.val > MAX_CELL_TEMP))
+        if (!(accData->max_temp.val > MAX_CELL_TEMP))
         {
             highTemp.faultTimer.cancelTimer();
             highTemp.faultEvalState = BEFORE_TIMER_START;
@@ -306,7 +306,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
     }
 
 	// Extremely low cell voltage fault
-	  if (lowCell.faultEvalState == BEFORE_TIMER_START && (accData->min_voltage.val < 900))
+	if (lowCell.faultEvalState == BEFORE_TIMER_START && (accData->min_voltage.val < 900))
     {
         lowCell.faultTimer.startTimer(LOW_CELL_TIME);
         lowCell.faultEvalState = DURING_FAULT_EVAL;
@@ -317,7 +317,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
         {
             faultStatus |= LOW_CELL_VOLTAGE;
         }
-        else if (!(accData->min_voltage.val < 900))
+        if (!(accData->min_voltage.val < 900))
         {
             lowCell.faultTimer.cancelTimer();
             lowCell.faultEvalState = BEFORE_TIMER_START;
