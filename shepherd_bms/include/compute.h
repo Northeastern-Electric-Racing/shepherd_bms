@@ -16,6 +16,9 @@
 #define MC_BAUD               1000000U
 #define MAX_ADC_RESOLUTION    1023 // 13 bit ADC
 
+extern uint8_t mpu_state;
+extern uint8_t mpu_fan_pwm;
+
 class ComputeInterface
 {
    private:

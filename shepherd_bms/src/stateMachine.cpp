@@ -180,8 +180,11 @@ void StateMachine::handleState(AccumulatorData_t *bmsdata)
 
     (this->*handlerLUT[current_state])(bmsdata);
 
+	if (mpu_state != 2)
+		compute.setFanSpeed(analyzer.calcFanPWM());
+	else
+		compute.setFanSpeed(mpu_fan_pwm);
 
-	compute.setFanSpeed(analyzer.calcFanPWM());
 	broadcastCurrentLimit(bmsdata);
 
 	//send relevant CAN msgs

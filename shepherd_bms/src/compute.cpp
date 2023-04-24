@@ -1,5 +1,8 @@
 #include "compute.h"
 
+uint8_t mpu_state;
+uint8_t mpu_fan_pwm;
+
 ComputeInterface compute;
 
 ComputeInterface::ComputeInterface()
@@ -270,6 +273,18 @@ void ComputeInterface::sendCurrentsStatus(uint16_t discharge, uint16_t charge, u
 
 void ComputeInterface::MCCallback(const CAN_message_t &msg)
 {
+    switch(msg.id)
+    {
+        case 0xA:
+            mpu_state = msg.buf[0];
+            if (mpu_state == 2)
+                mpu_fan_pwm = msg.buf[1];
+
+            break;
+
+        default:
+            break;
+    }
     return;
 }
 
