@@ -39,4 +39,5 @@
 
 #define MAX_CHARGE          7000 // To do: change this to a legitimate value in amp hours
 
+#define SOC_INTEGRAL_ADDR   0x006A // Arbitrary memory address for EEPROM
 #endif

@@ -21,6 +21,7 @@ class StateMachine
 
         AccumulatorData_t *prevAccData;
         uint32_t bmsFault = FAULTS_CLEAR;
+        bool socSet = false;
 
         uint16_t overVoltCount;
         uint16_t underVoltCount;

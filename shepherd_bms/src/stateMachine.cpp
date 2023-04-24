@@ -17,7 +17,18 @@ void StateMachine::initBoot()
 
 void StateMachine::handleBoot(AccumulatorData_t *bmsdata)
 {
-
+	#ifdef INIT_SOC
+	if(!socSet)
+	{
+		Serial.println("Enter SOC at the current moment:  ");
+		while(Serial.available() == 0)
+		{}
+		int currentSOC = Serial.parseInt();
+		uint16_t currentIntegral = 100 - currentSOC;
+		EEPROM.write(SOC_INTEGRAL_ADDR, analyzer.currentIntegral);
+		socSet = true;
+	}
+	#endif
 	overVoltCount = 0;
 	underVoltCount = 0;
     overCurrCount = 0;

@@ -13,7 +13,7 @@ void Analyzer::push(AccumulatorData_t *data)
     {
         delete prevbmsdata;
         curr_time = 0;
-        currentIntegral = 0;
+        //currentIntegral = 0;
     }
     else
         curr_time = millis();
@@ -271,13 +271,15 @@ void Analyzer::disableTherms()
 
 void Analyzer::calcStateOfCharge()
 {
+
     // Sampling period for reimann sum used in SOC calculation
     uint32_t sample_period = (bmsdata->timestamp) - (prevbmsdata->timestamp);
 
     // Multipying current by 1000 to account for units of sample period
+    uint16_t currentIntegral = EEPROM.read(SOC_INTEGRAL_ADDR);
     currentIntegral += (1 / MAX_CHARGE) * ((bmsdata->pack_current  * 1000) / sample_period);
-
     bmsdata->soc = 100 - currentIntegral;
+    EEPROM.update(SOC_INTEGRAL_ADDR, currentIntegral);
 }
 
 uint8_t Analyzer::calcThermStandardDev()

@@ -130,8 +130,6 @@ class Analyzer
             {0,0,0,0,0,0,0,0,0,0,0}
         };
 
-        uint16_t currentIntegral;
-
         void calcPackVoltageStats();
 
         void calcCellResistances();
@@ -185,6 +183,7 @@ class Analyzer
         AccumulatorData_t *bmsdata;
 
         AccumulatorData_t *prevbmsdata;
+
 };
 
 extern Analyzer analyzer;
