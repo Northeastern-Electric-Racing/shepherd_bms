@@ -183,7 +183,7 @@ void StateMachine::handleState(AccumulatorData_t *bmsdata)
 	if (mpu_state != 2)
 		compute.setFanSpeed(analyzer.calcFanPWM());
 	else
-		compute.setFanSpeed(mpu_fan_pwm);
+		compute.setFanSpeed(analyzer.calcFanPWM() * (mpu_fan_pwm / 100.0));
 
 	broadcastCurrentLimit(bmsdata);
 
