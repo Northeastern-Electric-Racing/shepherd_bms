@@ -96,7 +96,7 @@ struct AccumulatorData_t
     /*Max, min, and avg thermistor readings*/
     CriticalCellValue_t max_temp;
     CriticalCellValue_t min_temp;
-    uint8_t avg_temp;
+    int8_t avg_temp;
 
     /*Max and min cell resistances*/
     CriticalCellValue_t max_res;

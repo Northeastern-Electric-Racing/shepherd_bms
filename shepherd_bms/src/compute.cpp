@@ -170,19 +170,21 @@ void ComputeInterface::sendBMSStatusMessage(int bms_state, uint32_t fault_status
         struct
         {
             uint8_t state;
-            uint32_t fault;
-            uint8_t temp_avg;
+            uint32_t fault; 
+            int8_t temp_avg;
             uint8_t temp_internal;
         } cfg;
     } bmsStatusMsg;
 
-    bmsStatusMsg.cfg.state = bms_state;
+    bmsStatusMsg.cfg.temp_avg = static_cast<int8_t>(avg_temp);
+    bmsStatusMsg.cfg.state = static_cast<uint8_t>(bms_state);
     bmsStatusMsg.cfg.fault = fault_status;
-    bmsStatusMsg.cfg.temp_avg = static_cast<uint8_t>(avg_temp);
     bmsStatusMsg.cfg.temp_internal = static_cast<uint8_t>(internal_temp);
 
+    uint8_t msg[8] = {bmsStatusMsg.cfg.state, (fault_status & 0xff000000),(fault_status & 0x00ff0000), (fault_status & 0x0000ff00), (fault_status & 0x000000ff), bmsStatusMsg.cfg.temp_avg};
+    
 
-    sendMessageCAN1(CANMSG_BMSDTCSTATUS, 8, bmsStatusMsg.msg);
+    sendMessageCAN1(CANMSG_BMSDTCSTATUS, 8, msg);
 }
 
 void ComputeInterface::sendShutdownControlMessage(uint8_t mpe_state)
@@ -225,7 +227,8 @@ void ComputeInterface::sendCellDataMessage(CriticalCellValue_t high_voltage, Cri
     cellDataMsg.cfg.lowCellID = (low_voltage.chipIndex << 4) | low_voltage.cellNum;
     cellDataMsg.cfg.voltAvg = avg_voltage;
 
-    sendMessageCAN1(CANMSG_BMSCELLDATA, 8, cellDataMsg.msg);
+    uint8_t msg[8] = {(cellDataMsg.cfg.highCellVoltage & 0x00ff), ((cellDataMsg.cfg.highCellVoltage & 0xff00)>>8), cellDataMsg.cfg.highCellID, (cellDataMsg.cfg.lowCellVoltage & 0x00ff), ((cellDataMsg.cfg.lowCellVoltage & 0xff00)>>8), cellDataMsg.cfg.lowCellID, (cellDataMsg.cfg.voltAvg & 0x00ff), ((cellDataMsg.cfg.voltAvg & 0xff00)>>8)};
+    sendMessageCAN1(CANMSG_BMSCELLDATA, 8, msg);
 }
 
 void ComputeInterface::sendCellVoltageMessage(uint8_t cell_id, uint16_t instant_voltage, uint16_t internal_Res, uint8_t shunted, uint16_t open_voltage)
