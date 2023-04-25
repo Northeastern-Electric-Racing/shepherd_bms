@@ -181,7 +181,14 @@ void ComputeInterface::sendBMSStatusMessage(int bms_state, uint32_t fault_status
     bmsStatusMsg.cfg.fault = fault_status;
     bmsStatusMsg.cfg.temp_internal = static_cast<uint8_t>(internal_temp);
 
-    uint8_t msg[8] = {bmsStatusMsg.cfg.state, (fault_status & 0xff000000),(fault_status & 0x00ff0000), (fault_status & 0x0000ff00), (fault_status & 0x000000ff), bmsStatusMsg.cfg.temp_avg};
+    uint8_t msg[8] = {
+                         bmsStatusMsg.cfg.state, 
+                        (fault_status & 0xff000000),
+                        (fault_status & 0x00ff0000), 
+                        (fault_status & 0x0000ff00), 
+                        (fault_status & 0x000000ff), 
+                         bmsStatusMsg.cfg.temp_avg
+                     };
     
 
     sendMessageCAN1(CANMSG_BMSDTCSTATUS, 8, msg);
@@ -227,7 +234,17 @@ void ComputeInterface::sendCellDataMessage(CriticalCellValue_t high_voltage, Cri
     cellDataMsg.cfg.lowCellID = (low_voltage.chipIndex << 4) | low_voltage.cellNum;
     cellDataMsg.cfg.voltAvg = avg_voltage;
 
-    uint8_t msg[8] = {(cellDataMsg.cfg.highCellVoltage & 0x00ff), ((cellDataMsg.cfg.highCellVoltage & 0xff00)>>8), cellDataMsg.cfg.highCellID, (cellDataMsg.cfg.lowCellVoltage & 0x00ff), ((cellDataMsg.cfg.lowCellVoltage & 0xff00)>>8), cellDataMsg.cfg.lowCellID, (cellDataMsg.cfg.voltAvg & 0x00ff), ((cellDataMsg.cfg.voltAvg & 0xff00)>>8)};
+    uint8_t msg[8] = {
+                        ( cellDataMsg.cfg.highCellVoltage & 0x00ff), 
+                        ((cellDataMsg.cfg.highCellVoltage & 0xff00)>>8), 
+                          cellDataMsg.cfg.highCellID, 
+                        ( cellDataMsg.cfg.lowCellVoltage & 0x00ff), 
+                        ((cellDataMsg.cfg.lowCellVoltage & 0xff00)>>8), 
+                          cellDataMsg.cfg.lowCellID, 
+                        ( cellDataMsg.cfg.voltAvg & 0x00ff), 
+                        ((cellDataMsg.cfg.voltAvg & 0xff00)>>8)
+                     };
+
     sendMessageCAN1(CANMSG_BMSCELLDATA, 8, msg);
 }
 
@@ -299,12 +316,23 @@ void ComputeInterface::sendCellTemp(CriticalCellValue_t max_cell_temp, CriticalC
     } cellTempMsg;
 
     cellTempMsg.cfg.maxCellTemp = max_cell_temp.val;
-    cellTempMsg.cfg.maxCellID = (max_cell_temp.chipIndex << 4) | (max_cell_temp.cellNum);
+    cellTempMsg.cfg.maxCellID = (max_cell_temp.chipIndex << 4) | (max_cell_temp.cellNum - 17);
     cellTempMsg.cfg.minCellTemp = min_cell_temp.val;
-    cellTempMsg.cfg.minCellID = (min_cell_temp.chipIndex << 4) | (min_cell_temp.cellNum);
+    cellTempMsg.cfg.minCellID = (min_cell_temp.chipIndex << 4) | (min_cell_temp.cellNum - 17);
     cellTempMsg.cfg.averageTemp = avg_temp;
+    
+    uint8_t msg[8] = {
+                        ( cellTempMsg.cfg.maxCellTemp & 0x00ff), 
+                        ((cellTempMsg.cfg.maxCellTemp & 0xff00)>>8), 
+                          cellTempMsg.cfg.maxCellID, 
+                        ( cellTempMsg.cfg.minCellTemp & 0x00ff),
+                        ((cellTempMsg.cfg.minCellTemp & 0xff00)>>8), 
+                          cellTempMsg.cfg.minCellID, 
+                        ( cellTempMsg.cfg.averageTemp & 0x00ff), 
+                        ((cellTempMsg.cfg.averageTemp & 0xff00)>>8)
+                     };
 
-    sendMessageCAN1(0x08, 8, cellTempMsg.msg);
+    sendMessageCAN1(0x08, 8, msg);
 }
 uint8_t ComputeInterface::calcChargerLEDState(AccumulatorData_t *bms_data)
 {
