@@ -37,12 +37,12 @@
 
 #define MAX_STANDARD_DEV    3 // only used for standard deviation for therms calc
 
-//Fault settings
-#define OVER_CURR_TIME      50 //todo adjust these based on testing and/or counter values
-#define OVER_CHG_CURR_TIME  50
-#define UNDER_VOLT_TIME     1000
-#define OVER_VOLT_TIME      1000
-#define LOW_CELL_TIME       1000
+//Fault times
+#define OVER_CURR_TIME      500 //todo adjust these based on testing and/or counter values
+#define OVER_CHG_CURR_TIME  500
+#define UNDER_VOLT_TIME     5000
+#define OVER_VOLT_TIME      5000
+#define LOW_CELL_TIME       5000
 #define HIGH_TEMP_TIME      60000 
 #define CURR_ERR_MARG       2       // in A * 10
 
