@@ -89,13 +89,11 @@ void StateMachine::handleCharging(AccumulatorData_t *bmsdata)
 				{
 					digitalWrite(CHARGE_SAFETY_RELAY, HIGH);
 					compute.enableCharging(true);
-
 				}
 				else
 				{
 					digitalWrite(CHARGE_SAFETY_RELAY, LOW);
 					compute.enableCharging(false);
-
 				}
 
 				// Check if we should balance
@@ -349,7 +347,7 @@ bool StateMachine::chargingCheck(AccumulatorData_t *bmsdata)
 	if(bmsdata->max_voltage.val >= (MAX_CHARGE_VOLT * 10000))
 	{
 		chargeOverVolt++;
-		if (chargeOverVolt > 100)
+		if (chargeOverVolt > 1000)
 		{
 			chargeTimeout.startTimer(CHARGE_TIMEOUT);
 			return false;
