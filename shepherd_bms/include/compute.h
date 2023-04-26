@@ -61,12 +61,12 @@ class ComputeInterface
       FaultStatus_t sendChargingMessage(uint16_t voltage_to_set, AccumulatorData_t *bms_data);
 
       /**
-      * @brief Returns if we are detecting a charging voltage
+      * @brief Returns if charger interlock is engaged, indicating charger LV connector is plugged in
       *
       * @return true
       * @return false
       */
-      bool isCharging();
+      bool chargerConnected();
 
       /**
       * @brief Handle any messages received from the charger
