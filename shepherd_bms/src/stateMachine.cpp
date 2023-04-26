@@ -7,6 +7,9 @@ faultEval overVolt;
 faultEval lowCell;
 faultEval highTemp;
 
+Timer chargeTimeout;
+faultEval chargeCutoffTime;
+
 StateMachine::StateMachine()
 {
     current_state = BOOT_STATE;
@@ -330,32 +333,33 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
 
 bool StateMachine::chargingCheck(AccumulatorData_t *bmsdata)
 {
-	static Timer chargeTimeout;
-
+	if (!compute.chargerConnected()) return false;
 	if(!chargeTimeout.isTimerExpired()) return false;
-	// Serial.println("Timer expired");
-	// if(!compute.isCharging()) return false;
-	// Serial.println("Timer expired");
-	if(bmsdata->max_voltage.val >= (MAX_CHARGE_VOLT * 10000))
-	{
-		chargeOverVolt++;
-		if (chargeOverVolt > 1000)
-		{
-			chargeTimeout.startTimer(CHARGE_TIMEOUT);
-			return false;
-		}
-	}
-	else
-	{
-		chargeOverVolt = 0;
-	}
+
+	if (bmsdata->max_voltage.val >= (MAX_CHARGE_VOLT * 10000) && chargeCutoffTime.faultEvalState == BEFORE_TIMER_START)
+    {
+        chargeCutoffTime.faultTimer.startTimer(5000);
+        chargeCutoffTime.faultEvalState = DURING_FAULT_EVAL;
+    }
+    else if (chargeCutoffTime.faultEvalState == DURING_FAULT_EVAL)
+    {
+        if (chargeCutoffTime.faultTimer.isTimerExpired())
+        {
+            return false;
+        }
+        if (!(bmsdata->max_voltage.val >= (MAX_CHARGE_VOLT * 10000)))
+        {
+            chargeCutoffTime.faultTimer.cancelTimer();
+            chargeCutoffTime.faultEvalState = BEFORE_TIMER_START;
+        }
+    }
 
 	return true;
 }
 
 bool StateMachine::balancingCheck(AccumulatorData_t *bmsdata)
 {
-	if (!compute.isCharging()) return false;
+	if (!compute.chargerConnected()) return false;
 	if (bmsdata->max_temp.val > MAX_CELL_TEMP_BAL) return false;
 	if (bmsdata->max_voltage.val <= (BAL_MIN_V * 10000)) return false;
 	if(bmsdata->delt_voltage <= (MAX_DELTA_V * 10000)) return false;
