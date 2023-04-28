@@ -56,11 +56,10 @@ void StateMachine::initReady()
 void StateMachine::handleReady(AccumulatorData_t *bmsdata)
 {
 	//check for charger
-	if (digitalRead(CHARGE_DETECT) == LOW)
+	if (compute.chargerConnected())
 	{
 		requestTransition(CHARGING_STATE);
 	}
-
 	else
 	{
     	broadcastCurrentLimit(bmsdata);
@@ -345,6 +344,7 @@ bool StateMachine::chargingCheck(AccumulatorData_t *bmsdata)
     {
         if (chargeCutoffTime.faultTimer.isTimerExpired())
         {
+			chargeTimeout.startTimer(CHARGE_TIMEOUT);
             return false;
         }
         if (!(bmsdata->max_voltage.val >= (MAX_CHARGE_VOLT * 10000)))
