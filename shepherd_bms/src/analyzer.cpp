@@ -303,15 +303,23 @@ void Analyzer::disableTherms()
 
 void Analyzer::calcStateOfCharge()
 {
-    int index = (((float(bmsdata->min_ocv.val)/10000) - MIN_VOLT) / .1);
+     /* Spltting the delta voltage into 18 increments */
+    const uint16_t increments = ((uint16_t)(4.2*10000 - 2.5*10000) / 18);
 
-    // .1 = 1.8V range / 18 datapoints on curve
-    if (index >= 18)
-        bmsdata->soc = 100;
-    else
+    /* Retrieving a index of 0-18 */
+    uint8_t index = ((bmsdata->min_voltage.val) - 2.5*10000) / increments;
+
+    bmsdata->soc = STATE_OF_CHARGE_CURVE[index];
+
+    if (bmsdata->soc != 100)
     {
-        float distance_from_higher = (float(bmsdata->min_ocv.val)/10000) - ((index / 10) + MIN_VOLT);
-        bmsdata->soc = ((distance_from_higher*STATE_OF_CHARGE_CURVE[index+1]) + ((1-distance_from_higher)*STATE_OF_CHARGE_CURVE[index]));
+        float interpolation = (float)(STATE_OF_CHARGE_CURVE[index+1] - STATE_OF_CHARGE_CURVE[index]) / increments;
+        bmsdata->soc += (uint8_t)(interpolation * (((bmsdata->min_voltage.val) - (int32_t)(2.5 * 10000)) % increments));
+    }
+
+    if (bmsdata->soc < 0)
+    {
+        bmsdata->soc = 0;
     }
 }
 
