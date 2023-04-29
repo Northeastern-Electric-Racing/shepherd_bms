@@ -69,6 +69,7 @@ void StateMachine::handleReady(AccumulatorData_t *bmsdata)
 
 void StateMachine::initCharging()
 {
+	chargeTimeout.cancelTimer();
     return;
 }
 
