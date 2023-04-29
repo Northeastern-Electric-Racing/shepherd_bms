@@ -180,7 +180,7 @@ void StateMachine::handleState(AccumulatorData_t *bmsdata)
 
     (this->*handlerLUT[current_state])(bmsdata);
 
-	if (mpu_state != 2)
+	if (mpu_state != 2 || bmsdata->max_temp.val > MAX_CELL_TEMP)
 		compute.setFanSpeed(analyzer.calcFanPWM());
 	else
 		compute.setFanSpeed(analyzer.calcFanPWM() * (mpu_fan_pwm / 100.0));
