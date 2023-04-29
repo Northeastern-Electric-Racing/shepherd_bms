@@ -343,6 +343,30 @@ void ComputeInterface::sendCellTemp(CriticalCellValue_t max_cell_temp, CriticalC
 
     sendMessageCAN1(0x08, 8, msg);
 }
+
+void ComputeInterface::sendSegmentTemps(int8_t segment_temps[NUM_SEGMENTS])
+{
+    union
+    {
+        uint8_t msg[4] = {0, 0, 0, 0};
+
+        struct
+        {
+            int8_t segment1_average_temp;
+            int8_t segment2_average_temp;
+            int8_t segment3_average_temp;
+            int8_t segment4_average_temp;
+        } cfg;
+    } segmentTempsMsg;
+
+    segmentTempsMsg.cfg.segment1_average_temp = segment_temps[0];
+    segmentTempsMsg.cfg.segment2_average_temp = segment_temps[1];
+    segmentTempsMsg.cfg.segment3_average_temp = segment_temps[2];
+    segmentTempsMsg.cfg.segment4_average_temp = segment_temps[3];
+
+    sendMessageCAN1(0x09, 4, segmentTempsMsg.msg);
+}
+
 uint8_t ComputeInterface::calcChargerLEDState(AccumulatorData_t *bms_data)
 {
   enum LED_state

@@ -186,15 +186,14 @@ void StateMachine::handleState(AccumulatorData_t *bmsdata)
 	//send relevant CAN msgs
 	if (canMsgTimer.isTimerExpired())
 	{
-		compute.sendMCMsg(bmsdata->charge_limit, bmsdata->boost_setting);
 		compute.sendAccStatusMessage(analyzer.bmsdata->pack_voltage, analyzer.bmsdata->pack_current, 0, analyzer.bmsdata->soc, 0);
 		compute.sendCurrentsStatus(analyzer.bmsdata->discharge_limit, analyzer.bmsdata->charge_limit, analyzer.bmsdata->pack_current);
-		compute.sendBMSStatusMessage(current_state, bmsdata->fault_code, bmsdata->avg_temp, static_cast<int8_t>(0), segment.isBalancing());
+		compute.sendBMSStatusMessage(current_state, bmsdata->fault_code, bmsdata->avg_temp, 0);
 		compute.sendCellTemp(analyzer.bmsdata->max_temp, analyzer.bmsdata->min_temp, analyzer.bmsdata->avg_temp);
 		compute.sendCellDataMessage(analyzer.bmsdata->max_voltage, analyzer.bmsdata->min_voltage, analyzer.bmsdata->avg_voltage);
+		compute.sendSegmentTemps(analyzer.bmsdata->segment_average_temps);
 		canMsgTimer.startTimer(CAN_MESSAGE_WAIT);
 	}
-
 }
 
 void StateMachine::requestTransition(BMSState_t next_state)

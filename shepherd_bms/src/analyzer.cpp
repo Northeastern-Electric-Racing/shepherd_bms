@@ -82,6 +82,11 @@ void Analyzer::calcPackTemps()
             }
 
             total_temp += bmsdata->chip_data[c].thermistor_value[therm];
+            total_seg_temp += bmsdata->chip_data[c].thermistor_value[therm];
+        }
+        if (c % 2 == 0) {
+            bmsdata->segment_average_temps[c/2] = total_seg_temp / 22;
+            total_seg_temp = 0;
         }
     }
 
