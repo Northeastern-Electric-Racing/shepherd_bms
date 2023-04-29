@@ -31,7 +31,7 @@
 // Algorithm settings
 #define CHARGE_TIMEOUT      300000 // 5 minutes, may need adjustment
 #define VOLT_SAG_MARGIN     0.45 // Volts above the minimum cell voltage we would like to aim for
-#define OCV_CURR_THRESH     3.5
+#define OCV_CURR_THRESH     1.5
 
 #define OCV_AVG             3
 
