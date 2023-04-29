@@ -129,7 +129,7 @@ class ComputeInterface
       *
       * @return Returns a fault if we are not able to send
       */
-      void sendBMSStatusMessage(int bms_state, uint32_t fault_status, int8_t avg_temp, int8_t internal_temp);
+      void sendBMSStatusMessage(int bms_state, uint32_t fault_status, int8_t avg_temp, int8_t internal_temp, bool balance);
 
       /**
       * @brief sends shutdown control message

@@ -167,7 +167,7 @@ void ComputeInterface::sendAccStatusMessage(uint16_t voltage, int16_t current, u
     sendMessageCAN1(CANMSG_BMSACCSTATUS, 8, accStatusMsg.msg);
 }
 
-void ComputeInterface::sendBMSStatusMessage(int bms_state, uint32_t fault_status, int8_t avg_temp, int8_t internal_temp)
+void ComputeInterface::sendBMSStatusMessage(int bms_state, uint32_t fault_status, int8_t avg_temp, int8_t internal_temp, bool balance)
 {
     union
     {
@@ -179,6 +179,7 @@ void ComputeInterface::sendBMSStatusMessage(int bms_state, uint32_t fault_status
             uint32_t fault; 
             int8_t temp_avg;
             uint8_t temp_internal;
+            uint8_t balance;
         } cfg;
     } bmsStatusMsg;
 
@@ -186,6 +187,7 @@ void ComputeInterface::sendBMSStatusMessage(int bms_state, uint32_t fault_status
     bmsStatusMsg.cfg.state = static_cast<uint8_t>(bms_state);
     bmsStatusMsg.cfg.fault = fault_status;
     bmsStatusMsg.cfg.temp_internal = static_cast<uint8_t>(internal_temp);
+    bmsStatusMsg.cfg.balance = static_cast<uint8_t>(balance);
 
     uint8_t msg[8] = {
                          bmsStatusMsg.cfg.state, 
@@ -193,7 +195,8 @@ void ComputeInterface::sendBMSStatusMessage(int bms_state, uint32_t fault_status
                         (fault_status & 0x00ff0000), 
                         (fault_status & 0x0000ff00), 
                         (fault_status & 0x000000ff), 
-                         bmsStatusMsg.cfg.temp_avg
+                         bmsStatusMsg.cfg.temp_avg,
+                         bmsStatusMsg.cfg.balance
                      };
     
 
