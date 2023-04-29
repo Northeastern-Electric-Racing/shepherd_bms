@@ -81,6 +81,7 @@ struct AccumulatorData_t
 
     int16_t pack_current;                        // this value is multiplied by 10 to account for decimal precision
     uint16_t pack_voltage;
+     uint16_t pack_ocv;
     uint16_t pack_res;
 
     uint16_t discharge_limit;
@@ -107,6 +108,11 @@ struct AccumulatorData_t
     CriticalCellValue_t min_voltage;
     uint16_t avg_voltage;
     uint16_t delt_voltage;
+
+    CriticalCellValue_t max_ocv;
+    CriticalCellValue_t min_ocv;
+    uint16_t avg_ocv;
+    uint16_t delt_ocv;
 
     uint16_t boost_setting;
 

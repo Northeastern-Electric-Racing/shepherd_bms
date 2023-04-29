@@ -91,8 +91,11 @@ void Analyzer::calcPackTemps()
 
 void Analyzer::calcPackVoltageStats() {
     bmsdata->max_voltage = {MIN_VOLT_MEAS, 0, 0};
+    bmsdata->max_ocv = {MIN_VOLT_MEAS, 0, 0};
     bmsdata->min_voltage = {MAX_VOLT_MEAS, 0, 0};
+    bmsdata->min_ocv = {MAX_VOLT_MEAS, 0, 0};
     uint32_t total_volt = 0;
+    uint32_t total_ocv = 0;
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
         for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
@@ -103,13 +106,24 @@ void Analyzer::calcPackVoltageStats() {
                 bmsdata->max_voltage = {bmsdata->chip_data[c].voltage_reading[cell], c, cell};
             }
 
+            if (bmsdata->chip_data[c].open_cell_voltage[cell] > bmsdata->max_ocv.val)
+            {
+                bmsdata->max_ocv = {bmsdata->chip_data[c].open_cell_voltage[cell], c, cell};
+            }
+
             //finds out the minimum cell voltage and location
             if (bmsdata->chip_data[c].voltage_reading[cell] < bmsdata->min_voltage.val)
             {
                 bmsdata->min_voltage = {bmsdata->chip_data[c].voltage_reading[cell], c, cell};
             }
 
+            if (bmsdata->chip_data[c].open_cell_voltage[cell] < bmsdata->min_ocv.val)
+            {
+                bmsdata->min_ocv = {bmsdata->chip_data[c].open_cell_voltage[cell], c, cell};
+            }
+
             total_volt += bmsdata->chip_data[c].voltage_reading[cell];
+            total_ocv += bmsdata->chip_data[c].open_cell_voltage[cell];
         }
     }
 
@@ -117,6 +131,10 @@ void Analyzer::calcPackVoltageStats() {
     bmsdata->avg_voltage = total_volt / (NUM_CELLS_PER_CHIP * NUM_CHIPS);
     bmsdata->pack_voltage = total_volt / 1000; // convert to voltage * 10
     bmsdata->delt_voltage = bmsdata->max_voltage.val - bmsdata->min_voltage.val;
+
+    bmsdata->avg_ocv = total_ocv / (NUM_CELLS_PER_CHIP * NUM_CHIPS);
+    bmsdata->pack_ocv = total_ocv / 1000; // convert to voltage * 10
+    bmsdata->delt_ocv = bmsdata->max_ocv.val - bmsdata->min_ocv.val;
 }
 
 void Analyzer::calcCellResistances()
@@ -226,11 +244,11 @@ void Analyzer::calcOpenCellVoltage()
 
                     if (bmsdata->chip_data[chip].open_cell_voltage[cell] > MAX_VOLT * 10000) 
                     {
-                        bmsdata->chip_data[chip].open_cell_voltage[cell] = MAX_VOLT * 10000;
+                        bmsdata->chip_data[chip].open_cell_voltage[cell] = prevbmsdata->chip_data[chip].open_cell_voltage[cell];
                     } 
                     else if (bmsdata->chip_data[chip].open_cell_voltage[cell] < MIN_VOLT * 10000) 
                     {
-                        bmsdata->chip_data[chip].open_cell_voltage[cell] = MIN_VOLT * 10000;
+                        bmsdata->chip_data[chip].open_cell_voltage[cell] = prevbmsdata->chip_data[chip].open_cell_voltage[cell];
                     }
                 }
             }
@@ -285,14 +303,14 @@ void Analyzer::disableTherms()
 
 void Analyzer::calcStateOfCharge()
 {
-    int index = (((float(bmsdata->min_voltage.val)/10000) - MIN_VOLT) / .1);
+    int index = (((float(bmsdata->min_ocv.val)/10000) - MIN_VOLT) / .1);
 
     // .1 = 1.8V range / 18 datapoints on curve
     if (index >= 18)
         bmsdata->soc = 100;
     else
     {
-        float distance_from_higher = (float(bmsdata->min_voltage.val)/10000) - ((index / 10) + 2.9);
+        float distance_from_higher = (float(bmsdata->min_ocv.val)/10000) - ((index / 10) + MIN_VOLT);
         bmsdata->soc = ((distance_from_higher*STATE_OF_CHARGE_CURVE[index+1]) + ((1-distance_from_higher)*STATE_OF_CHARGE_CURVE[index]));
     }
 }
