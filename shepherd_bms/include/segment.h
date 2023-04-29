@@ -136,6 +136,8 @@ class SegmentInterface
 
         void varianceThermCheck();
 
+        void discardNeutrals();
+
 };
 
 extern SegmentInterface segment;
