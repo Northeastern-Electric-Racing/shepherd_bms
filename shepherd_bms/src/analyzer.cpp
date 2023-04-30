@@ -166,6 +166,20 @@ void Analyzer::calcCellResistances()
 
 void Analyzer::calcDCL()
 {
+
+    typedef enum
+	{
+		BEFORE_TIMER_START,
+		DURING_DCL_EVAL
+	}DCL_state;
+
+    struct DCLeval
+    {
+	    DCL_state state = BEFORE_TIMER_START;
+	    Timer timer;
+    };
+
+    DCLeval dclEval;
     int16_t current_limit = 0x7FFF;
 
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
@@ -185,6 +199,38 @@ void Analyzer::calcDCL()
     if (current_limit > MAX_CELL_CURR)
     {
         bmsdata->discharge_limit = MAX_CELL_CURR;
+    }
+
+    else if (dclEval.state == BEFORE_TIMER_START && current_limit < 5) // 5 is arbitrary @ matt adjust as needed
+    {
+        if (prevbmsdata == nullptr)
+        {
+            bmsdata->discharge_limit = current_limit;
+            return;
+        }
+
+        bmsdata->discharge_limit = prevbmsdata->discharge_limit;
+        dclEval.state = DURING_DCL_EVAL;
+        dclEval.timer.startTimer(1000); // 1 second is arbitrary @ matt adjust as needed
+    }
+
+    else if (dclEval.state == DURING_DCL_EVAL)
+    {
+        if (dclEval.timer.isTimerExpired())
+        {
+            bmsdata->discharge_limit = current_limit;
+        }
+        if (current_limit > 5)
+        {
+            bmsdata->discharge_limit = current_limit;
+            dclEval.state = BEFORE_TIMER_START;
+            dclEval.timer.cancelTimer();
+        }
+
+        else 
+        {
+            bmsdata->discharge_limit = prevbmsdata->discharge_limit;
+        }
     }
     else
     {
