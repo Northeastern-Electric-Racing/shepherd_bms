@@ -24,7 +24,7 @@ StateMachine stateMachine;
 const void printBMSStats(AccumulatorData_t *accData)
 {
 	static Timer debug_statTimer;
-	static const uint16_t PRINT_STAT_WAIT = 500; //ms
+	static const uint16_t PRINT_STAT_WAIT = 250; //ms
 
 	if(!debug_statTimer.isTimerExpired()) return;
 
