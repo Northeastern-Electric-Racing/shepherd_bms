@@ -211,7 +211,7 @@ void Analyzer::calcDCL()
 
         bmsdata->discharge_limit = prevbmsdata->discharge_limit;
         dclEval.state = DURING_DCL_EVAL;
-        dclEval.timer.startTimer(1000); // 1 second is arbitrary @ matt adjust as needed
+        dclEval.timer.startTimer(250); // 1 second is arbitrary @ matt adjust as needed
     }
 
     else if (dclEval.state == DURING_DCL_EVAL)
