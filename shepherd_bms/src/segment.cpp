@@ -209,7 +209,12 @@ FaultStatus_t SegmentInterface::pullVoltages()
     {
         for (uint8_t j = 0; j < NUM_CELLS_PER_CHIP; j++)
         {
-            segment_data[i].voltage_reading[j] = segment_voltages[i][j];
+            // THIS SHOULD BE REMOVED IF NOISE ISSUES ARE RESOLVED
+            if (segment_voltages[i][j] < 22000 || segment_voltages[i][j] > 48000) {
+                segment_data[i].voltage_reading[j] = previous_data[i].voltage_reading[j];
+            } else {
+                segment_data[i].voltage_reading[j] = segment_voltages[i][j];
+            }
         }
     }
 
