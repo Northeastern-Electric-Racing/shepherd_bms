@@ -91,7 +91,7 @@ uint8_t ADAX[2]; //!< GPIO conversion command.
 void LTC6804_initialize()
 {
   NERduino.enableSPI1();
-  set_adc(MD_NORMAL,DCP_DISABLED,CELL_CH_ALL,AUX_CH_ALL);
+  set_adc(MD_FILTERED,DCP_DISABLED,CELL_CH_ALL,AUX_CH_ALL);
 }
 
 /*!*******************************************************************************************************************
@@ -1144,6 +1144,7 @@ int8_t read_68( uint8_t total_ic, // Number of ICs in the system
 
 		if (received_pec != data_pec)
 		{
+      Serial.println("PEC FAULT");
 		  pec_error = -1;
 		}
 	}
