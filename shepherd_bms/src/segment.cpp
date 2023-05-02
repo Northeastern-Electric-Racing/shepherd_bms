@@ -209,10 +209,22 @@ FaultStatus_t SegmentInterface::pullVoltages()
     {
         for (uint8_t j = 0; j < NUM_CELLS_PER_CHIP; j++)
         {
-            // THIS SHOULD BE REMOVED IF NOISE ISSUES ARE RESOLVED
-            if (segment_voltages[i][j] < 22000 || segment_voltages[i][j] > 48000) {
-                segment_data[i].voltage_reading[j] = previous_data[i].voltage_reading[j];
-            } else {
+            if (abs(previous_data[i].voltage_reading[j] - segment_data[i].voltage_reading[j]) > MAX_VOLT_DELTA)
+            {
+                if (segment_data[i].bad_volt_diff_count[j] > MAX_VOLT_DELTA_COUNT)
+                {
+                    segment_data[i].bad_volt_diff_count[j] = 0;
+                    segment_data[i].voltage_reading[j] = segment_voltages[i][j];    
+                }
+                else
+                {
+                    segment_data[i].voltage_reading[j] = previous_data[i].voltage_reading[j];
+                    segment_data[i].bad_volt_diff_count[j]++;
+                }
+            }
+            else 
+            {
+                segment_data[i].bad_volt_diff_count[j] = 0;
                 segment_data[i].voltage_reading[j] = segment_voltages[i][j];
             }
         }
