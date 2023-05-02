@@ -21,6 +21,8 @@ struct ChipData_t
     int8_t cell_temp[NUM_CELLS_PER_CHIP];
     float cell_resistance[NUM_CELLS_PER_CHIP];
     uint16_t open_cell_voltage[NUM_CELLS_PER_CHIP];
+
+    uint8_t bad_volt_diff_count[NUM_CELLS_PER_CHIP];
 };
 
 /**
