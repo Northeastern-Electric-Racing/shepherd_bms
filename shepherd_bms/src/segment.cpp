@@ -209,17 +209,15 @@ FaultStatus_t SegmentInterface::pullVoltages()
     {
         for (uint8_t j = 0; j < NUM_CELLS_PER_CHIP; j++)
         {
-            if (abs(previous_data[i].voltage_reading[j] - segment_data[i].voltage_reading[j]) > MAX_VOLT_DELTA)
+            if (abs(segment_voltages[i][j] - previous_data[i].voltage_reading[j]) > MAX_VOLT_DELTA)
             {
+                segment_data[i].voltage_reading[j] = previous_data[i].voltage_reading[j];
+                segment_data[i].bad_volt_diff_count[j]++;
+
                 if (segment_data[i].bad_volt_diff_count[j] > MAX_VOLT_DELTA_COUNT)
                 {
                     segment_data[i].bad_volt_diff_count[j] = 0;
                     segment_data[i].voltage_reading[j] = segment_voltages[i][j];    
-                }
-                else
-                {
-                    segment_data[i].voltage_reading[j] = previous_data[i].voltage_reading[j];
-                    segment_data[i].bad_volt_diff_count[j]++;
                 }
             }
             else 
