@@ -10,8 +10,8 @@
 #define VOLTAGE_WAIT_TIME   100 //ms
 #define THERM_AVG           15 // Number of values to average
 
-#define MAX_VOLT_DELTA      5000
-#define MAX_VOLT_DELTA_COUNT    250
+#define MAX_VOLT_DELTA      2500
+#define MAX_VOLT_DELTA_COUNT    10
 
 /**
  * @brief This class serves as the interface for all of the segment boards
