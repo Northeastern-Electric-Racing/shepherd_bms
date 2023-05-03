@@ -46,6 +46,8 @@
 #define HIGH_TEMP_TIME      60000
 #define CURR_ERR_MARG       50       // in A * 10
 
+#define DCDC_CURRENT_DRAW   2 // in A, this is generous
+
 #define CAN_MESSAGE_WAIT    10
 
 #endif

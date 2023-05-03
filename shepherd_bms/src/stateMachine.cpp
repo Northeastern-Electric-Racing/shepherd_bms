@@ -213,10 +213,12 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
 	uint32_t faultStatus = 0;
 
 	// Over current fault for discharge
-	if (overCurr.faultEvalState == BEFORE_TIMER_START && (accData->pack_current) > ((accData->discharge_limit)*10))
+	float dcl_mult = (accData->pack_current > 75) ? 1.06 : 1.0; // Current sensor precision is within like 6% when in upper range
+
+	if (overCurr.faultEvalState == BEFORE_TIMER_START && (accData->pack_current) > ((accData->discharge_limit)*10*dcl_mult))
     {
-        overCurr.faultTimer.startTimer(OVER_CURR_TIME);
-        overCurr.faultEvalState = DURING_FAULT_EVAL;
+		overCurr.faultTimer.startTimer(OVER_CURR_TIME);
+		overCurr.faultEvalState = DURING_FAULT_EVAL;
     }
     else if (overCurr.faultEvalState == DURING_FAULT_EVAL)
     {
@@ -224,7 +226,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
         {
             faultStatus |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
         }
-        if (!((accData->pack_current) > ((accData->discharge_limit)*10)))
+        if (!((accData->pack_current) > ((accData->discharge_limit)*10*dcl_mult)))
         {
             overCurr.faultTimer.cancelTimer();
             overCurr.faultEvalState = BEFORE_TIMER_START;

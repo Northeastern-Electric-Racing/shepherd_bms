@@ -236,6 +236,9 @@ void Analyzer::calcDCL()
     {
         bmsdata->discharge_limit = current_limit;
     }
+
+    if (bmsdata->discharge_limit > DCDC_CURRENT_DRAW)
+        bmsdata->discharge_limit -= DCDC_CURRENT_DRAW;
 }
 
 void Analyzer::calcContDCL()
