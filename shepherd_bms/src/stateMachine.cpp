@@ -8,11 +8,13 @@ faultEval lowCell;
 faultEval highTemp;
 
 faultEval prefaultOverCurr;
+faultEval prefaultLowCell;
 
 Timer chargeTimeout;
 faultEval chargeCutoffTime;
 
-Timer prefaultCANDelay;
+Timer prefaultCANDelay1; // low cell
+Timer prefaultCANDelay2; // dcl
 
 StateMachine::StateMachine()
 {
@@ -216,6 +218,31 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
 	// FAULT CHECK (Check for fuckies)
 	uint32_t faultStatus = 0;
 
+	//prefault for Low Cell Voltage
+
+	if (prefaultLowCell.faultEvalState == BEFORE_TIMER_START && accData->min_voltage.val < MIN_VOLT * 10000)
+    {
+        prefaultLowCell.faultTimer.startTimer(PRE_UNDER_VOLT_TIME);
+        prefaultLowCell.faultEvalState = DURING_FAULT_EVAL;
+    }
+    else if (prefaultLowCell.faultEvalState == DURING_FAULT_EVAL)
+    {
+        if (prefaultLowCell.faultTimer.isTimerExpired())
+        {
+            if (prefaultCANDelay1.isTimerExpired())
+			{
+            	compute.sendDclPreFault(true);
+				prefaultCANDelay1.startTimer(CAN_MESSAGE_WAIT);
+			}
+        }
+        if (!(accData->min_voltage.val < MIN_VOLT * 10000))
+        {
+            prefaultLowCell.faultTimer.cancelTimer();
+            prefaultLowCell.faultEvalState = BEFORE_TIMER_START;
+        }
+    }
+
+
 	//prefault for DCL
 
 	if (prefaultOverCurr.faultEvalState == BEFORE_TIMER_START && (accData->pack_current) > ((accData->discharge_limit + DCDC_CURRENT_DRAW)*10*1.04)) // *104% to account for current sensor +/-A
@@ -227,10 +254,10 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
     {
         if (prefaultOverCurr.faultTimer.isTimerExpired())
         {
-			if (prefaultCANDelay.isTimerExpired())
+			if (prefaultCANDelay2.isTimerExpired())
 			{
             	compute.sendDclPreFault(true);
-				prefaultCANDelay.startTimer(CAN_MESSAGE_WAIT);
+				prefaultCANDelay2.startTimer(CAN_MESSAGE_WAIT);
 			}
         }
         if (!((accData->pack_current) > ((accData->discharge_limit + DCDC_CURRENT_DRAW)*10*1.04)))
