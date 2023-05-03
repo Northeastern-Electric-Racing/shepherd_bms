@@ -366,7 +366,7 @@ void Analyzer::calcStateOfCharge()
     if (bmsdata->soc != 100)
     {
         float interpolation = (float)(STATE_OF_CHARGE_CURVE[index+1] - STATE_OF_CHARGE_CURVE[index]) / increments;
-        bmsdata->soc += (uint8_t)(interpolation * (((bmsdata->min_ocv.val) - (int32_t)(2.5 * 10000)) % increments));
+        bmsdata->soc += (uint8_t)(interpolation * (((bmsdata->min_ocv.val) - (int32_t)(MIN_VOLT * 10000)) % increments));
     }
 
     if (bmsdata->soc < 0)
