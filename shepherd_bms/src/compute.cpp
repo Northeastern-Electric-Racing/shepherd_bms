@@ -410,3 +410,9 @@ uint8_t ComputeInterface::calcChargerLEDState(AccumulatorData_t *bms_data)
   }
 
 }
+
+void ComputeInterface::sendDclPreFault(bool prefault)
+{
+    uint8_t msg[1] = {prefault};
+    sendMessageCAN1(0x500, 1, msg);
+}

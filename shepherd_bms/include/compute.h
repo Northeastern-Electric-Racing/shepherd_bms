@@ -190,6 +190,8 @@ class ComputeInterface
        * @return Returns a fault if we are not able to send
        */
       void sendSegmentTemps(int8_t segmentTemps[NUM_SEGMENTS]);
+
+      void sendDclPreFault(bool prefault);
 };
 
 extern ComputeInterface compute;
