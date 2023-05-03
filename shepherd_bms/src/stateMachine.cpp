@@ -97,7 +97,6 @@ void StateMachine::handleCharging(AccumulatorData_t *bmsdata)
 		// Check if we should balance
 		if (balancingCheck(analyzer.bmsdata))
 		{
-			segment.enableBalancing(true);
 			balanceCells(analyzer.bmsdata);
 		}
 		else
