@@ -402,7 +402,7 @@ uint8_t ComputeInterface::calcChargerLEDState(AccumulatorData_t *bms_data)
   }
   else if((bms_data->soc >= 95) && (bms_data->pack_current <= .5 * 10))
   {
-    return GREEN_BLINKING;
+    return GREEN_CONSTANT;
   }
   else
   {
