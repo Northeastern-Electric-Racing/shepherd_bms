@@ -16,6 +16,8 @@ faultEval chargeCutoffTime;
 Timer prefaultCANDelay1; // low cell
 Timer prefaultCANDelay2; // dcl
 
+uint8_t fault_index; //eeprom counter
+
 StateMachine::StateMachine()
 {
     current_state = BOOT_STATE;
@@ -267,7 +269,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
         }
     }
 
-
+	// Overcurrent fault for discharge
 	if (overCurr.faultEvalState == BEFORE_TIMER_START && (accData->pack_current) > ((accData->discharge_limit + DCDC_CURRENT_DRAW)*10*1.04)) // *104% to account for current sensor +/-A
     {
 		overCurr.faultTimer.startTimer(OVER_CURR_TIME);
@@ -297,6 +299,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
         if (overChgCurr.faultTimer.isTimerExpired())
         {
             faultStatus |= CHARGE_LIMIT_ENFORCEMENT_FAULT;
+
         }
         if (!((accData->pack_current) < 0 && abs((accData->pack_current)) > ((accData->charge_limit)*10)))
         {
@@ -482,6 +485,7 @@ void balanceCells(AccumulatorData_t *bms_data)
 				balanceConfig[chip][cell] = false;
         }
     }
+	
 	#ifdef DEBUG_CHARGING
 	Serial.println("Cell Balancing:");
 	for(uint8_t c = 0; c < NUM_CHIPS; c++)
@@ -496,4 +500,19 @@ void balanceCells(AccumulatorData_t *bms_data)
 	#endif
 
 	segment.configureBalancing(balanceConfig);
+}
+
+void eepromLogFault(AccumulatorData_t *bmsdata, BMSFault_t fault)
+{
+	fault_index = EEPROM.read(EEPROM_FAULT_START);
+			
+	EEPROM.put(fault_index, int(fault));
+	EEPROM.put((fault_index + 4), bmsdata->pack_current);
+	EEPROM.put((fault_index + 6), bmsdata->discharge_limit);
+	EEPROM.write((fault_index + 8), int8_t(bmsdata->max_temp.val));
+
+	// increment counter 
+	if (fault_index >= 37) EEPROM.write(EEPROM_FAULT_START, 1);
+	else EEPROM.write(EEPROM_FAULT_START, (fault_index + 9));
+	
 }

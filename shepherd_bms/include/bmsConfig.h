@@ -52,4 +52,8 @@
 
 #define CAN_MESSAGE_WAIT    10
 
+// eemprom addresses
+#define EEPROM_FAULT_START 0x00
+#define EEPROM_FAULT_END   0x0A
+
 #endif
