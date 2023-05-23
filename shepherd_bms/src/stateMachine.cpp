@@ -280,6 +280,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
         if (overCurr.faultTimer.isTimerExpired())
         {
             faultStatus |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
+			eepromLogFault(accData, DISCHARGE_LIMIT_ENFORCEMENT_FAULT);
         }
         if (!((accData->pack_current) > ((accData->discharge_limit + DCDC_CURRENT_DRAW)*10*1.04)))
         {
@@ -299,6 +300,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
         if (overChgCurr.faultTimer.isTimerExpired())
         {
             faultStatus |= CHARGE_LIMIT_ENFORCEMENT_FAULT;
+			eepromLogFault(accData, CHARGE_LIMIT_ENFORCEMENT_FAULT);
 
         }
         if (!((accData->pack_current) < 0 && abs((accData->pack_current)) > ((accData->charge_limit)*10)))
@@ -319,6 +321,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
         if (underVolt.faultTimer.isTimerExpired())
         {
             faultStatus |= CELL_VOLTAGE_TOO_LOW;
+			eepromLogFault(accData, CELL_VOLTAGE_TOO_LOW);
         }
         if (!(accData->min_voltage.val < MIN_VOLT * 10000))
         {
@@ -338,6 +341,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
         if (overVolt.faultTimer.isTimerExpired())
         {
             faultStatus |= CELL_VOLTAGE_TOO_HIGH;
+			eepromLogFault(accData, CELL_VOLTAGE_TOO_HIGH);
         }
         if (!((accData->max_voltage.val > MAX_VOLT * 10000) && digitalRead(CHARGE_DETECT) == HIGH) || (accData->max_voltage.val > MAX_CHARGE_VOLT * 10000))
         {
@@ -357,6 +361,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
         if (highTemp.faultTimer.isTimerExpired())
         {
             faultStatus |= PACK_TOO_HOT;
+			eepromLogFault(accData, PACK_TOO_HOT);
         }
         if (!(accData->max_temp.val > MAX_CELL_TEMP))
         {
@@ -376,6 +381,7 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
         if (lowCell.faultTimer.isTimerExpired())
         {
             faultStatus |= LOW_CELL_VOLTAGE;
+			eepromLogFault(accData, LOW_CELL_VOLTAGE);
         }
         if (!(accData->min_voltage.val < 900))
         {
