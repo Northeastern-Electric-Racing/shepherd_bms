@@ -54,6 +54,6 @@
 
 // eemprom addresses
 #define EEPROM_FAULT_START 0x00
-#define EEPROM_FAULT_END   0x0A
+#define EEPROM_FAULT_END   0x2E
 
 #endif
