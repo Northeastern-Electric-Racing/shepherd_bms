@@ -508,7 +508,7 @@ void balanceCells(AccumulatorData_t *bms_data)
 	segment.configureBalancing(balanceConfig);
 }
 
-void eepromLogFault(AccumulatorData_t *bmsdata, BMSFault_t fault)
+void StateMachine::eepromLogFault(AccumulatorData_t *bmsdata, BMSFault_t fault)
 {
 	fault_index = EEPROM.read(EEPROM_FAULT_START);
 			

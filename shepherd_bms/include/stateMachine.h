@@ -129,6 +129,15 @@ class StateMachine
         */
         uint32_t faultCheck(AccumulatorData_t *accData);
 
+        /**
+         * @brief Logs faults in EEPROM
+         * 
+         * @param bmsdata
+         * @param fault
+         * 
+         */
+        void eepromLogFault(AccumulatorData_t *bmsdata, BMSFault_t fault);
+
     public:
         StateMachine();
 
