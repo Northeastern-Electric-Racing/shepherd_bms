@@ -8,6 +8,8 @@
 //We want to make sure we aren't doing useless analysis on the same set of data since we are backfilling segment data
 #define ANALYSIS_INTERVAL VOLTAGE_WAIT_TIME
 
+
+
 //#define MAX_SIZE_OF_HIST_QUEUE  300000U //bytes
 
 /**
@@ -19,6 +21,7 @@ class Analyzer
     private:
 
         Timer analysisTimer;
+        Timer ocvTimer;
 
         bool is_first_reading_ = true;
 
@@ -76,9 +79,9 @@ class Analyzer
          * @note values are unitless percentages that represent % charge
          *
          */
-        const uint8_t STATE_OF_CHARGE_CURVE[13] =
+        const uint8_t STATE_OF_CHARGE_CURVE[18] =
         {
-            0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 100
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 15, 24, 56, 74, 85, 95, 98, 100
         };
 
         /**
@@ -151,6 +154,12 @@ class Analyzer
         void disableTherms();
 
         void calcStateOfCharge();
+
+        void highCurrThermCheck();
+
+        void diffCurrThermCheck();
+
+
 
     public:
         Analyzer();

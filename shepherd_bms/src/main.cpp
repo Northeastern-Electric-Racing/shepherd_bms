@@ -28,10 +28,10 @@ const void printBMSStats(AccumulatorData_t *accData)
 
 	if(!debug_statTimer.isTimerExpired()) return;
 
-	Serial.print("Prev Fault: ");
-	Serial.println(stateMachine.previousFault);
+	Serial.print("Prev Fault: 0x");
+	Serial.println(stateMachine.previousFault, HEX);
 	Serial.print("Current: ");
-	Serial.println((accData->pack_current)/10);
+	Serial.println((float)(accData->pack_current) / 10.0);
 	Serial.print("Min, Max, Avg Temps: ");
 	Serial.print(accData->min_temp.val);
 	Serial.print(",  ");
@@ -65,16 +65,16 @@ const void printBMSStats(AccumulatorData_t *accData)
 	else if (stateMachine.current_state == 2) Serial.println("CHARGING");
 	else if (stateMachine.current_state == 1) Serial.println("FAULTED");
 
-	/*Serial.println("Raw Cell Voltage:");
+	Serial.println("Raw Cell Voltage:");
 	for(uint8_t c = 0; c < NUM_CHIPS; c++)
 	{
 		for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
 		{
-			Serial.print(accData->chipData[c].voltageReading[cell]);
+			Serial.print(accData->chip_data[c].voltage_reading[cell]);
 			Serial.print("\t");
 		}
 		Serial.println();
-	}*/
+	}
 
 	Serial.println("Open Cell Voltage:");
 	for(uint8_t c = 0; c < NUM_CHIPS; c++)
@@ -150,5 +150,5 @@ void loop()
 	#endif
 
 	wdt.feed();
-	delay(10); // not sure if we need this in, it was in before
+	//delay(10); // not sure if we need this in, it was in before
 }

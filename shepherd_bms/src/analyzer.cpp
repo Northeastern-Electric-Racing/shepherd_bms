@@ -16,6 +16,12 @@ void Analyzer::push(AccumulatorData_t *data)
 
     disableTherms();
 
+    highCurrThermCheck(); // = prev if curr > 50 
+    //diffCurrThermCheck(); // = prev if curr - prevcurr > 10 
+    //varianceThermCheck();// = prev if val > 5 deg difference     
+    //standardDevThermCheck(); // = prev if std dev > 3
+    //averagingThermCheck(); // matt shitty incrementing
+
     calcCellTemps();
 	calcPackTemps();
 	calcPackVoltageStats();
@@ -60,7 +66,7 @@ void Analyzer::calcPackTemps()
     bmsdata->min_temp = {MAX_TEMP, 0, 0};
     int total_temp = 0;
     int total_seg_temp = 0;
-    for(uint8_t c = 1; c < NUM_CHIPS; c++)
+    for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
         for(uint8_t therm = 17; therm < 28; therm++)
         {
@@ -91,11 +97,14 @@ void Analyzer::calcPackTemps()
 
 void Analyzer::calcPackVoltageStats() {
     bmsdata->max_voltage = {MIN_VOLT_MEAS, 0, 0};
+    bmsdata->max_ocv = {MIN_VOLT_MEAS, 0, 0};
     bmsdata->min_voltage = {MAX_VOLT_MEAS, 0, 0};
+    bmsdata->min_ocv = {MAX_VOLT_MEAS, 0, 0};
     uint32_t total_volt = 0;
+    uint32_t total_ocv = 0;
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
     {
-        for(uint8_t cell = 0; cell < 9; cell++)
+        for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
         {
             // fings out the maximum cell voltage and location
             if (bmsdata->chip_data[c].voltage_reading[cell] > bmsdata->max_voltage.val)
@@ -103,13 +112,24 @@ void Analyzer::calcPackVoltageStats() {
                 bmsdata->max_voltage = {bmsdata->chip_data[c].voltage_reading[cell], c, cell};
             }
 
+            if (bmsdata->chip_data[c].open_cell_voltage[cell] > bmsdata->max_ocv.val)
+            {
+                bmsdata->max_ocv = {bmsdata->chip_data[c].open_cell_voltage[cell], c, cell};
+            }
+
             //finds out the minimum cell voltage and location
-            else if (bmsdata->chip_data[c].voltage_reading[cell] < bmsdata->min_voltage.val)
+            if (bmsdata->chip_data[c].voltage_reading[cell] < bmsdata->min_voltage.val)
             {
                 bmsdata->min_voltage = {bmsdata->chip_data[c].voltage_reading[cell], c, cell};
             }
 
+            if (bmsdata->chip_data[c].open_cell_voltage[cell] < bmsdata->min_ocv.val)
+            {
+                bmsdata->min_ocv = {bmsdata->chip_data[c].open_cell_voltage[cell], c, cell};
+            }
+
             total_volt += bmsdata->chip_data[c].voltage_reading[cell];
+            total_ocv += bmsdata->chip_data[c].open_cell_voltage[cell];
         }
     }
 
@@ -117,6 +137,10 @@ void Analyzer::calcPackVoltageStats() {
     bmsdata->avg_voltage = total_volt / (NUM_CELLS_PER_CHIP * NUM_CHIPS);
     bmsdata->pack_voltage = total_volt / 1000; // convert to voltage * 10
     bmsdata->delt_voltage = bmsdata->max_voltage.val - bmsdata->min_voltage.val;
+
+    bmsdata->avg_ocv = total_ocv / (NUM_CELLS_PER_CHIP * NUM_CHIPS);
+    bmsdata->pack_ocv = total_ocv / 1000; // convert to voltage * 10
+    bmsdata->delt_ocv = bmsdata->max_ocv.val - bmsdata->min_ocv.val;
 }
 
 void Analyzer::calcCellResistances()
@@ -142,6 +166,20 @@ void Analyzer::calcCellResistances()
 
 void Analyzer::calcDCL()
 {
+
+    typedef enum
+	{
+		BEFORE_TIMER_START,
+		DURING_DCL_EVAL
+	}DCL_state;
+
+    struct DCLeval
+    {
+	    DCL_state state = BEFORE_TIMER_START;
+	    Timer timer;
+    };
+
+    DCLeval dclEval;
     int16_t current_limit = 0x7FFF;
 
     for(uint8_t c = 0; c < NUM_CHIPS; c++)
@@ -162,10 +200,45 @@ void Analyzer::calcDCL()
     {
         bmsdata->discharge_limit = MAX_CELL_CURR;
     }
+
+    else if (dclEval.state == BEFORE_TIMER_START && current_limit < 5) // 5 is arbitrary @ matt adjust as needed
+    {
+        if (prevbmsdata == nullptr)
+        {
+            bmsdata->discharge_limit = current_limit;
+            return;
+        }
+
+        bmsdata->discharge_limit = prevbmsdata->discharge_limit;
+        dclEval.state = DURING_DCL_EVAL;
+        dclEval.timer.startTimer(500); // 1 second is arbitrary @ matt adjust as needed
+    }
+
+    else if (dclEval.state == DURING_DCL_EVAL)
+    {
+        if (dclEval.timer.isTimerExpired())
+        {
+            bmsdata->discharge_limit = current_limit;
+        }
+        if (current_limit > 5)
+        {
+            bmsdata->discharge_limit = current_limit;
+            dclEval.state = BEFORE_TIMER_START;
+            dclEval.timer.cancelTimer();
+        }
+
+        else 
+        {
+            bmsdata->discharge_limit = prevbmsdata->discharge_limit;
+        }
+    }
     else
     {
         bmsdata->discharge_limit = current_limit;
     }
+
+    if (bmsdata->discharge_limit > DCDC_CURRENT_DRAW)
+        bmsdata->discharge_limit -= DCDC_CURRENT_DRAW;
 }
 
 void Analyzer::calcContDCL()
@@ -210,28 +283,43 @@ void Analyzer::calcOpenCellVoltage()
                 bmsdata->chip_data[chip].open_cell_voltage[cell] = bmsdata->chip_data[chip].voltage_reading[cell];
             }
         }
+        return;
     }
     // If we are within the current threshold for open voltage measurments
-     else if (bmsdata->pack_current < (OCV_CURR_THRESH * 10) && bmsdata->pack_current > (-OCV_CURR_THRESH * 10))
+    else if (bmsdata->pack_current < (OCV_CURR_THRESH * 10) && bmsdata->pack_current > (-OCV_CURR_THRESH * 10))
     {
-        for (uint8_t chip = 0; chip < NUM_CHIPS; chip++)
-        {
-            for (uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+        if (ocvTimer.isTimerExpired()) {
+            for (uint8_t chip = 0; chip < NUM_CHIPS; chip++)
             {
-                // Sets open cell voltage to a moving average of OCV_AVG values
-                bmsdata->chip_data[chip].open_cell_voltage[cell] = (uint32_t(bmsdata->chip_data[chip].voltage_reading[cell]) + (uint32_t(prevbmsdata->chip_data[chip].open_cell_voltage[cell])  * (OCV_AVG - 1))) / OCV_AVG;
+                for (uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+                {
+                    // Sets open cell voltage to a moving average of OCV_AVG values
+                    bmsdata->chip_data[chip].open_cell_voltage[cell] = (uint32_t(bmsdata->chip_data[chip].voltage_reading[cell]) + (uint32_t(prevbmsdata->chip_data[chip].open_cell_voltage[cell])  * (OCV_AVG - 1))) / OCV_AVG;
+                    bmsdata->chip_data[chip].open_cell_voltage[cell] = bmsdata->chip_data[chip].voltage_reading[cell];
+
+                    if (bmsdata->chip_data[chip].open_cell_voltage[cell] > MAX_VOLT * 10000) 
+                    {
+                        bmsdata->chip_data[chip].open_cell_voltage[cell] = prevbmsdata->chip_data[chip].open_cell_voltage[cell];
+                    } 
+                    else if (bmsdata->chip_data[chip].open_cell_voltage[cell] < MIN_VOLT * 10000) 
+                    {
+                        bmsdata->chip_data[chip].open_cell_voltage[cell] = prevbmsdata->chip_data[chip].open_cell_voltage[cell];
+                    }
+                }
             }
+            return;
         }
     }
-    else
+    else 
     {
-        for (uint8_t chip = 0; chip < NUM_CHIPS; chip++)
+        ocvTimer.startTimer(1000);
+    }
+    for (uint8_t chip = 0; chip < NUM_CHIPS; chip++)
+    {
+        for (uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
         {
-            for (uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
-            {
-                // Set OCV to the previous/existing OCV
-                bmsdata->chip_data[chip].open_cell_voltage[cell] = prevbmsdata->chip_data[chip].open_cell_voltage[cell];
-            }
+            // Set OCV to the previous/existing OCV
+            bmsdata->chip_data[chip].open_cell_voltage[cell] = prevbmsdata->chip_data[chip].open_cell_voltage[cell];
         }
     }
 }
@@ -270,14 +358,61 @@ void Analyzer::disableTherms()
 
 void Analyzer::calcStateOfCharge()
 {
-    int index = (((bmsdata->min_voltage.val) - MIN_VOLT) / .1);
+     /* Spltting the delta voltage into 18 increments */
+    const uint16_t increments = ((uint16_t)(MAX_VOLT*10000 - MIN_VOLT*10000) / ((MAX_VOLT - MIN_VOLT) * 10));
 
-    // .1 = 1.3V range / 13 datapoints on curve
-    if (index >= 13)
-        bmsdata->soc = 100;
-    else
+    /* Retrieving a index of 0-18 */
+    uint8_t index = ((bmsdata->min_ocv.val) - MIN_VOLT*10000) / increments;
+
+    bmsdata->soc = STATE_OF_CHARGE_CURVE[index];
+
+    if (bmsdata->soc != 100)
     {
-        float distance_from_higher = (bmsdata->min_voltage.val) - ((index / 10) + 2.9);
-        bmsdata->soc = ((distance_from_higher*STATE_OF_CHARGE_CURVE[index+1]) + ((1-distance_from_higher)*STATE_OF_CHARGE_CURVE[index]));
+        float interpolation = (float)(STATE_OF_CHARGE_CURVE[index+1] - STATE_OF_CHARGE_CURVE[index]) / increments;
+        bmsdata->soc += (uint8_t)(interpolation * (((bmsdata->min_ocv.val) - (int32_t)(MIN_VOLT * 10000)) % increments));
+    }
+
+    if (bmsdata->soc < 0)
+    {
+        bmsdata->soc = 0;
     }
 }
+
+void Analyzer::highCurrThermCheck()
+{
+    if (prevbmsdata == nullptr)
+        return;
+
+    if (bmsdata->pack_current > 500) {
+    
+        for(uint8_t c = 0; c < NUM_CHIPS; c++)
+        {
+            for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+            {
+                bmsdata->chip_data[c].thermistor_reading[cell] = prevbmsdata->chip_data[c].thermistor_reading[cell];
+                bmsdata->chip_data[c].thermistor_value[cell] = prevbmsdata->chip_data[c].thermistor_value[cell];
+            }
+        }
+    }
+}
+
+void Analyzer::diffCurrThermCheck()
+{
+    if (prevbmsdata == nullptr)
+        return;
+
+    if (abs(bmsdata->pack_current - prevbmsdata->pack_current) > 100) {
+        for(uint8_t c = 0; c < NUM_CHIPS; c++)
+        {
+            for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+            {
+                bmsdata->chip_data[c].thermistor_reading[cell] = prevbmsdata->chip_data[c].thermistor_reading[cell];
+                bmsdata->chip_data[c].thermistor_value[cell] = prevbmsdata->chip_data[c].thermistor_value[cell];
+            }
+        }
+    }
+}
+
+
+
+

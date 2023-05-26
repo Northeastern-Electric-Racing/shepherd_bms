@@ -7,8 +7,11 @@
 #include "bmsConfig.h"
 
 #define THERM_WAIT_TIME     500 //ms
-#define VOLTAGE_WAIT_TIME   250 //ms
+#define VOLTAGE_WAIT_TIME   100 //ms
 #define THERM_AVG           15 // Number of values to average
+
+#define MAX_VOLT_DELTA      2500
+#define MAX_VOLT_DELTA_COUNT    10
 
 /**
  * @brief This class serves as the interface for all of the segment boards
@@ -19,6 +22,7 @@ class SegmentInterface
 
         Timer therm_timer;
         Timer voltage_reading_timer;
+        Timer variance_timer;
 
         FaultStatus_t voltage_error = NOT_FAULTED;
         FaultStatus_t therm_error = NOT_FAULTED;
@@ -58,7 +62,7 @@ class SegmentInterface
 
         FaultStatus_t pullVoltages();
 
-        uint8_t steinhartEst(uint16_t V);
+        int8_t steinhartEst(uint16_t V);
 
         void serializeI2CMsg(uint8_t data_to_write[][3], uint8_t comm_output[][6]);
 
@@ -124,6 +128,19 @@ class SegmentInterface
          * @return false
          */
         bool isBalancing();
+
+        void averagingThermCheck();
+
+        void standardDevThermCheck();
+
+        int8_t calcThermStandardDev(int16_t avg_temp);
+
+        int16_t calcAverage();
+
+        void varianceThermCheck();
+
+        void discardNeutrals();
+
 };
 
 extern SegmentInterface segment;
