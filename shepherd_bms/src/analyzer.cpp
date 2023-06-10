@@ -31,6 +31,7 @@ void Analyzer::push(AccumulatorData_t *data)
 	calcContDCL();
 	calcContCCL();
 	calcStateOfCharge();
+    calcPackResistances();
 
     is_first_reading_ = false;
 }
@@ -413,6 +414,34 @@ void Analyzer::diffCurrThermCheck()
     }
 }
 
-
+void Analyzer::calcPackResistances()
+{
+    float pack_resistance[NUM_CHIPS][NUM_CELLS_PER_CHIP];
+    // Want to calculate the pack resistance when current is high
+    if(bmsdata->pack_current >= 100)
+    {
+        calcCellResistances();
+        for(int chip = 0; chip < NUM_CHIPS; chip++)
+        {
+            for(int cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+            {
+                pack_resistance[chip][cell] = (bmsdata->chip_data[chip].open_cell_voltage[cell] - bmsdata->chip_data[chip].voltage_reading[cell]) / bmsdata->pack_current;
+                // If the tested resistance is greater than the thermal limit then it is set to the thermal limit
+                pack_resistance[chip][cell] = (pack_resistance[chip][cell] > bmsdata->chip_data[chip].cell_resistance[cell]) ? bmsdata->chip_data[chip].cell_resistance[cell] : pack_resistance[chip][cell];
+            }
+        }
+    }
+    // Update the bms data when current is low
+    if(bmsdata->pack_current < 5)
+    {
+       for(int chip = 0; chip < NUM_CHIPS; chip++)
+        {
+            for(int cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+            {
+                bmsdata->chip_data[chip].cell_resistance[cell] = pack_resistance[chip][cell];
+            }
+        }
+    }
+}
 
 

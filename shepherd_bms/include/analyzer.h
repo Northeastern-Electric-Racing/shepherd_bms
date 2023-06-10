@@ -159,6 +159,8 @@ class Analyzer
 
         void diffCurrThermCheck();
 
+        void calcPackResistances();
+
 
 
     public:
