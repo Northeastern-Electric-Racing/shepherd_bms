@@ -420,7 +420,6 @@ void Analyzer::calcPackResistances()
     // Want to calculate the pack resistance when current is high
     if(bmsdata->pack_current >= 100)
     {
-        calcCellResistances();
         for(int chip = 0; chip < NUM_CHIPS; chip++)
         {
             for(int cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
