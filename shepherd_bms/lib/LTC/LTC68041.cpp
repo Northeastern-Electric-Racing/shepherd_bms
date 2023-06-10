@@ -528,15 +528,14 @@ int8_t LTC6804_rdaux(uint8_t reg, //Determines which GPIO voltage register is re
 					//a.ii
 					for (uint8_t current_gpio = 0; current_gpio< GPIO_IN_REG; current_gpio++) // This loop parses the read back data into GPIO voltages, it
 					{
-					// loops once for each of the 3 gpio voltage codes in the register
+            // loops once for each of the 3 gpio voltage codes in the register
 
-					parsed_aux = data[data_counter] + (data[data_counter+1]<<8);              //Each gpio codes is received as two bytes and is combined to
-					// create the parsed gpio voltage code
+            parsed_aux = data[data_counter] + (data[data_counter+1]<<8);              //Each gpio codes is received as two bytes and is combined to
+            // create the parsed gpio voltage code
 
-					aux_codes[current_ic][current_gpio +((gpio_reg-1)*GPIO_IN_REG)] = parsed_aux;
-					data_counter=data_counter+2;                        //Because gpio voltage codes are two bytes the data counter
-					//must increment by two for each parsed gpio voltage code
-
+            aux_codes[current_ic][current_gpio +((gpio_reg-1)*GPIO_IN_REG)] = parsed_aux;
+            data_counter=data_counter+2;                        //Because gpio voltage codes are two bytes the data counter
+            //must increment by two for each parsed gpio voltage code
 					}
 					//a.iii
 					received_pec = (data[data_counter]<<8)+ data[data_counter+1];          //The received PEC for the current_ic is transmitted as the 7th and 8th
@@ -549,6 +548,11 @@ int8_t LTC6804_rdaux(uint8_t reg, //Determines which GPIO voltage register is re
 					}
 					else if (received_pec != data_pec)
 					{
+            if (retries == LTC_MAX_RETRIES)
+            {
+              aux_codes[current_ic][gpio_reg-1] = LTC_BAD_READ;
+              aux_codes[current_ic][gpio_reg] = LTC_BAD_READ;
+            }
 						pec_error = -1;
 					}
 
@@ -1140,6 +1144,7 @@ int8_t read_68( uint8_t total_ic, // Number of ICs in the system
 
 		if (received_pec != data_pec)
 		{
+      Serial.println("PEC FAULT");
 		  pec_error = -1;
 		}
 	}

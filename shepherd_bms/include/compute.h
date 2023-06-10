@@ -8,10 +8,10 @@
 
 #define CURRENT_SENSOR_PIN_L  A1
 #define CURRENT_SENSOR_PIN_H  A0
-#define FAULT_PIN             RELAY_PIN
-#define CHARGE_VOLTAGE_PIN    3
-#define CHARGE_SAFETY_RELAY   6
-#define CHARGE_DETECT         7
+#define MEAS_5VREF_PIN        A7
+#define FAULT_PIN             2
+#define CHARGE_SAFETY_RELAY   4
+#define CHARGE_DETECT         5
 #define CHARGER_BAUD          250000U
 #define MC_BAUD               1000000U
 #define MAX_ADC_RESOLUTION    1023 // 13 bit ADC
@@ -61,12 +61,12 @@ class ComputeInterface
       FaultStatus_t sendChargingMessage(uint16_t voltage_to_set, AccumulatorData_t *bms_data);
 
       /**
-      * @brief Returns if we are detecting a charging voltage
+      * @brief Returns if charger interlock is engaged, indicating charger LV connector is plugged in
       *
       * @return true
       * @return false
       */
-      bool isCharging();
+      bool chargerConnected();
 
       /**
       * @brief Handle any messages received from the charger
@@ -129,7 +129,11 @@ class ComputeInterface
       *
       * @return Returns a fault if we are not able to send
       */
+<<<<<<< HEAD
       void sendBMSStatusMessage(int bms_state, uint32_t fault_status, int8_t avg_temp, int8_t internal_temp);
+=======
+      void sendBMSStatusMessage(int bms_state, uint32_t fault_status, int8_t avg_temp, int8_t internal_temp, bool balance);
+>>>>>>> main
 
       /**
       * @brief sends shutdown control message
@@ -181,6 +185,20 @@ class ComputeInterface
        * @return Returns a fault if we are not able to send
       */
       void sendCellTemp(CriticalCellValue_t max_cell_temp, CriticalCellValue_t min_cell_temp, uint16_t avg_temp);
+<<<<<<< HEAD
+=======
+
+      /**
+       * @brief sends the average segment temperatures
+       * 
+       * 
+       * 
+       * @return Returns a fault if we are not able to send
+       */
+      void sendSegmentTemps(int8_t segmentTemps[NUM_SEGMENTS]);
+
+      void sendDclPreFault(bool prefault);
+>>>>>>> main
 };
 
 extern ComputeInterface compute;

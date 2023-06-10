@@ -21,6 +21,11 @@ struct ChipData_t
     int8_t cell_temp[NUM_CELLS_PER_CHIP];
     float cell_resistance[NUM_CELLS_PER_CHIP];
     uint16_t open_cell_voltage[NUM_CELLS_PER_CHIP];
+<<<<<<< HEAD
+=======
+
+    uint8_t bad_volt_diff_count[NUM_CELLS_PER_CHIP];
+>>>>>>> main
 };
 
 /**
@@ -81,12 +86,18 @@ struct AccumulatorData_t
 
     int16_t pack_current;                        // this value is multiplied by 10 to account for decimal precision
     uint16_t pack_voltage;
+<<<<<<< HEAD
+=======
+     uint16_t pack_ocv;
+>>>>>>> main
     uint16_t pack_res;
 
     uint16_t discharge_limit;
     uint16_t charge_limit;
     uint16_t cont_DCL;
     uint8_t soc;
+
+    int8_t segment_average_temps[NUM_SEGMENTS];
 
     /**
      * @brief Note that this is a 32 bit integer, so there are 32 max possible fault codes
@@ -96,7 +107,11 @@ struct AccumulatorData_t
     /*Max, min, and avg thermistor readings*/
     CriticalCellValue_t max_temp;
     CriticalCellValue_t min_temp;
+<<<<<<< HEAD
     uint8_t avg_temp;
+=======
+    int8_t avg_temp;
+>>>>>>> main
 
     /*Max and min cell resistances*/
     CriticalCellValue_t max_res;
@@ -107,6 +122,17 @@ struct AccumulatorData_t
     CriticalCellValue_t min_voltage;
     uint16_t avg_voltage;
     uint16_t delt_voltage;
+<<<<<<< HEAD
+=======
+
+    CriticalCellValue_t max_ocv;
+    CriticalCellValue_t min_ocv;
+    uint16_t avg_ocv;
+    uint16_t delt_ocv;
+
+    uint16_t boost_setting;
+
+>>>>>>> main
 };
 
 #endif

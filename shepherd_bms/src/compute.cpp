@@ -6,7 +6,9 @@ ComputeInterface::ComputeInterface()
 {
     pinMode(CURRENT_SENSOR_PIN_H, INPUT);
     pinMode(CURRENT_SENSOR_PIN_L, INPUT);
+    pinMode(MEAS_5VREF_PIN, INPUT);
     pinMode(FAULT_PIN, OUTPUT);
+    pinMode(CHARGE_DETECT, INPUT);
     initializeCAN(CANLINE_2, CHARGER_BAUD, &(this->chargerCallback));
     initializeCAN(CANLINE_1, MC_BAUD, &(this->MCCallback));
 }
@@ -63,9 +65,9 @@ FaultStatus_t ComputeInterface::sendChargingMessage(uint16_t voltage_to_set, Acc
     return NOT_FAULTED;
 }
 
-bool ComputeInterface::isCharging() // This is useless kinda, especially if we move to DCDC
+bool ComputeInterface::chargerConnected()
 {
-    return digitalRead(CHARGE_VOLTAGE_PIN);
+    return !(digitalRead(CHARGE_DETECT) == HIGH);
 }
 
 void ComputeInterface::chargerCallback(const CAN_message_t &msg)
@@ -89,6 +91,7 @@ int16_t ComputeInterface::getPackCurrent()
 {
     static const float CURRENT_LOWCHANNEL_MAX = 75.0; //Amps
     static const float CURRENT_LOWCHANNEL_MIN = -75.0; //Amps
+<<<<<<< HEAD
     static const float CURRENT_SUPPLY_VOLTAGE = 5.038;
     static const float CURRENT_ADC_RESOLUTION = 5.0 / MAX_ADC_RESOLUTION;
 
@@ -96,19 +99,50 @@ int16_t ComputeInterface::getPackCurrent()
     static const float CURRENT_HIGHCHANNEL_OFFSET = 2.57; // Calibrated with current = 0A
 
     static const float HIGHCHANNEL_GAIN = 1 / 0.0040;
+=======
+    // static const float CURRENT_SUPPLY_VOLTAGE = 5.038;
+    static const float CURRENT_ADC_RESOLUTION = 5.0 / MAX_ADC_RESOLUTION;
+
+    static const float CURRENT_LOWCHANNEL_OFFSET = 2.517; // Calibrated with current = 0A
+    static const float CURRENT_HIGHCHANNEL_OFFSET = 2.520; // Calibrated with current = 0A
+
+    static const float HIGHCHANNEL_GAIN = 1 / 0.004; // Calibrated with  current = 5A, 10A, 20A
+>>>>>>> main
     static const float LOWCHANNEL_GAIN = 1 / 0.0267;
 
+    static const float REF5V_DIV = 19.02 / (19.08 + 19.02); // Resistive divider in kOhm
+    static const float REF5V_CONV = 1 / REF5V_DIV; // Converting from reading to real value
 
+<<<<<<< HEAD
     int16_t high_current = 10 * (5 / CURRENT_SUPPLY_VOLTAGE) * (analogRead(CURRENT_SENSOR_PIN_H) * CURRENT_ADC_RESOLUTION - CURRENT_HIGHCHANNEL_OFFSET) * HIGHCHANNEL_GAIN; // Channel has a large range with low resolution
     int16_t low_current = 10 * (5 / CURRENT_SUPPLY_VOLTAGE) * (analogRead(CURRENT_SENSOR_PIN_L) * CURRENT_ADC_RESOLUTION - CURRENT_LOWCHANNEL_OFFSET) * LOWCHANNEL_GAIN; // Channel has a small range with high resolution
+=======
+    float ref_5V = analogRead(MEAS_5VREF_PIN) * (3.3 / MAX_ADC_RESOLUTION) * REF5V_CONV;
+    int16_t high_current = 10 * (((5 / ref_5V) * (analogRead(CURRENT_SENSOR_PIN_L) * CURRENT_ADC_RESOLUTION)) - CURRENT_HIGHCHANNEL_OFFSET) * HIGHCHANNEL_GAIN; // Channel has a large range with low resolution
+    int16_t low_current = 10 * (((5 / ref_5V) * (analogRead(CURRENT_SENSOR_PIN_H) * CURRENT_ADC_RESOLUTION)) - CURRENT_LOWCHANNEL_OFFSET) * LOWCHANNEL_GAIN; // Channel has a small range with high resolution
+    
+    // Serial.print("High: ");
+    // Serial.println(-high_current);
+    // Serial.print("Low: ");
+    // Serial.println(-low_current);
+    // Serial.print("5V: ");
+    // Serial.println(ref_5V);
+>>>>>>> main
 
     // If the current is scoped within the range of the low channel, use the low channel
     if(low_current < CURRENT_LOWCHANNEL_MAX - 5.0 || low_current > CURRENT_LOWCHANNEL_MIN + 5.0)
     {
+<<<<<<< HEAD
         return low_current;
     }
 
     return high_current;
+=======
+        return -low_current;
+    }
+
+    return -high_current;
+>>>>>>> main
 }
 
 void ComputeInterface::sendMCMsg(uint16_t user_max_charge, uint16_t user_max_discharge)
@@ -155,7 +189,11 @@ void ComputeInterface::sendAccStatusMessage(uint16_t voltage, int16_t current, u
     sendMessageCAN1(CANMSG_BMSACCSTATUS, 8, accStatusMsg.msg);
 }
 
+<<<<<<< HEAD
 void ComputeInterface::sendBMSStatusMessage(int bms_state, uint32_t fault_status, int8_t avg_temp, int8_t internal_temp)
+=======
+void ComputeInterface::sendBMSStatusMessage(int bms_state, uint32_t fault_status, int8_t avg_temp, int8_t internal_temp, bool balance)
+>>>>>>> main
 {
     union
     {
@@ -164,6 +202,7 @@ void ComputeInterface::sendBMSStatusMessage(int bms_state, uint32_t fault_status
         struct
         {
             uint8_t state;
+<<<<<<< HEAD
             uint32_t fault;
             uint8_t temp_avg;
             uint8_t temp_internal;
@@ -177,6 +216,33 @@ void ComputeInterface::sendBMSStatusMessage(int bms_state, uint32_t fault_status
 
 
     sendMessageCAN1(CANMSG_BMSDTCSTATUS, 8, bmsStatusMsg.msg);
+=======
+            uint32_t fault; 
+            int8_t temp_avg;
+            uint8_t temp_internal;
+            uint8_t balance;
+        } cfg;
+    } bmsStatusMsg;
+
+    bmsStatusMsg.cfg.temp_avg = static_cast<int8_t>(avg_temp);
+    bmsStatusMsg.cfg.state = static_cast<uint8_t>(bms_state);
+    bmsStatusMsg.cfg.fault = fault_status;
+    bmsStatusMsg.cfg.temp_internal = static_cast<uint8_t>(internal_temp);
+    bmsStatusMsg.cfg.balance = static_cast<uint8_t>(balance);
+
+    uint8_t msg[8] = {
+                         bmsStatusMsg.cfg.state, 
+                        (fault_status & 0xff000000),
+                        (fault_status & 0x00ff0000), 
+                        (fault_status & 0x0000ff00), 
+                        (fault_status & 0x000000ff), 
+                         bmsStatusMsg.cfg.temp_avg,
+                         bmsStatusMsg.cfg.balance
+                     };
+    
+
+    sendMessageCAN1(CANMSG_BMSDTCSTATUS, 8, msg);
+>>>>>>> main
 }
 
 void ComputeInterface::sendShutdownControlMessage(uint8_t mpe_state)
@@ -219,7 +285,22 @@ void ComputeInterface::sendCellDataMessage(CriticalCellValue_t high_voltage, Cri
     cellDataMsg.cfg.lowCellID = (low_voltage.chipIndex << 4) | low_voltage.cellNum;
     cellDataMsg.cfg.voltAvg = avg_voltage;
 
+<<<<<<< HEAD
     sendMessageCAN1(CANMSG_BMSCELLDATA, 8, cellDataMsg.msg);
+=======
+    uint8_t msg[8] = {
+                        ( cellDataMsg.cfg.highCellVoltage & 0x00ff), 
+                        ((cellDataMsg.cfg.highCellVoltage & 0xff00)>>8), 
+                          cellDataMsg.cfg.highCellID, 
+                        ( cellDataMsg.cfg.lowCellVoltage & 0x00ff), 
+                        ((cellDataMsg.cfg.lowCellVoltage & 0xff00)>>8), 
+                          cellDataMsg.cfg.lowCellID, 
+                        ( cellDataMsg.cfg.voltAvg & 0x00ff), 
+                        ((cellDataMsg.cfg.voltAvg & 0xff00)>>8)
+                     };
+
+    sendMessageCAN1(CANMSG_BMSCELLDATA, 8, msg);
+>>>>>>> main
 }
 
 void ComputeInterface::sendCellVoltageMessage(uint8_t cell_id, uint16_t instant_voltage, uint16_t internal_Res, uint8_t shunted, uint16_t open_voltage)
@@ -290,6 +371,7 @@ void ComputeInterface::sendCellTemp(CriticalCellValue_t max_cell_temp, CriticalC
     } cellTempMsg;
 
     cellTempMsg.cfg.maxCellTemp = max_cell_temp.val;
+<<<<<<< HEAD
     cellTempMsg.cfg.maxCellID = (max_cell_temp.chipIndex << 4) | (max_cell_temp.cellNum);
     cellTempMsg.cfg.minCellTemp = min_cell_temp.val;
     cellTempMsg.cfg.minCellID = (min_cell_temp.chipIndex << 4) | (min_cell_temp.cellNum);
@@ -297,6 +379,50 @@ void ComputeInterface::sendCellTemp(CriticalCellValue_t max_cell_temp, CriticalC
 
     sendMessageCAN1(0x08, 8, cellTempMsg.msg);
 }
+=======
+    cellTempMsg.cfg.maxCellID = (max_cell_temp.chipIndex << 4) | (max_cell_temp.cellNum - 17);
+    cellTempMsg.cfg.minCellTemp = min_cell_temp.val;
+    cellTempMsg.cfg.minCellID = (min_cell_temp.chipIndex << 4) | (min_cell_temp.cellNum - 17);
+    cellTempMsg.cfg.averageTemp = avg_temp;
+    
+    uint8_t msg[8] = {
+                        ( cellTempMsg.cfg.maxCellTemp & 0x00ff), 
+                        ((cellTempMsg.cfg.maxCellTemp & 0xff00)>>8), 
+                          cellTempMsg.cfg.maxCellID, 
+                        ( cellTempMsg.cfg.minCellTemp & 0x00ff),
+                        ((cellTempMsg.cfg.minCellTemp & 0xff00)>>8), 
+                          cellTempMsg.cfg.minCellID, 
+                        ( cellTempMsg.cfg.averageTemp & 0x00ff), 
+                        ((cellTempMsg.cfg.averageTemp & 0xff00)>>8)
+                     };
+
+    sendMessageCAN1(0x08, 8, msg);
+}
+
+void ComputeInterface::sendSegmentTemps(int8_t segment_temps[NUM_SEGMENTS])
+{
+    union
+    {
+        uint8_t msg[4] = {0, 0, 0, 0};
+
+        struct
+        {
+            int8_t segment1_average_temp;
+            int8_t segment2_average_temp;
+            int8_t segment3_average_temp;
+            int8_t segment4_average_temp;
+        } cfg;
+    } segmentTempsMsg;
+
+    segmentTempsMsg.cfg.segment1_average_temp = segment_temps[0];
+    segmentTempsMsg.cfg.segment2_average_temp = segment_temps[1];
+    segmentTempsMsg.cfg.segment3_average_temp = segment_temps[2];
+    segmentTempsMsg.cfg.segment4_average_temp = segment_temps[3];
+
+    sendMessageCAN1(0x09, 4, segmentTempsMsg.msg);
+}
+
+>>>>>>> main
 uint8_t ComputeInterface::calcChargerLEDState(AccumulatorData_t *bms_data)
 {
   enum LED_state
@@ -332,7 +458,7 @@ uint8_t ComputeInterface::calcChargerLEDState(AccumulatorData_t *bms_data)
   }
   else if((bms_data->soc >= 95) && (bms_data->pack_current <= .5 * 10))
   {
-    return GREEN_BLINKING;
+    return GREEN_CONSTANT;
   }
   else
   {
@@ -340,3 +466,12 @@ uint8_t ComputeInterface::calcChargerLEDState(AccumulatorData_t *bms_data)
   }
 
 }
+<<<<<<< HEAD
+=======
+
+void ComputeInterface::sendDclPreFault(bool prefault)
+{
+    uint8_t msg[1] = {prefault};
+    sendMessageCAN1(0x500, 1, msg);
+}
+>>>>>>> main

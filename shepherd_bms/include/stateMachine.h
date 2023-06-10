@@ -5,6 +5,11 @@
 #include "segment.h"
 #include "compute.h"
 #include "analyzer.h"
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> main
 
 typedef enum
 {
@@ -14,6 +19,19 @@ typedef enum
     FAULTED_STATE,    //State when BMS has detected a catastrophic fault and we need to hault operations
     NUM_STATES
 }BMSState_t;
+
+typedef enum
+	{
+		BEFORE_TIMER_START,
+		DURING_FAULT_EVAL
+	}FaultEvalState;
+
+//timers and fault states for each fault
+struct faultEval
+{
+	FaultEvalState faultEvalState = BEFORE_TIMER_START;
+	Timer faultTimer;
+};
 
 class StateMachine
 {
@@ -30,6 +48,11 @@ class StateMachine
         uint16_t lowCellCount;
         uint16_t highTempCount;
 
+<<<<<<< HEAD
+=======
+        Timer canMsgTimer;
+
+>>>>>>> main
         bool enteredFaulted = false;
 
 
