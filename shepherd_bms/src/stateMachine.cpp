@@ -1,20 +1,6 @@
 #include "stateMachine.h"
 
-faultEval overCurr;
-faultEval overChgCurr;
-faultEval underVolt;
-faultEval overVolt;
-faultEval lowCell;
-faultEval highTemp;
 
-faultEval prefaultOverCurr;
-faultEval prefaultLowCell;
-
-Timer chargeTimeout;
-faultEval chargeCutoffTime;
-
-Timer prefaultCANDelay1; // low cell
-Timer prefaultCANDelay2; // dcl
 
 StateMachine::StateMachine()
 {

@@ -7,7 +7,6 @@
 #include "analyzer.h"
 
 
-
 typedef enum
 {
     BOOT_STATE,       //State when BMS first starts up, used to initialize everything that needs configuring
@@ -15,20 +14,52 @@ typedef enum
     CHARGING_STATE,   //State when car is on and is charging (Filling battery)
     FAULTED_STATE,    //State when BMS has detected a catastrophic fault and we need to hault operations
     NUM_STATES
-}BMSState_t;
+
+} BMSState_t;
 
 typedef enum
-	{
-		BEFORE_TIMER_START,
-		DURING_FAULT_EVAL
-	}FaultEvalState;
+{
+	BEFORE_TIMER_START,
+	DURING_FAULT_EVAL
+
+} FaultEvalState;
+
+typedef enum
+{
+    GT = 0, // fault if {data} greater than {threshold}
+    LT = 1, // fault if {data} less than {threshold}
+    GE = 2, // fault if {data} greater than or equal to {threshold}
+    LE = 3, // fault if {data} less than or equal to {threshold}
+    EQ = 4, // fault if {data} equal to {threshold}
+    NOP = 5 // no operation, use for single threshold faults
+
+} FaultEvalType;
 
 //timers and fault states for each fault
-struct faultEval
+struct fault_timer
 {
 	FaultEvalState faultEvalState = BEFORE_TIMER_START;
 	Timer faultTimer;
 };
+
+struct fault_eval
+{
+    char* id; // how tf have we made it this far without the damn string library included
+    fault_timer timer;
+
+    int lim_1;
+    FaultEvalType optype_1;
+    int data_1;
+
+    int lim_2 = 0;            // optional second threshold
+    FaultEvalType optype_2 = NOP;
+    int data_2 = 0;
+
+    bool is_faulted = false;
+
+
+};
+
 
 class StateMachine
 {
@@ -37,13 +68,24 @@ class StateMachine
         AccumulatorData_t *prevAccData;
         uint32_t bmsFault = FAULTS_CLEAR;
 
-        uint16_t overVoltCount;
-        uint16_t underVoltCount;
-        uint16_t overCurrCount;
-        uint16_t chargeOverVolt;
-        uint16_t overChgCurrCount;
-        uint16_t lowCellCount;
-        uint16_t highTempCount;
+        fault_timer overCurr_tmr;
+        fault_timer overChgCurr_tmr;
+        fault_timer underVolt_tmr;
+        fault_timer overVoltCharge_tmr;
+        fault_timer overVolt_tmr;
+        fault_timer lowCell_tmr;
+        fault_timer highTemp_tmr;
+
+        fault_timer prefaultOverCurr;
+        fault_timer prefaultLowCell;
+
+        Timer chargeTimeout;
+        fault_timer chargeCutoffTime;
+
+        Timer prefaultCANDelay1; // low cell
+        Timer prefaultCANDelay2; // dcl
+
+      
 
         Timer canMsgTimer;
 
@@ -52,6 +94,20 @@ class StateMachine
 
         Timer chargeMessageTimer;
         static const uint16_t CHARGE_MESSAGE_WAIT = 250; //ms
+
+        struct fault_eval fault_table[8] = 
+        {
+          // ___________FAULT ID____________  ____________TIMER____________   ___________THRESHOLD___________  ___________OPERATOR___________ ___________DATA___________, ___________OPERATOR___________, ___________DATA___________
+            {.id = "Discharge Limit",         .timer = overCurr_tmr,       .lim_1 = macro, .optype_1 = GT,         .data_1 = stuff}, // Discharge Limit Enforcement
+            {.id = "Over Current",            .timer = overChgCurr_tmr,    .lim_1 = macro, .optype_1 = type,       .data_1 = stuff}, // Over Current (charge)
+            {.id = "Cell Voltage Low",        .timer = underVolt_tmr,      .lim_1 = macro, .optype_1 = type,       .data_1 = stuff}, // Low Cell Voltage
+            {.id = "Charge Cell Voltage High",.timer = overVoltCharge_tmr, .lim_1 = macro, .optype_1 = type,       .data_1 = stuff}, // High Cell (charging) Voltage
+            {.id = "Cell Voltage High",       .timer = overVolt_tmr,       .lim_1 = macro, .optype_1 = type,       .data_1 = stuff}, // High Cell (not charging) Voltage
+            {.id = "High Temp",               .timer = highTemp_tmr,       .lim_1 = macro, .optype_1 = type,       .data_1 = stuff}, // High Temperature
+            {.id = "Extremely Low Voltage",   .timer = lowCell_tmr,        .lim_1 = macro, .optype_1 = type,       .data_1 = stuff}, // Extremely Low Cell Voltage
+
+            NULL
+        };
 
 
         const bool validTransitionFromTo[NUM_STATES][NUM_STATES] =
@@ -128,6 +184,7 @@ class StateMachine
         * @return uint32_t
         */
         uint32_t faultCheck(AccumulatorData_t *accData);
+
 
     public:
         StateMachine();
