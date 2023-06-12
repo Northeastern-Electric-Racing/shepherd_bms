@@ -218,6 +218,7 @@ uint32_t StateMachine::faultReturn(AccumulatorData_t *accData)
     while (&fault_table[incr] != NULL)
     {
         fault_status |= faultEval(fault_table[incr]);
+        incr++;
     }
 
     return fault_status;
