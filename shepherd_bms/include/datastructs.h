@@ -122,4 +122,77 @@ struct AccumulatorData_t
 
 };
 
+/**
+ * @brief Represents individual BMS states
+ */
+typedef enum
+{
+    BOOT_STATE,       //State when BMS first starts up, used to initialize everything that needs configuring
+    READY_STATE,      //State when car is not on/BMS is not really doing anything
+    CHARGING_STATE,   //State when car is on and is charging (Filling battery)
+    FAULTED_STATE,    //State when BMS has detected a catastrophic fault and we need to hault operations
+    NUM_STATES
+
+} BMSState_t;
+
+/**
+ * @brief Represents the state of the BMS fault timers
+ */
+typedef enum
+{
+	BEFORE_TIMER_START,
+	DURING_FAULT_EVAL
+
+} FaultEvalState;
+
+/**
+ * @brief Represents fault evaluation operators
+ */
+typedef enum
+{
+    GT = 0, // fault if {data} greater than {threshold}
+    LT = 1, // fault if {data} less than {threshold}
+    GE = 2, // fault if {data} greater than or equal to {threshold}
+    LE = 3, // fault if {data} less than or equal to {threshold}
+    EQ = 4, // fault if {data} equal to {threshold}
+    NOP = 5 // no operation, use for single threshold faults
+
+} FaultEvalType;
+
+/**
+ * @brief Represents fault timer data
+ */
+struct fault_timer
+{
+    int length;
+	FaultEvalState faultEvalState = BEFORE_TIMER_START;
+	Timer faultTimer;
+    
+};
+
+/**
+ * @brief Represents data to be packaged into a fault evaluation
+ */
+struct fault_eval
+{
+    char* id; // how tf have we made it this far without the damn string library included
+    fault_timer timer;
+
+    int data_1;
+    FaultEvalType optype_1;
+    int lim_1;
+
+    int code;
+
+    int data_2 = 0;            // optional second threshold
+    FaultEvalType optype_2 = NOP;
+    int lim_2 = 0;
+   
+    bool is_faulted = false;
+
+};
+
+
+
+
 #endif
