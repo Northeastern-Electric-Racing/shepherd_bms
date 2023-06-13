@@ -6,29 +6,27 @@
 #include "compute.h"
 #include "analyzer.h"
 
-
-
-
 class StateMachine
 {
     private:
 
         AccumulatorData_t *prevAccData;
         uint32_t bmsFault = FAULTS_CLEAR;
+    
 
-        fault_timer overCurr_tmr {.length = OVER_CURR_TIME};
-        fault_timer overChgCurr_tmr{.length = OVER_CHG_CURR_TIME};
-        fault_timer underVolt_tmr {.length = UNDER_VOLT_TIME};
-        fault_timer overVoltCharge_tmr {.length = OVER_VOLT_TIME};
-        fault_timer overVolt_tmr {.length = OVER_VOLT_TIME};
-        fault_timer lowCell_tmr {.length = LOW_CELL_TIME};
-        fault_timer highTemp_tmr {.length = HIGH_TEMP_TIME};
+        tristate_timer overCurr_tmr;
+        tristate_timer overChgCurr_tmr;
+        tristate_timer underVolt_tmr;
+        tristate_timer overVoltCharge_tmr;
+        tristate_timer overVolt_tmr;
+        tristate_timer lowCell_tmr;
+        tristate_timer highTemp_tmr;
 
-        fault_timer prefaultOverCurr_tmr;
-        fault_timer prefaultLowCell_tmr;
+        tristate_timer prefaultOverCurr_tmr;
+        tristate_timer prefaultLowCell_tmr;
 
         Timer chargeTimeout;
-        fault_timer chargeCutoffTime;
+        tristate_timer chargeCutoffTime;
 
         Timer prefaultCANDelay1; // low cell
         Timer prefaultCANDelay2; // dcl
