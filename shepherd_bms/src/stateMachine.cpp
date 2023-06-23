@@ -154,8 +154,9 @@ void StateMachine::handleState(AccumulatorData_t *bmsdata)
 {
 
     preFaultCheck(bmsdata);
+	bmsdata->is_charger_connected = compute.chargerConnected();
 	bmsdata->fault_code = faultReturn(bmsdata);
-
+	
 	 if (bmsdata->fault_code != FAULTS_CLEAR)
     {
 		bmsdata->discharge_limit = 0;
@@ -199,12 +200,12 @@ uint32_t StateMachine::faultReturn(AccumulatorData_t *accData)
 
 	static struct fault_eval fault_table[8] = 
         {
-          // ___________FAULT ID____________   __________TIMER___________   _____________DATA________________    __OPERATOR__   __________________________THRESHOLD____________________________  _______TIMER LENGTH_________  _____________FAULT CODE_________________    _______________DATA_________________  ___OPERATOR___  ________THRESHOLD________
+          // ___________FAULT ID____________   __________TIMER___________   _____________DATA________________    __OPERATOR__   __________________________THRESHOLD____________________________  _______TIMER LENGTH_________  _____________FAULT CODE_________________    _______________DATA_____________________  ___OPERATOR___  ________THRESHOLD________
             {.id = "Discharge Current Limit", .timer =       overCurr_tmr, .data_1 =    accData->pack_current, .optype_1 = GT, .lim_1 = (accData->discharge_limit + DCDC_CURRENT_DRAW)*10*1.04, .timeout =      OVER_CURR_TIME,	.code = DISCHARGE_LIMIT_ENFORCEMENT_FAULT   /* -----------------------------------UNUSED---------------------------------*/ }, 
-            {.id = "Charge Current Limit",    .timer =    overChgCurr_tmr, .data_1 =    accData->pack_current, .optype_1 = GT, .lim_1 =                             (accData->charge_limit)*10, .timeout =  OVER_CHG_CURR_TIME, .code =    CHARGE_LIMIT_ENFORCEMENT_FAULT,  .data_2 =      accData->pack_current, .optype_2 = LT, .lim_2 =                0 },
+            {.id = "Charge Current Limit",    .timer =    overChgCurr_tmr, .data_1 =    accData->pack_current, .optype_1 = GT, .lim_1 =                             (accData->charge_limit)*10, .timeout =  OVER_CHG_CURR_TIME, .code =    CHARGE_LIMIT_ENFORCEMENT_FAULT,  .data_2 =         accData->pack_current, .optype_2 = LT, .lim_2 =             0 },
             {.id = "Low Cell Voltage",        .timer =      underVolt_tmr, .data_1 = accData->min_voltage.val, .optype_1 = LT, .lim_1 =                                       MIN_VOLT * 10000, .timeout =     UNDER_VOLT_TIME,	.code =             CELL_VOLTAGE_TOO_LOW   /* -----------------------------------UNUSED---------------------------------*/  },
             {.id = "High Cell Voltage",       .timer = overVoltCharge_tmr, .data_1 = accData->max_voltage.val, .optype_1 = GT, .lim_1 =                                MAX_CHARGE_VOLT * 10000, .timeout =      OVER_VOLT_TIME, .code =            CELL_VOLTAGE_TOO_HIGH   /* -----------------------------------UNUSED---------------------------------*/  }, 
-            {.id = "High Cell Voltage",       .timer =       overVolt_tmr, .data_1 = accData->max_voltage.val, .optype_1 = GT, .lim_1 =                                       MAX_VOLT * 10000, .timeout =      OVER_VOLT_TIME,	.code =            CELL_VOLTAGE_TOO_HIGH,   .data_2 = digitalRead(CHARGE_DETECT), .optype_2 = EQ, .lim_2 =             HIGH }, 
+            {.id = "High Cell Voltage",       .timer =       overVolt_tmr, .data_1 = accData->max_voltage.val, .optype_1 = GT, .lim_1 =                                       MAX_VOLT * 10000, .timeout =      OVER_VOLT_TIME,	.code =            CELL_VOLTAGE_TOO_HIGH,   .data_2 = accData->is_charger_connected, .optype_2 = EQ, .lim_2 =         false }, 
             {.id = "High Temp",               .timer =       highTemp_tmr, .data_1 =    accData->max_temp.val, .optype_1 = GT, .lim_1 =                                          MAX_CELL_TEMP,	.timeout =       LOW_CELL_TIME,	.code =                     PACK_TOO_HOT   /* -----------------------------------UNUSED---------------------------------*/  }, 
             {.id = "Extremely Low Voltage",   .timer =        lowCell_tmr, .data_1 = accData->min_voltage.val, .optype_1 = LT, .lim_1 =                                                    900, .timeout =      HIGH_TEMP_TIME,	.code =                 LOW_CELL_VOLTAGE   /* -----------------------------------UNUSED---------------------------------*/  }, 
 

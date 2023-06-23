@@ -120,6 +120,8 @@ struct AccumulatorData_t
 
     uint16_t boost_setting;
 
+    bool is_charger_connected;
+
 };
 
 /**
