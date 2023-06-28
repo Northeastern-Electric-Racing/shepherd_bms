@@ -256,6 +256,35 @@ void Analyzer::calcContDCL()
     }
 }
 
+void Analyzer::calcCCL()
+{
+    int16_t currentLimit = 0x7FFF;
+
+    for (uint8_t c = 0; c < NUM_CHIPS; c++)
+    {
+        for (uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+        {   
+            // Apply equation
+            uint16_t tmpCCL = ((MAX_VOLT * 10000) - (bmsdata->chip_data[c].open_cell_voltage[cell] + (VOLT_SAG_MARGIN * 10000))) / (bmsdata->chip_data[c].cell_resistance[cell] * 10);
+            // Multiplying resistance by 10 to convert from mOhm to Ohm and then to Ohm * 10000 to account for the voltage units
+
+            //Taking the minimum CCL of all the cells
+            if (tmpCCL < currentLimit) currentLimit = tmpCCL;
+        }
+    }
+
+    // ceiling for current limit
+    if (currentLimit > MAX_CHG_CELL_CURR) 
+    {
+        bmsdata->charge_limit = MAX_CHG_CELL_CURR;
+    }
+    else 
+    {
+        bmsdata->charge_limit = currentLimit;
+    }
+}
+
+
 void Analyzer::calcContCCL()
 {
     uint8_t min_res_index = (bmsdata->min_temp.val - MIN_TEMP) / 5;  //resistance LUT increments by 5C for each index
@@ -263,11 +292,11 @@ void Analyzer::calcContCCL()
 
     if (TEMP_TO_CCL[min_res_index] < TEMP_TO_CCL[max_res_index])
     {
-        bmsdata->charge_limit = TEMP_TO_CCL[min_res_index];
+        bmsdata->cont_CCL = TEMP_TO_CCL[min_res_index];
     }
     else
     {
-        bmsdata->charge_limit = TEMP_TO_CCL[max_res_index];
+        bmsdata->cont_CCL = TEMP_TO_CCL[max_res_index];
     }
 }
 
