@@ -53,4 +53,9 @@
 
 #define CAN_MESSAGE_WAIT    10
 
+// eeprom info
+#define EEPROM_ROOT_ADDR   0x00;
+#define NUM_EEPROM_ITEMS   2
+#define NUM_EEPROM_FAULTS  5
+
 #endif
