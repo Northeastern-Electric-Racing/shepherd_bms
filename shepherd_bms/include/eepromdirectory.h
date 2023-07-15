@@ -46,13 +46,7 @@ int eepromGetIndex(char *key);
  */
 char *eepromGetKey(int index);
 
-/**
- * @brief logs fault code in eeprom
- * 
- * 
- * @param fault_code 
- */
-void logFault(uint32_t fault_code);
+
 
 /**
  * @brief fills passed data pointer with data from eeprom
@@ -75,6 +69,14 @@ void eepromReadData(uint8_t index, void *data);
 void eepromWriteData(char *key, void *data);
 
 void eepromWriteData(uint8_t index, void *data);
+
+/**
+ * @brief logs fault code in eeprom
+ * 
+ * 
+ * @param fault_code 
+ */
+void logFault(uint32_t fault_code);
 /**
  * @brief reads all stored faults from eeprom
  *

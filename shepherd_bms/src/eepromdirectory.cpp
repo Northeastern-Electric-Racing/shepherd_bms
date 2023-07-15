@@ -51,28 +51,7 @@ char* eepromGetKey(int index)
     return NULL;
 }
 
-void logFault(uint32_t fault_code)
-{
-    /* the most recent index is stored in the first byte of the fault partition */
-    uint8_t index = EEPROM.read(eepromGetIndex(const_cast<char*>("FAULTS"))); // TODO will need update with new eeprom driver
 
-    uint8_t startIndex =  eeprom_data[eepromGetIndex(const_cast<char*>("FAULTS"))].offset;
-    uint8_t size = eeprom_data[eepromGetIndex(const_cast<char*>("FAULTS"))].size;
-
-    /* if the index is at the end of the partition, wrap around (currently store 5 faults, so max = 5 + offset) */
-    if (index == size + startIndex - 3)
-    {
-        /* first byte of partition is the index of the most recent fault, faults begin at second byte */
-        index = startIndex + 1;
-    }
-    else
-    {
-        index++;
-    }
-
-    /* write the fault code to the new index */
-    EEPROM.put(index, fault_code);   // TODO will need update with new eeprom driver
-}
 
 void eepromReadData(char *key, void *data)
 {
@@ -101,10 +80,35 @@ void eepromWriteData(uint8_t index, void *data)
     EEPROM.put(index, data); // TODO will need update with new eeprom driver
 }
 
+void logFault(uint32_t *fault_code)
+{
+    /* the most recent index is stored in the first byte of the fault partition */
+    uint8_t* index;
+    eepromReadData("FAULTS", index);
+
+    uint8_t startIndex =  eeprom_data[eepromGetIndex(const_cast<char*>("FAULTS"))].offset;
+    uint8_t size = eeprom_data[eepromGetIndex(const_cast<char*>("FAULTS"))].size;
+
+    /* if the index is at the end of the partition, wrap around (currently store 5 faults, so max = 5 + offset) */
+    if (*index == size + startIndex - 3)
+    {
+        /* first byte of partition is the index of the most recent fault, faults begin at second byte */
+        *index = startIndex + 1;
+    }
+    else
+    {
+        *index += 4;
+    }
+
+    /* write the fault code to the new index */
+   eepromWriteData(*index, fault_code);
+}
+
 void getFaults()
 {
     /* the most recent index is stored in the first byte of the fault partition */
-    uint8_t index = EEPROM.read(eepromGetIndex(const_cast<char*>("FAULTS"))); // TODO will need update with new eeprom driver
+    uint8_t* index;
+    eepromReadData("FAULTS", index);
 
     uint8_t startIndex =  eeprom_data[eepromGetIndex(const_cast<char*>("FAULTS"))].offset;
     uint8_t size = eeprom_data[eepromGetIndex(const_cast<char*>("FAULTS"))].size;
@@ -114,20 +118,20 @@ void getFaults()
     int currIter = 0;
     while (currIter < NUM_EEPROM_FAULTS)
     {
-        eepromReadData(index, &eeprom_faults[currIter]);
+        eepromReadData(*index, &eeprom_faults[currIter]);
         currIter++;
 
         /* if the index is at the end of the partition, wrap around (5 faults * 4 bytes per fault + offset - 3  for start of fault) */
-        if (index == size + startIndex - 3)
+        if (*index == size + startIndex - 3)
         {                             
             /* first byte of partition is the index of the most recent fault, faults begin at second byte */
-            index = startIndex + 1;
+            *index = startIndex + 1;
         }
         
         else
         {
             /* 4 bytes per fault */
-            index += 4;
+            *index += 4;
         }
     }
 
