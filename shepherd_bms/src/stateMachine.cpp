@@ -388,8 +388,8 @@ uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
 
 bool StateMachine::chargingCheck(AccumulatorData_t *bmsdata)
 {
-	if (!compute.chargerConnected()) return false;
-	if(!chargeTimeout.isTimerExpired()) return false;
+	if (!compute.chargerConnected()) 	 return false;
+	if (!chargeTimeout.isTimerExpired()) return false;
 
 	if (bmsdata->max_voltage.val >= (MAX_CHARGE_VOLT * 10000) && chargeCutoffTime.faultEvalState == BEFORE_TIMER_START)
     {
@@ -401,6 +401,7 @@ bool StateMachine::chargingCheck(AccumulatorData_t *bmsdata)
         if (chargeCutoffTime.faultTimer.isTimerExpired())
         {
 			chargeTimeout.startTimer(CHARGE_TIMEOUT);
+			chargeCutoffTime.faultEvalState = BEFORE_TIMER_START;
             return false;
         }
         if (!(bmsdata->max_voltage.val >= (MAX_CHARGE_VOLT * 10000)))
