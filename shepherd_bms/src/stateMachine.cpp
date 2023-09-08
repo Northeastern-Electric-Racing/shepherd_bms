@@ -1,20 +1,6 @@
 #include "stateMachine.h"
 
-faultEval overCurr;
-faultEval overChgCurr;
-faultEval underVolt;
-faultEval overVolt;
-faultEval lowCell;
-faultEval highTemp;
 
-faultEval prefaultOverCurr;
-faultEval prefaultLowCell;
-
-Timer chargeTimeout;
-faultEval chargeCutoffTime;
-
-Timer prefaultCANDelay1; // low cell
-Timer prefaultCANDelay2; // dcl
 
 StateMachine::StateMachine()
 {
@@ -32,13 +18,6 @@ void StateMachine::initBoot()
 
 void StateMachine::handleBoot(AccumulatorData_t *bmsdata)
 {
-
-	overVoltCount = 0;
-	underVoltCount = 0;
-    overCurrCount = 0;
-    chargeOverVolt = 0;
-	overChgCurrCount = 0;
-    lowCellCount = 0;
 
 	prevAccData = nullptr;
 
@@ -136,7 +115,7 @@ void StateMachine::handleFaulted(AccumulatorData_t *bmsdata)
 	if (enteredFaulted)
 	{
 		enteredFaulted = false;
-		previousFault = faultCheck(bmsdata);
+		previousFault = faultReturn(bmsdata);
 	}
 
     if (bmsdata->fault_code == FAULTS_CLEAR)
@@ -174,8 +153,10 @@ void StateMachine::handleFaulted(AccumulatorData_t *bmsdata)
 void StateMachine::handleState(AccumulatorData_t *bmsdata)
 {
 
-	bmsdata->fault_code = faultCheck(bmsdata);
-
+    preFaultCheck(bmsdata);
+	bmsdata->is_charger_connected = compute.chargerConnected();
+	bmsdata->fault_code = faultReturn(bmsdata);
+	
 	 if (bmsdata->fault_code != FAULTS_CLEAR)
     {
 		bmsdata->discharge_limit = 0;
@@ -213,177 +194,88 @@ void StateMachine::requestTransition(BMSState_t next_state)
 }
 
 
-uint32_t StateMachine::faultCheck(AccumulatorData_t *accData)
+uint32_t StateMachine::faultReturn(AccumulatorData_t *accData)
 {
 	// FAULT CHECK (Check for fuckies)
-	uint32_t faultStatus = 0;
 
-	//prefault for Low Cell Voltage
-
-	if (prefaultLowCell.faultEvalState == BEFORE_TIMER_START && accData->min_voltage.val < MIN_VOLT * 10000)
-    {
-        prefaultLowCell.faultTimer.startTimer(PRE_UNDER_VOLT_TIME);
-        prefaultLowCell.faultEvalState = DURING_FAULT_EVAL;
-    }
-    else if (prefaultLowCell.faultEvalState == DURING_FAULT_EVAL)
-    {
-        if (prefaultLowCell.faultTimer.isTimerExpired())
+	static struct fault_eval fault_table[8] = 
         {
-            if (prefaultCANDelay1.isTimerExpired())
-			{
-            	compute.sendDclPreFault(true);
-				prefaultCANDelay1.startTimer(CAN_MESSAGE_WAIT);
-			}
-        }
-        if (!(accData->min_voltage.val < MIN_VOLT * 10000))
-        {
-            prefaultLowCell.faultTimer.cancelTimer();
-            prefaultLowCell.faultEvalState = BEFORE_TIMER_START;
-        }
-    }
+          // ___________FAULT ID____________   __________TIMER___________   _____________DATA________________    __OPERATOR__   __________________________THRESHOLD____________________________  _______TIMER LENGTH_________  _____________FAULT CODE_________________    _______________DATA_____________________  ___OPERATOR___  ________THRESHOLD________
+            {.id = "Discharge Current Limit", .timer =       overCurr_tmr, .data_1 =    accData->pack_current, .optype_1 = GT, .lim_1 = (accData->discharge_limit + DCDC_CURRENT_DRAW)*10*1.04, .timeout =      OVER_CURR_TIME,	.code = DISCHARGE_LIMIT_ENFORCEMENT_FAULT   /* -----------------------------------UNUSED---------------------------------*/ }, 
+            {.id = "Charge Current Limit",    .timer =    overChgCurr_tmr, .data_1 =    accData->pack_current, .optype_1 = GT, .lim_1 =                             (accData->charge_limit)*10, .timeout =  OVER_CHG_CURR_TIME, .code =    CHARGE_LIMIT_ENFORCEMENT_FAULT,  .data_2 =         accData->pack_current, .optype_2 = LT, .lim_2 =             0 },
+            {.id = "Low Cell Voltage",        .timer =      underVolt_tmr, .data_1 = accData->min_voltage.val, .optype_1 = LT, .lim_1 =                                       MIN_VOLT * 10000, .timeout =     UNDER_VOLT_TIME,	.code =             CELL_VOLTAGE_TOO_LOW   /* -----------------------------------UNUSED---------------------------------*/  },
+            {.id = "High Cell Voltage",       .timer = overVoltCharge_tmr, .data_1 = accData->max_voltage.val, .optype_1 = GT, .lim_1 =                                MAX_CHARGE_VOLT * 10000, .timeout =      OVER_VOLT_TIME, .code =            CELL_VOLTAGE_TOO_HIGH   /* -----------------------------------UNUSED---------------------------------*/  }, 
+            {.id = "High Cell Voltage",       .timer =       overVolt_tmr, .data_1 = accData->max_voltage.val, .optype_1 = GT, .lim_1 =                                       MAX_VOLT * 10000, .timeout =      OVER_VOLT_TIME,	.code =            CELL_VOLTAGE_TOO_HIGH,   .data_2 = accData->is_charger_connected, .optype_2 = EQ, .lim_2 =         false }, 
+            {.id = "High Temp",               .timer =       highTemp_tmr, .data_1 =    accData->max_temp.val, .optype_1 = GT, .lim_1 =                                          MAX_CELL_TEMP,	.timeout =       LOW_CELL_TIME,	.code =                     PACK_TOO_HOT   /* -----------------------------------UNUSED---------------------------------*/  }, 
+            {.id = "Extremely Low Voltage",   .timer =        lowCell_tmr, .data_1 = accData->min_voltage.val, .optype_1 = LT, .lim_1 =                                                    900, .timeout =      HIGH_TEMP_TIME,	.code =                 LOW_CELL_VOLTAGE   /* -----------------------------------UNUSED---------------------------------*/  }, 
+
+            NULL
+        };
 
 
-	//prefault for DCL
+	uint32_t fault_status = 0;
+    int incr = 0;
 
-	if (prefaultOverCurr.faultEvalState == BEFORE_TIMER_START && (accData->pack_current) > ((accData->discharge_limit + DCDC_CURRENT_DRAW)*10*1.04)) // *104% to account for current sensor +/-A
+    while (&fault_table[incr] != NULL)
     {
-		prefaultOverCurr.faultTimer.startTimer(PRE_OVER_CURR_TIME);
-		prefaultOverCurr.faultEvalState = DURING_FAULT_EVAL;
-    }
-    else if (prefaultOverCurr.faultEvalState == DURING_FAULT_EVAL)
-    {
-        if (prefaultOverCurr.faultTimer.isTimerExpired())
-        {
-			if (prefaultCANDelay2.isTimerExpired())
-			{
-            	compute.sendDclPreFault(true);
-				prefaultCANDelay2.startTimer(CAN_MESSAGE_WAIT);
-			}
-        }
-        if (!((accData->pack_current) > ((accData->discharge_limit + DCDC_CURRENT_DRAW)*10*1.04)))
-        {
-            prefaultOverCurr.faultTimer.cancelTimer();
-            prefaultOverCurr.faultEvalState = BEFORE_TIMER_START;
-        }
+        fault_status |= faultEval(fault_table[incr]);
+        incr++;
     }
 
+    return fault_status;
+    
+}
 
-	if (overCurr.faultEvalState == BEFORE_TIMER_START && (accData->pack_current) > ((accData->discharge_limit + DCDC_CURRENT_DRAW)*10*1.04)) // *104% to account for current sensor +/-A
+uint32_t StateMachine::faultEval(fault_eval index)
+{
+    bool condition1;
+    bool condition2;
+
+	index.timer.eval_length = index.timeout;
+
+    switch (index.optype_1)
     {
-		overCurr.faultTimer.startTimer(OVER_CURR_TIME);
-		overCurr.faultEvalState = DURING_FAULT_EVAL;
-    }
-    else if (overCurr.faultEvalState == DURING_FAULT_EVAL)
-    {
-        if (overCurr.faultTimer.isTimerExpired())
-        {
-            faultStatus |= DISCHARGE_LIMIT_ENFORCEMENT_FAULT;
-        }
-        if (!((accData->pack_current) > ((accData->discharge_limit + DCDC_CURRENT_DRAW)*10*1.04)))
-        {
-            overCurr.faultTimer.cancelTimer();
-            overCurr.faultEvalState = BEFORE_TIMER_START;
-        }
+        case GT: condition1 = index.data_1 > index.lim_1; break;
+        case LT: condition1 = index.data_1 < index.lim_1; break;
+        case GE: condition1 = index.data_1 >= index.lim_1; break;
+        case LE: condition1 = index.data_1 <= index.lim_1; break;
+        case EQ: condition1 = index.data_1 == index.lim_1; break;
+		case NEQ: condition1 = index.data_1 != index.lim_1; break;
+        case NOP: condition1 = true; break;
     }
 
-	// Over current fault for charge
-	if (overChgCurr.faultEvalState == BEFORE_TIMER_START && ((accData->pack_current) < 0 && abs((accData->pack_current)) > ((accData->charge_limit)*10)))
+    switch (index.optype_2)
     {
-        overChgCurr.faultTimer.startTimer(OVER_CHG_CURR_TIME);
-        overChgCurr.faultEvalState = DURING_FAULT_EVAL;
+        case GT: condition2 = index.data_2 > index.lim_2; break;
+        case LT: condition2 = index.data_2 < index.lim_2; break;
+        case GE: condition2 = index.data_2 >= index.lim_2; break;
+        case LE: condition2 = index.data_2 <= index.lim_2; break;
+        case EQ: condition2 = index.data_2 == index.lim_2; break;
+		case NEQ: condition2 = index.data_2 != index.lim_2; break;
+        case NOP: condition2 = true; break;
     }
-    else if (overChgCurr.faultEvalState == DURING_FAULT_EVAL)
+
+
+    if (index.timer.eval_state == BEFORE_TIMER_START && condition1 && condition2) 
     {
-        if (overChgCurr.faultTimer.isTimerExpired())
+        index.timer.startTimer(index.timer.eval_length);
+        index.timer.eval_state = DURING_EVAL;
+    }
+
+    else if (index.timer.eval_state == DURING_EVAL)
+    {
+        if (index.timer.isTimerExpired())
         {
-            faultStatus |= CHARGE_LIMIT_ENFORCEMENT_FAULT;
+            return index.code;
         }
-        if (!((accData->pack_current) < 0 && abs((accData->pack_current)) > ((accData->charge_limit)*10)))
+        if (!(condition1 && condition2))
         {
-            overChgCurr.faultTimer.cancelTimer();
-            overChgCurr.faultEvalState = BEFORE_TIMER_START;
+            index.timer.cancelTimer();
+            index.timer.eval_state = BEFORE_TIMER_START;
         }
     }
 
-	// Low cell voltage fault
-	if (underVolt.faultEvalState == BEFORE_TIMER_START && accData->min_voltage.val < MIN_VOLT * 10000)
-    {
-        underVolt.faultTimer.startTimer(UNDER_VOLT_TIME );
-        underVolt.faultEvalState = DURING_FAULT_EVAL;
-    }
-    else if (underVolt.faultEvalState == DURING_FAULT_EVAL)
-    {
-        if (underVolt.faultTimer.isTimerExpired())
-        {
-            faultStatus |= CELL_VOLTAGE_TOO_LOW;
-        }
-        if (!(accData->min_voltage.val < MIN_VOLT * 10000))
-        {
-            underVolt.faultTimer.cancelTimer();
-            underVolt.faultEvalState = BEFORE_TIMER_START;
-        }
-    }
-
-	// High cell voltage fault
-	if (overVolt.faultEvalState == BEFORE_TIMER_START && (((accData->max_voltage.val > MAX_VOLT * 10000) && digitalRead(CHARGE_DETECT) == HIGH) || (accData->max_voltage.val > MAX_CHARGE_VOLT * 10000)))
-    {
-        overVolt.faultTimer.startTimer(OVER_VOLT_TIME);
-        overVolt.faultEvalState = DURING_FAULT_EVAL;
-    }
-    else if (overVolt.faultEvalState == DURING_FAULT_EVAL)
-    {
-        if (overVolt.faultTimer.isTimerExpired())
-        {
-            faultStatus |= CELL_VOLTAGE_TOO_HIGH;
-        }
-        if (!((accData->max_voltage.val > MAX_VOLT * 10000) && digitalRead(CHARGE_DETECT) == HIGH) || (accData->max_voltage.val > MAX_CHARGE_VOLT * 10000))
-        {
-            overVolt.faultTimer.cancelTimer();
-            overVolt.faultEvalState = BEFORE_TIMER_START;
-        }
-    }
-
-	// High Temp Fault
-	if (highTemp.faultEvalState == BEFORE_TIMER_START && (accData->max_temp.val > MAX_CELL_TEMP))
-    {
-        highTemp.faultTimer.startTimer(HIGH_TEMP_TIME);
-        highTemp.faultEvalState = DURING_FAULT_EVAL;
-    }
-    else if (highTemp.faultEvalState == DURING_FAULT_EVAL)
-    {
-        if (highTemp.faultTimer.isTimerExpired())
-        {
-            faultStatus |= PACK_TOO_HOT;
-        }
-        if (!(accData->max_temp.val > MAX_CELL_TEMP))
-        {
-            highTemp.faultTimer.cancelTimer();
-            highTemp.faultEvalState = BEFORE_TIMER_START;
-        }
-    }
-
-	// Extremely low cell voltage fault
-	if (lowCell.faultEvalState == BEFORE_TIMER_START && (accData->min_voltage.val < 900))
-    {
-        lowCell.faultTimer.startTimer(LOW_CELL_TIME);
-        lowCell.faultEvalState = DURING_FAULT_EVAL;
-    }
-    else if (lowCell.faultEvalState == DURING_FAULT_EVAL)
-    {
-        if (lowCell.faultTimer.isTimerExpired())
-        {
-            faultStatus |= LOW_CELL_VOLTAGE;
-        }
-        if (!(accData->min_voltage.val < 900))
-        {
-            lowCell.faultTimer.cancelTimer();
-            lowCell.faultEvalState = BEFORE_TIMER_START;
-        }
-    }
-
-	
-
-	return faultStatus;
+    return 0;
 }
 
 bool StateMachine::chargingCheck(AccumulatorData_t *bmsdata)
@@ -391,22 +283,22 @@ bool StateMachine::chargingCheck(AccumulatorData_t *bmsdata)
 	if (!compute.chargerConnected()) return false;
 	if(!chargeTimeout.isTimerExpired()) return false;
 
-	if (bmsdata->max_voltage.val >= (MAX_CHARGE_VOLT * 10000) && chargeCutoffTime.faultEvalState == BEFORE_TIMER_START)
+	if (bmsdata->max_voltage.val >= (MAX_CHARGE_VOLT * 10000) && chargeCutoffTime.eval_state == BEFORE_TIMER_START)
     {
-        chargeCutoffTime.faultTimer.startTimer(5000);
-        chargeCutoffTime.faultEvalState = DURING_FAULT_EVAL;
+        chargeCutoffTime.startTimer(5000);
+        chargeCutoffTime.eval_state = DURING_EVAL;
     }
-    else if (chargeCutoffTime.faultEvalState == DURING_FAULT_EVAL)
+    else if (chargeCutoffTime.eval_state == DURING_EVAL)
     {
-        if (chargeCutoffTime.faultTimer.isTimerExpired())
+        if (chargeCutoffTime.isTimerExpired())
         {
 			chargeTimeout.startTimer(CHARGE_TIMEOUT);
             return false;
         }
         if (!(bmsdata->max_voltage.val >= (MAX_CHARGE_VOLT * 10000)))
         {
-            chargeCutoffTime.faultTimer.cancelTimer();
-            chargeCutoffTime.faultEvalState = BEFORE_TIMER_START;
+            chargeCutoffTime.cancelTimer();
+            chargeCutoffTime.eval_state = BEFORE_TIMER_START;
         }
     }
 
@@ -421,6 +313,55 @@ bool StateMachine::balancingCheck(AccumulatorData_t *bmsdata)
 	if(bmsdata->delt_voltage <= (MAX_DELTA_V * 10000)) return false;
 
 	return true;
+}
+
+void StateMachine::preFaultCheck(AccumulatorData_t *bmsdata)
+{
+	//prefault for Low Cell Voltage
+	if (prefaultLowCell_tmr.eval_state == BEFORE_TIMER_START && bmsdata->min_voltage.val < MIN_VOLT * 10000)
+    {
+        prefaultLowCell_tmr.startTimer(PRE_UNDER_VOLT_TIME);
+        prefaultLowCell_tmr.eval_state = DURING_EVAL;
+    }
+    else if (prefaultLowCell_tmr.eval_state == DURING_EVAL)
+    {
+        if (prefaultLowCell_tmr.isTimerExpired())
+        {
+            if (prefaultCANDelay1.isTimerExpired())
+			{
+            	compute.sendDclPreFault(true);
+				prefaultCANDelay1.startTimer(CAN_MESSAGE_WAIT);
+			}
+        }
+        if (!(bmsdata->min_voltage.val < MIN_VOLT * 10000))
+        {
+            prefaultLowCell_tmr.cancelTimer();
+            prefaultLowCell_tmr.eval_state = BEFORE_TIMER_START;
+        }
+    }
+
+	//prefault for DCL
+	if (prefaultOverCurr_tmr.eval_state == BEFORE_TIMER_START && (bmsdata->pack_current) > ((bmsdata->discharge_limit + DCDC_CURRENT_DRAW)*10*1.04)) // *104% to account for current sensor +/-A
+    {
+		prefaultOverCurr_tmr.startTimer(PRE_OVER_CURR_TIME);
+		prefaultOverCurr_tmr.eval_state = DURING_EVAL;
+    }
+    else if (prefaultOverCurr_tmr.eval_state == DURING_EVAL)
+    {
+        if (prefaultOverCurr_tmr.isTimerExpired())
+        {
+			if (prefaultCANDelay2.isTimerExpired())
+			{
+            	compute.sendDclPreFault(true);
+				prefaultCANDelay2.startTimer(CAN_MESSAGE_WAIT);
+			}
+        }
+        if (!((bmsdata->pack_current) > ((bmsdata->discharge_limit + DCDC_CURRENT_DRAW)*10*1.04)))
+        {
+            prefaultOverCurr_tmr.cancelTimer();
+            prefaultOverCurr_tmr.eval_state = BEFORE_TIMER_START;
+        }
+    }
 }
 
 void broadcastCurrentLimit(AccumulatorData_t *bmsdata)

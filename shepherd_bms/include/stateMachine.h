@@ -6,44 +6,32 @@
 #include "compute.h"
 #include "analyzer.h"
 
-
-
-typedef enum
-{
-    BOOT_STATE,       //State when BMS first starts up, used to initialize everything that needs configuring
-    READY_STATE,      //State when car is not on/BMS is not really doing anything
-    CHARGING_STATE,   //State when car is on and is charging (Filling battery)
-    FAULTED_STATE,    //State when BMS has detected a catastrophic fault and we need to hault operations
-    NUM_STATES
-}BMSState_t;
-
-typedef enum
-	{
-		BEFORE_TIMER_START,
-		DURING_FAULT_EVAL
-	}FaultEvalState;
-
-//timers and fault states for each fault
-struct faultEval
-{
-	FaultEvalState faultEvalState = BEFORE_TIMER_START;
-	Timer faultTimer;
-};
-
 class StateMachine
 {
     private:
 
         AccumulatorData_t *prevAccData;
         uint32_t bmsFault = FAULTS_CLEAR;
+    
 
-        uint16_t overVoltCount;
-        uint16_t underVoltCount;
-        uint16_t overCurrCount;
-        uint16_t chargeOverVolt;
-        uint16_t overChgCurrCount;
-        uint16_t lowCellCount;
-        uint16_t highTempCount;
+        tristate_timer overCurr_tmr;
+        tristate_timer overChgCurr_tmr;
+        tristate_timer underVolt_tmr;
+        tristate_timer overVoltCharge_tmr;
+        tristate_timer overVolt_tmr;
+        tristate_timer lowCell_tmr;
+        tristate_timer highTemp_tmr;
+
+        tristate_timer prefaultOverCurr_tmr;
+        tristate_timer prefaultLowCell_tmr;
+
+        Timer chargeTimeout;
+        tristate_timer chargeCutoffTime;
+
+        Timer prefaultCANDelay1; // low cell
+        Timer prefaultCANDelay2; // dcl
+
+      
 
         Timer canMsgTimer;
 
@@ -52,7 +40,6 @@ class StateMachine
 
         Timer chargeMessageTimer;
         static const uint16_t CHARGE_MESSAGE_WAIT = 250; //ms
-
 
         const bool validTransitionFromTo[NUM_STATES][NUM_STATES] =
         {
@@ -127,7 +114,23 @@ class StateMachine
         * @param accData
         * @return uint32_t
         */
-        uint32_t faultCheck(AccumulatorData_t *accData);
+        uint32_t faultReturn(AccumulatorData_t *accData);
+
+        /**
+         * @brief Used in parellel to faultReturn(), calculates each fault to append the fault status
+         * 
+         * @param index
+         * @return fault_code
+         */
+        uint32_t faultEval(fault_eval index);
+
+        /**
+         * @brief Used to check for faults immedietly before reaching faulted state, allows for easier handling
+         * 
+         * @param bmsdata 
+         */
+        void preFaultCheck(AccumulatorData_t *bmsdata);
+
 
     public:
         StateMachine();
