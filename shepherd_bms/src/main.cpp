@@ -1,7 +1,28 @@
 #ifdef DEBUG_EVERYTHING
-#define DEBUG_CHARGING
 #define DEBUG_STATS
+#define DEBUG_THERMS
+#define DEBUG_CURRENT
 // etc etc
+#endif
+
+#ifndef DEBUG_EVERYTHING
+
+#ifdef DEBUG_STATS
+#define debug_stats
+#endif
+
+#ifdef DEBUG_VOLTAGE
+#define debug_voltage
+#endif
+
+#ifdef DEBUG_THERMS
+#define debug_therms
+#endif
+
+#ifdef DEBUG_CURRENT
+#define debug_current
+#endif
+
 #endif
 
 #include <nerduino.h>
@@ -28,31 +49,6 @@ const void printBMSStats(AccumulatorData_t *accData)
 
 	if(!debug_statTimer.isTimerExpired()) return;
 
-	Serial.print("Prev Fault: 0x");
-	Serial.println(stateMachine.previousFault, HEX);
-	Serial.print("Current: ");
-	Serial.println((float)(accData->pack_current) / 10.0);
-	Serial.print("Min, Max, Avg Temps: ");
-	Serial.print(accData->min_temp.val);
-	Serial.print(",  ");
-	Serial.print(accData->max_temp.val);
-	Serial.print(",  ");
-	Serial.println(accData->avg_temp);
-	Serial.print("Min, Max, Avg, Delta Voltages: ");
-	Serial.print(accData->min_voltage.val);
-	Serial.print(",  ");
-	Serial.print(accData->max_voltage.val);
-	Serial.print(",  ");
-	Serial.print(accData->avg_voltage);
-	Serial.print(",  ");
-	Serial.println(accData->delt_voltage);
-
-	Serial.print("DCL: ");
-	Serial.println(accData->discharge_limit);
-
-	Serial.print("CCL: ");
-	Serial.println(accData->charge_limit);
-
 	Serial.print("SoC: ");
 	Serial.println(accData->soc);
 
@@ -60,32 +56,35 @@ const void printBMSStats(AccumulatorData_t *accData)
 	Serial.println(segment.isBalancing());
 
 	Serial.print("State: ");
-	if (stateMachine.current_state == 0) Serial.println("BOOT");
+	if 		(stateMachine.current_state == 0) Serial.println("BOOT");
 	else if (stateMachine.current_state == 1) Serial.println("READY");
 	else if (stateMachine.current_state == 2) Serial.println("CHARGING");
 	else if (stateMachine.current_state == 1) Serial.println("FAULTED");
 
-	Serial.println("Raw Cell Voltage:");
-	for(uint8_t c = 0; c < NUM_CHIPS; c++)
-	{
-		for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
-		{
-			Serial.print(accData->chip_data[c].voltage_reading[cell]);
-			Serial.print("\t");
-		}
-		Serial.println();
-	}
+	Serial.print("Prev Fault (hex): ");
+	Serial.println(stateMachine.previousFault, HEX);
 
-	Serial.println("Open Cell Voltage:");
-	for(uint8_t c = 0; c < NUM_CHIPS; c++)
-	{
-		for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
-		{
-			Serial.print(accData->chip_data[c].open_cell_voltage[cell]);
-			Serial.print("\t");
-		}
-		Serial.println();
-	}
+	#ifdef debug_current
+
+	Serial.print("Pack Current: ");
+	Serial.println((float)(accData->pack_current) / 10.0);
+
+	Serial.print("DCL: ");
+	Serial.println(accData->discharge_limit);
+
+	Serial.print("CCL: ");
+	Serial.println(accData->charge_limit);
+
+	#endif
+
+	#ifdef debug_therms
+
+	Serial.print("Min, Max, Avg Temps: ");
+	Serial.print(accData->min_temp.val);
+	Serial.print(",  ");
+	Serial.print(accData->max_temp.val);
+	Serial.print(",  ");
+	Serial.println(accData->avg_temp);
 
 	Serial.println("Cell Temps:");
 	for(uint8_t c = 0; c < NUM_CHIPS; c++)
@@ -109,6 +108,42 @@ const void printBMSStats(AccumulatorData_t *accData)
 		Serial.println();
 	}
 
+	#endif
+
+	#ifdef debug_voltage
+
+	Serial.print("Min, Max, Avg, Delta Voltages: ");
+	Serial.print(accData->min_voltage.val);
+	Serial.print(",  ");
+	Serial.print(accData->max_voltage.val);
+	Serial.print(",  ");
+	Serial.print(accData->avg_voltage);
+	Serial.print(",  ");
+	Serial.println(accData->delt_voltage);
+
+	Serial.println("Raw Cell Voltage:");
+	for(uint8_t c = 0; c < NUM_CHIPS; c++)
+	{
+		for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+		{
+			Serial.print(accData->chip_data[c].voltage_reading[cell]);
+			Serial.print("\t");
+		}
+		Serial.println();
+	}
+
+	Serial.println("Open Cell Voltage:");
+	for(uint8_t c = 0; c < NUM_CHIPS; c++)
+	{
+		for(uint8_t cell = 0; cell < NUM_CELLS_PER_CHIP; cell++)
+		{
+			Serial.print(accData->chip_data[c].open_cell_voltage[cell]);
+			Serial.print("\t");
+		}
+		Serial.println();
+	}
+
+	#endif
 
 	debug_statTimer.startTimer(PRINT_STAT_WAIT);
 }
