@@ -1,3 +1,5 @@
+**Public Archive. Code in use to/from: 2023/2023**
+
 # shepherd_bms
 Repo for Shepherd BMS development
 
