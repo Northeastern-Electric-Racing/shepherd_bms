@@ -145,6 +145,8 @@ class Analyzer
 
         void calcContDCL();
 
+        void calcCCL();
+
         void calcContCCL();
 
         void printData();

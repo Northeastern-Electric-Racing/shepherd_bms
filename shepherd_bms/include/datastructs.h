@@ -89,6 +89,7 @@ struct AccumulatorData_t
     uint16_t discharge_limit;
     uint16_t charge_limit;
     uint16_t cont_DCL;
+    uint16_t cont_CCL;
     uint8_t soc;
 
     int8_t segment_average_temps[NUM_SEGMENTS];
@@ -119,6 +120,87 @@ struct AccumulatorData_t
     uint16_t delt_ocv;
 
     uint16_t boost_setting;
+
+    bool is_charger_connected;
+
+};
+
+/**
+ * @brief Represents the state of the BMS fault timers
+ */
+typedef enum
+{
+	BEFORE_TIMER_START,
+	DURING_EVAL
+
+} TSTimerEvalState;
+
+/**
+ * @brief Represents a timer that can be in one of three states
+ */
+struct tristate_timer : public Timer
+{
+    
+	TSTimerEvalState eval_state = BEFORE_TIMER_START;
+    int eval_length;
+    
+};
+
+/**
+ * @brief Represents individual BMS states
+ */
+typedef enum
+{
+    BOOT_STATE,       /* State when BMS first starts up, used to initialize everything that needs configuring */
+    READY_STATE,      /* State when car is not on/BMS is not really doing anything */
+    CHARGING_STATE,   /* State when car is on and is charging (Filling battery) */
+    FAULTED_STATE,    /* State when BMS has detected a catastrophic fault and we need to hault operations */
+    NUM_STATES
+
+} BMSState_t;
+
+
+/**
+ * @brief Represents fault evaluation operators
+ */
+typedef enum
+{
+    GT,     /* fault if {data} greater than {threshold}             */
+    LT,     /* fault if {data} less than {threshold}                */
+    GE,     /* fault if {data} greater than or equal to {threshold} */
+    LE,     /* fault if {data} less than or equal to {threshold}    */
+    EQ,     /* fault if {data} equal to {threshold}                 */
+    NEQ,    /* fault if {data} not equal to {threshold}             */
+    NOP     /* no operation, use for single threshold faults        */
+
+} FaultEvalType;
+
+/**
+ * @brief Represents fault timer data
+ */
+
+
+
+/**
+ * @brief Represents data to be packaged into a fault evaluation
+ */
+struct fault_eval
+{
+    char* id; 
+    tristate_timer timer;
+
+    int data_1;
+    FaultEvalType optype_1;
+    int lim_1;
+
+    int timeout;
+    int code;
+
+    int data_2 = 0;
+    FaultEvalType optype_2 = NOP;
+    int lim_2 = 0;
+   
+    bool is_faulted = false;
 
 };
 
